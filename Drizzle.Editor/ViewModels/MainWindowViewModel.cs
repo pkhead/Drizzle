@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -111,10 +111,11 @@ public class MainWindowViewModel : ViewModelBase, ILingoRuntimeManager
             _tabsList.Remove(SelectedTab);
     }
 
-    public void RenderProject() => StartRendering();
-    public void RenderCamera(int camera) => StartRendering(camera);
+    public void RenderVoxels() => StartRendering(true);
+    public void RenderProject() => StartRendering(false);
+    public void RenderCamera(int camera) => StartRendering(false, camera);
 
-    private void StartRendering(int? singleCamera = null)
+    private void StartRendering(bool voxels, int? singleCamera = null)
     {
         if (SelectedTab?.Content == null)
             return;
@@ -122,7 +123,7 @@ public class MainWindowViewModel : ViewModelBase, ILingoRuntimeManager
         var runtime = SelectedTab.Content.Runtime;
 
         var renderViewModel = new RenderViewModel();
-        renderViewModel.StartRendering(runtime.Clone(), singleCamera);
+        renderViewModel.StartRendering(runtime.Clone(), voxels, singleCamera);
 
         var window = new RenderWindow { DataContext = renderViewModel };
         window.Show();

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -71,7 +71,7 @@ int DoCmdRender(CommandLineArgs.VerbRender options)
         {
             EditorRuntimeHelpers.RunLoadLevel(renderRuntime, s);
 
-            var renderer = new LevelRenderer(renderRuntime, null);
+            var renderer = new LevelRenderer(renderRuntime, null, options.Voxels);
             if (options.Checksums)
                 renderer.OnScreenRenderCompleted += (cam, img) => HandleChecksum(levelName, cam, img, checksums);
 

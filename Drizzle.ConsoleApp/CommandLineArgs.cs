@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using C = System.Console;
 
@@ -8,7 +8,7 @@ public sealed record CommandLineArgs(CommandLineArgs.BaseVerb Verb)
 {
     public abstract record BaseVerb;
 
-    public sealed record VerbRender(int MaxParallelism, List<string> Levels, bool Checksums, string? CompareChecksums) : BaseVerb
+    public sealed record VerbRender(int MaxParallelism, List<string> Levels, bool Voxels, bool Checksums, string? CompareChecksums) : BaseVerb
     {
         public static VerbRender? ContinueParse(IEnumerator<string> enumerator)
         {
@@ -16,6 +16,7 @@ public sealed record CommandLineArgs(CommandLineArgs.BaseVerb Verb)
             var parallelism = 0;
             var genChecksums = false;
             string? compareChecksums = null;
+            bool voxels = false;
 
             while (enumerator.MoveNext())
             {
@@ -46,6 +47,10 @@ public sealed record CommandLineArgs(CommandLineArgs.BaseVerb Verb)
 
                     compareChecksums = enumerator.Current;
                 }
+                else if(arg == "--voxels")
+                {
+                    voxels = true;
+                }
                 else if (arg == "--help")
                 {
                     PrintVerbHelp();
@@ -63,7 +68,7 @@ public sealed record CommandLineArgs(CommandLineArgs.BaseVerb Verb)
                 return null;
             }
 
-            return new VerbRender(parallelism, levels, genChecksums, compareChecksums);
+            return new VerbRender(parallelism, levels, voxels, genChecksums, compareChecksums);
         }
 
         private static void PrintVerbHelp()
@@ -78,6 +83,7 @@ Options:
   --compare-checksums <file>  Checksums file to compare against.
                               The checksum of the generated image will be looked up and compared,
                               and an error will be raised if it does not match.
+  --voxels                    Output voxels instead of level images.
   --help                      Print help then exit.
 ");
         }
