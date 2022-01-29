@@ -1,4 +1,4 @@
-global vertRepeater, r, gEEprops, solidMtrx, gLEprops, colr, gdLayer, gLOProps, gLevel, gEffectProps, gViewRender, keepLooping, gRenderCameraTilePos, effectSeed
+global vertRepeater, r, gEEprops, solidMtrx, gLEprops, colr, gdLayer, gLOProps, gLevel, gEffectProps, gViewRender, keepLooping, gRenderCameraTilePos, effectSeed, gRenderCameraTileSize
 global effectIn3D, gAnyDecals
 
 on exitFrame me
@@ -179,8 +179,8 @@ on initEffect me
   
   case gEEprops.effects[r].nm of
     "blackGoo":
-      cols = 100
-      rows = 60
+      cols = gRenderCameraTileSize.locH
+      rows = gRenderCameraTileSize.locV
       
       member("blackOutImg1").image = image(cols*20, rows*20, 32)
       member("blackOutImg1").image.copyPixels(member("pxl").image, rect(0,0,cols*20, rows*20), rect(0,0,1,1), {#color:255})
@@ -191,8 +191,8 @@ on initEffect me
       
       global gRenderCameraTilePos, gRenderCameraPixelPos
       
-      repeat with q = 1 to 100 then
-        repeat with c = 1 to 60 then
+      repeat with q = 1 to cols then
+        repeat with c = 1 to rows then
           q2 = q + gRenderCameraTilePos.locH
           c2 = c + gRenderCameraTilePos.locV
           if(q2 < 1)or(q2 > gLOprops.size.locH)or(c2 < 1)or(c2 > gLOprops.size.locV)then
@@ -297,8 +297,8 @@ on exitEffect me
     "blackGoo":
       
       
-      member("layer0").image.copyPixels(member("blackOutImg1").image, rect(0,0,100*20, 60*20), rect(0,0,100*20, 60*20), {#ink:36, #color:color(0, 255, 0)})
-      member("layer0").image.copyPixels(member("blackOutImg2").image, rect(0,0,100*20, 60*20), rect(0,0,100*20, 60*20), {#ink:36, #color:color(255, 0, 0)})
+      member("layer0").image.copyPixels(member("blackOutImg1").image, rect(point(0,0),gRenderCameraTileSize*20), rect(point(0,0),gRenderCameraTileSize*20), {#ink:36, #color:color(0, 255, 0)})
+      member("layer0").image.copyPixels(member("blackOutImg2").image, rect(point(0,0),gRenderCameraTileSize*20), rect(point(0,0),gRenderCameraTileSize*20), {#ink:36, #color:color(255, 0, 0)})
       
       
       member("blackOutImg1").image = image(1, 1, 1)
@@ -2090,7 +2090,7 @@ on applyWire me, q, c, eftc
     startPos = mdPnt+point(-11+random(21), -11+random(21))
     
     myCamera = me.closestCamera(startPos+gRenderCameraTilePos*20)
-    if(myCamera = 0)then
+    if (myCamera = 0) and (gCurrentRenderCamera <> 0) then
       exit
     end if
     
@@ -2137,7 +2137,7 @@ on applyWire me, q, c, eftc
         if tlPos.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)) = 0 then
           exit repeat
         else 
-          if(myCamera = gCurrentRenderCamera)and(me.seenByCamera(myCamera, pnt + gRenderCameraTilePos)=1) then
+          if gCurrentRenderCamera = 0 or ((myCamera = gCurrentRenderCamera) and (me.seenByCamera(myCamera, pnt + gRenderCameraTilePos)=1)) then
             if gLEprops.matrix[tlPos.locH][tlPos.locV][lr][1] = 1 then
               if member("layer"&string(d)).image.getPixel(pnt) <> color(255,255,255) then
                 goodStops = goodStops + 1
@@ -2200,7 +2200,7 @@ on applyChain me, q, c, eftc
     startPos = mdPnt+point(-11+random(21), -11+random(21))
     
     myCamera = me.closestCamera(startPos+gRenderCameraTilePos*20)
-    if(myCamera = 0)then
+    if (myCamera = 0) and (gCurrentRenderCamera <> 0) then
       exit
     end if
     
@@ -2271,7 +2271,7 @@ on applyChain me, q, c, eftc
           if tlPos.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)) = 0 then
             exit repeat
           else 
-            if(myCamera = gCurrentRenderCamera)and(me.seenByCamera(myCamera, pnt + gRenderCameraTilePos)=1) then
+            if  (gCurrentRenderCamera = 0) or ((myCamera = gCurrentRenderCamera) and (me.seenByCamera(myCamera, pnt + gRenderCameraTilePos) = 1)) then
               if gLEprops.matrix[tlPos.locH][tlPos.locV][lr][1] = 1 then
                 if member("layer"&string(d)).image.getPixel(pnt) <> color(255,255,255) then
                   goodStops = goodStops + 1

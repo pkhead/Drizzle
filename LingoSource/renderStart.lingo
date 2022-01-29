@@ -1,4 +1,4 @@
-global gTiles, tileSetIndex, gCurrentRenderCamera, gAnyDecals, firstCamRepeat, solidMtrx, gLOprops, gLEprops, gTEprops
+global gTiles, tileSetIndex, gCurrentRenderCamera, gAnyDecals, firstCamRepeat, solidMtrx, gLOprops, gLEprops, gTEprops, gRenderCameraTileSize
 
 on exitFrame me
   put "Start render"
@@ -7,6 +7,7 @@ on exitFrame me
   
   firstCamRepeat = true
   gCurrentRenderCamera = 0
+  gRenderCameraTileSize = point(100, 60)
   gAnyDecals = 0
   me.createShortCuts()
   

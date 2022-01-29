@@ -126,6 +126,10 @@ on quadifyMember me, mem, fac
   
   global gCameraProps, gCurrentRenderCamera
   
+  if gCurrentRenderCamera = 0 then
+    alert("quadifyMember isn't available when rendering voxels!")
+  end if
+  
   newImg = member(mem).image.duplicate()
   qd = [point(0,0), point(newImg.width, 0), point(newImg.width, newImg.height), point(0,newImg.height)]
   

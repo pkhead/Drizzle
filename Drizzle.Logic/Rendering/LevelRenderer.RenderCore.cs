@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -21,7 +21,11 @@ public sealed partial class LevelRenderer
 
         // Set up camera order.
         List<int> camOrder;
-        if (_singleCamera is { } s)
+        if (_renderVoxels)
+        {
+            camOrder = new List<int> { 0 };
+        }
+        else if (_singleCamera is { } s)
         {
             camOrder = new List<int> { s + 1 };
         }
@@ -46,22 +50,30 @@ public sealed partial class LevelRenderer
                 RenderPropsPreEffects();
                 RenderEffects();
                 RenderPropsPostEffects();
-                RenderLight();
-                RenderFinalize();
-                RenderColors();
-                RenderFinished();
+                if (_renderVoxels)
+                {
+                    RenderStartFrame(RenderStage.SaveFile);
+                    SaveVoxels();
+                }
+                else
+                {
+                    RenderLight();
+                    RenderFinalize();
+                    RenderColors();
+                    RenderFinished();
 
-                RenderStartFrame(RenderStage.SaveFile);
-                // Save image.
-                var fileName = Path.Combine(
-                    LingoRuntime.MovieBasePath,
-                    "Levels",
-                    $"{Movie.gLoadedName}_{camIndex}.png");
+                    RenderStartFrame(RenderStage.SaveFile);
+                    // Save image.
+                    var fileName = Path.Combine(
+                        LingoRuntime.MovieBasePath,
+                        "Levels",
+                        $"{Movie.gLoadedName}_{camIndex}.png");
 
-                var file = File.OpenWrite(fileName);
-                var image = _runtime.GetCastMember("finalImage")!.image!;
-                OnScreenRenderCompleted?.Invoke(camIndex, image);
-                image.SaveAsPng(file);
+                    var file = File.OpenWrite(fileName);
+                    var image = _runtime.GetCastMember("finalImage")!.image!;
+                    OnScreenRenderCompleted?.Invoke(camIndex, image);
+                    image.SaveAsPng(file);
+                }
 
                 _countCamerasDone += 1;
             }
@@ -90,25 +102,49 @@ public sealed partial class LevelRenderer
     {
         RenderStartFrame(RenderStage.CameraSetup);
 
-        var camera = (LingoPoint)Movie.gCameraProps.cameras[camIndex];
         _cameraIndex = camIndex;
         Movie.gCurrentRenderCamera = new LingoNumber(camIndex);
-        Movie.gRenderCameraTilePos =
-            new LingoPoint(
-                (camera.loch / (LingoNumber)20.0 - (LingoNumber)0.49999).integer,
-                (camera.locv / (LingoNumber)20.0 - (LingoNumber)0.49999).integer);
 
-        Movie.gRenderCameraPixelPos = camera - (Movie.gRenderCameraTilePos * 20);
-        Movie.gRenderCameraPixelPos.loch = Movie.gRenderCameraPixelPos.loch.integer;
-        Movie.gRenderCameraPixelPos.locv = Movie.gRenderCameraPixelPos.locv.integer;
+        // Camera 0 covers the entire level.
+        if (camIndex == 0)
+        {
+            Movie.gRenderCameraTilePos = new LingoPoint(0, 0);
+            Movie.gRenderCameraPixelPos = new LingoPoint(0, 0);
+            Movie.gRenderCameraTileSize = Movie.gLOprops.size;
+        }
+        else
+        {
+            LingoPoint camera = (LingoPoint)Movie.gCameraProps.cameras[camIndex];
 
-        Movie.gRenderCameraTilePos += new LingoPoint(-15, -10);
+            Movie.gRenderCameraTilePos =
+                new LingoPoint(
+                    (camera.loch / (LingoNumber)20.0 - (LingoNumber)0.49999).integer,
+                    (camera.locv / (LingoNumber)20.0 - (LingoNumber)0.49999).integer);
+
+            Movie.gRenderCameraPixelPos = camera - (Movie.gRenderCameraTilePos * 20);
+            Movie.gRenderCameraPixelPos.loch = Movie.gRenderCameraPixelPos.loch.integer;
+            Movie.gRenderCameraPixelPos.locv = Movie.gRenderCameraPixelPos.locv.integer;
+            Movie.gRenderCameraTileSize = new LingoPoint(100.0, 60.0);
+
+            Movie.gRenderCameraTilePos += new LingoPoint(-15, -10);
+        }
     }
 
     private void RenderLayers()
     {
-        const int cols = 100;
-        const int rows = 60;
+        int cols;
+        int rows;
+
+        if((LingoNumber)Movie.gCurrentRenderCamera == 0)
+        {
+            cols = (int)Movie.gLOprops.size.loch;
+            rows = (int)Movie.gLOprops.size.locv;
+        }
+        else
+        {
+            cols = 100;
+            rows = 60;
+        }
 
         RenderStartFrame(RenderStage.RenderLayers);
 

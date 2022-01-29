@@ -32,9 +32,6 @@ public sealed partial class LevelRenderer : ILingoRuntimeManager
         _renderVoxels = renderVoxels;
         _runtime = runtime;
 
-        if (renderVoxels)
-            throw new NotImplementedException("Voxel rendering has not been implemented!");
-
         _cmdChannel = Channel.CreateUnbounded<RenderCmd>();
     }
 
