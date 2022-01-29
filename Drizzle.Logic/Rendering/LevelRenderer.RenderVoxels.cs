@@ -195,10 +195,10 @@ namespace Drizzle.Logic.Rendering
             // Index into the room palette. 2 bits.
             public int paletteColor;
 
-            // Index into the room's effect color list. 1 bit.
+            // Index into the room's effect color list. 2 bits.
             public int effectColor;
 
-            // Intensity of effect color. 5 bits.
+            // Intensity of effect color. 4 bits.
             public int effectAmount;
 
             public Voxel(int paletteColor, int effectColor, float effectAmount)
@@ -209,12 +209,12 @@ namespace Drizzle.Logic.Rendering
 
                 this.paletteColor = paletteColor;
                 this.effectColor = effectColor;
-                this.effectAmount = Math.Min((int)(effectAmount * (1 << 5)), 1 << 5 - 1);
+                this.effectAmount = Math.Min((int)(effectAmount * (1 << 4)), (1 << 4) - 1);
             }
 
             public byte ToByte()
             {
-                return (byte)(paletteColor | effectColor << 2 | effectAmount << 3);
+                return (byte)(paletteColor | effectColor << 2 | effectAmount << 4);
             }
 
             public override bool Equals(object? obj)
