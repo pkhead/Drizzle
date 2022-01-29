@@ -1808,7 +1808,7 @@ on renderTileMaterial(layer, material, frntImg)
             tlsOrdered.add([random(gLOprops.size.loch+gLOprops.size.locV), point(q,c)])
           else if (material = "Temple Stone")then
             tlsOrdered.add([random(gLOprops.size.loch+gLOprops.size.locV), point(q,c)])
-          else if (point(q,c).inside(rect(gRenderCameraTilePos, gRenderCameraTilePos+point(100, 60)))) then
+          else if (point(q,c).inside(rect(gRenderCameraTilePos, gRenderCameraTilePos+gRenderCameraTileSize))) then
             frntImg = drawATileMaterial(q, c, layer, "Standard", frntImg)
           end if
         end if
@@ -1845,7 +1845,7 @@ on renderTileMaterial(layer, material, frntImg)
             hts = hts + (tls.getPos(tl+dir)>0)*(delL.getPos(tl+dir)=0)
           end repeat
           if hts = 3 then
-            if(tl.inside(rect(gRenderCameraTilePos, gRenderCameraTilePos+point(100, 60)))) then
+            if(tl.inside(rect(gRenderCameraTilePos, gRenderCameraTilePos+gRenderCameraTileSize))) then
               frntImg = drawATileTile(tl.loch,tl.locV,layer, gTiles[3].tls[2], frntImg)
             end if
             repeat with dir in [point(1,0), point(0,1), point(1,1)] then
@@ -1864,7 +1864,7 @@ on renderTileMaterial(layer, material, frntImg)
       repeat while tls.count > 0 then
         the randomSeed  = gLOprops.tileSeed + tls.count
         tl = tls[random(tls.count)]
-        if(tl.inside(rect(gRenderCameraTilePos, gRenderCameraTilePos+point(100, 60)))) then
+        if(tl.inside(rect(gRenderCameraTilePos, gRenderCameraTilePos+gRenderCameraTileSize))) then
           frntImg = drawATileTile(tl.locH,tl.locV,layer, gTiles[3].tls[1], frntImg)
         end if
         tls.deleteOne(tl)
@@ -1989,7 +1989,7 @@ on renderTileMaterial(layer, material, frntImg)
             
             if(legalToPlace)then
               rootPos = tl + point(((testTile.sz.locH.float/2.0) + 0.4999).integer-1, ((testTile.sz.locV.float/2.0) + 0.4999).integer-1)
-              if(rootPos.inside(rect(gRenderCameraTilePos, gRenderCameraTilePos+point(100, 60))))then
+              if(rootPos.inside(rect(gRenderCameraTilePos, gRenderCameraTilePos+gRenderCameraTileSize)))then
                 frntImg = drawATileTile(rootPos.loch,rootPos.locV,layer,testTile, frntImg)
               end if
               repeat with a = 0 to testTile.sz.locH-1 then

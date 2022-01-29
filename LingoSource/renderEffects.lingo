@@ -1,4 +1,4 @@
-global vertRepeater, r, gEEprops, solidMtrx, gLEprops, colr, gdLayer, gLOProps, gLevel, gEffectProps, gViewRender, keepLooping, gRenderCameraTilePos, effectSeed, gRenderCameraTileSize
+global vertRepeater, r, gEEprops, solidMtrx, gLEprops, colr, gdLayer, gLOProps, gLevel, gEffectProps, gViewRender, keepLooping, gRenderCameraTilePos, effectSeed, gRenderCameraTileSize, gCurrentRenderCamera
 global effectIn3D, gAnyDecals
 
 on exitFrame me
@@ -22,7 +22,6 @@ on newFrame me
   
   vertRepeater = vertRepeater + 1
   
-  
   if (gEEprops.effects.count = 0)then
     keepLooping = 0
     exit
@@ -32,7 +31,9 @@ on newFrame me
     me.initEffect()
   end if
   
-  if ((vertRepeater > 60)and(gEEprops.effects[r].crossScreen = 0))or((vertRepeater > gLOprops.size.locV)and(gEEprops.effects[r].crossScreen = 1)) then
+  crossScreen = (gEEprops.effects[r].crossScreen = 1) or (gCurrentRenderCamera = 0)
+  
+  if ((vertRepeater > 60) and not crossScreen) or ((vertRepeater > gLOprops.size.locV) and crossScreen) then
     me.exitEffect()
     r = r + 1
     
@@ -48,7 +49,7 @@ on newFrame me
   
   
   
-  if (gEEprops.effects[r].crossScreen = 0) then
+  if not crossScreen then
     sprite(59).locV = vertRepeater*20
     repeat with q = 1 to 100 then
       q2 = q + gRenderCameraTilePos.locH
