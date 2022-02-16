@@ -45,6 +45,7 @@ int DoCmdRender(CommandLineArgs.VerbRender options)
     Console.WriteLine($"Starting render of {options.Levels.Count} levels");
     var sw = Stopwatch.StartNew();
 
+
     var errors = 0;
     var success = 0;
 
@@ -53,9 +54,11 @@ int DoCmdRender(CommandLineArgs.VerbRender options)
         MaxDegreeOfParallelism = options.MaxParallelism == 0 ? -1 : options.MaxParallelism
     };
 
+    var doChecksums = options.Checksums;
     Dictionary<string, Dictionary<string, string>>? checksums = null;
     if (options.CompareChecksums is { } chkFileName)
     {
+        doChecksums = true;
         using var chkFile = File.OpenRead(chkFileName);
         checksums = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(chkFile);
     }

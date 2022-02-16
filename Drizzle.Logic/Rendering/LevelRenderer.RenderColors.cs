@@ -66,7 +66,7 @@ public sealed partial class LevelRenderer
                 {
                     foreach (var (dpX, dpY) in FogDisplacements)
                     {
-                        var dpQ = Math.Clamp(q + dpY, 0, 1339);
+                        var dpQ = Math.Clamp(q + dpX, 0, 1339);
                         var dpC = Math.Clamp(c + dpY, 0, 799);
                         var otherFogFac = (255 - fogImage.getpixel(dpQ, dpC).RedByte) / 255.0f;
                         otherFogFac = (otherFogFac - 0.0275f) / 0.9411f;
@@ -211,14 +211,14 @@ public sealed partial class LevelRenderer
             if (!IsPixelInFinalImageRainbowed(pxl + (-1, 0)))
             {
                 var currCol = finalImage.getpixel(pxl.X - 1, pxl.Y);
-                currCol.GreenByte += 4;
+                MathHelper.SatAdd(ref currCol.GreenByte, 4);
                 finalImage.setpixel(pxl.X - 1, pxl.Y, currCol);
             }
 
             if (!IsPixelInFinalImageRainbowed(pxl + (0, -1)))
             {
                 var currCol = finalImage.getpixel(pxl.X, pxl.Y - 1);
-                currCol.GreenByte += 4;
+                MathHelper.SatAdd(ref currCol.GreenByte, 4);
                 finalImage.setpixel(pxl.X, pxl.Y - 1, currCol);
             }
 
@@ -240,7 +240,7 @@ public sealed partial class LevelRenderer
 
         bool DoesGreenValueMeanRainbow(int grn)
         {
-            return grn is (> 3 and < 8) or (> 1 and < 16);
+            return grn is (> 3 and < 8) or (> 11 and < 16);
         }
     }
 }
