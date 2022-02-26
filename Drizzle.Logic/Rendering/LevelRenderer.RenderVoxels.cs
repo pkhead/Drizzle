@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using Drizzle.Lingo.Runtime;
+using System.IO.Compression;
 
 namespace Drizzle.Logic.Rendering
 {
@@ -15,10 +16,10 @@ namespace Drizzle.Logic.Rendering
             var fileName = Path.Combine(
                 LingoRuntime.MovieBasePath,
                 "Levels",
-                $"{Movie.gLoadedName}_Voxels.vx1");
+                $"{Movie.gLoadedName}_Voxels.vx1.gz");
 
             var layer0 = _runtime.GetCastMember("layer0")!.image!;
-            var bw = new BinaryWriter(File.Create(fileName));
+            var bw = new BinaryWriter(new GZipStream(File.Create(fileName), CompressionLevel.SmallestSize));
 
             // Encode the size
             bw.Write((ushort)layer0.Width);
@@ -68,6 +69,12 @@ namespace Drizzle.Logic.Rendering
 
             // Done!
             bw.Dispose();
+
+#warning Temporary! Embed light cookie into file later.
+
+            var img = _runtime.GetCastMember("lightImage")?.image;
+            if (img != null)
+                img.SaveAsPng(File.Create(Path.Combine(LingoRuntime.MovieBasePath, "Levels", $"{Movie.gLoadedName}.png")));
         }
 
         private IEnumerable<Voxel> GetVoxels()
