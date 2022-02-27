@@ -1,4 +1,4 @@
-global gViewRender, c, gPEprops, keepLooping, gRenderCameraTilePos, gLastImported, gProps, afterEffects, gAnyDecals, gRenderTrashProps, gCurrentlyRenderingTrash, gESoftProp
+global gViewRender, c, gPEprops, keepLooping, gRenderCameraTilePos, gLastImported, gProps, afterEffects, gAnyDecals, gRenderTrashProps, gCurrentlyRenderingTrash, gESoftProp, gCurrentRenderCamera
 global softProp, propsToRender
 
 on exitFrame me
@@ -105,7 +105,7 @@ on ShouldThisPropRender(prop, qd, settings)
   
   -- put prop[1] && Diag(mdPoint, closestPntInRect(rect(-100, -100, 1700, 900), mdPoint)) && dig
   
-  if(Diag(mdPoint, closestPntInRect(rect(-50, -100, 2050, 1100), mdPoint)) > dig) then
+  if(gCurrentRenderCamera <> 0) and (Diag(mdPoint, closestPntInRect(rect(-50, -100, 2050, 1100), mdPoint)) > dig) then
     --   put "Culling a prop " & prop
     return false
   end if
