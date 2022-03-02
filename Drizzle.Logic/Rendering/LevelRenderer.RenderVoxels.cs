@@ -6,11 +6,14 @@ using System.Threading.Tasks;
 using System.IO;
 using Drizzle.Lingo.Runtime;
 using System.IO.Compression;
+using K4os.Compression.LZ4;
 
 namespace Drizzle.Logic.Rendering
 {
     public partial class LevelRenderer
     {
+        private const int chunkSize = 128;
+
         private void SaveVoxels()
         {
             var fileName = Path.Combine(
@@ -31,53 +34,45 @@ namespace Drizzle.Logic.Rendering
             bw.Write((short)-extraTiles[1]); // Left
             bw.Write((short)-extraTiles[4]); // Bottom
 
-            // Write all voxels with simple RLE
-            Voxel queuedVoxel = default;
-            int count = 0;
+            // Write voxel data in chunks
+            // Each chunk starts with a size header, then <= chunkSize*chunkSize*30 bytes compressed with LZ4
+            int xChunks = ((int)layer0.width + chunkSize - 1) / chunkSize;
+            int yChunks = ((int)layer0.height + chunkSize - 1) / chunkSize;
 
-            void WriteQueuedVoxels()
+            byte[] chunkData = new byte[chunkSize * chunkSize * 30];
+            byte[] lz4Data = new byte[LZ4Codec.MaximumOutputSize(chunkData.Length)];
+            
+            for (int y = 0; y < yChunks; y++)
             {
-                if (count >= 4)
+                for (int x = 0; x < xChunks; x++)
                 {
-                    bw.Write((byte)0xFF);
-                    bw.Write(queuedVoxel.ToByte());
-                    bw.Write7BitEncodedInt(count);
-                }
-                else
-                {
-                    for (int rep = 0; rep < count; rep++)
-                        bw.Write(queuedVoxel.ToByte());
+                    int chunkDataLen = 0;
+                    foreach (var voxel in GetVoxels(x, y))
+                        chunkData[chunkDataLen++] = voxel.ToByte();
+
+                    int lz4DataLen = LZ4Codec.Encode(chunkData, 0, chunkDataLen, lz4Data, 0, lz4Data.Length, LZ4Level.L10_OPT);
+                    bw.Write7BitEncodedInt(lz4DataLen);
+                    bw.Write(lz4Data, 0, lz4DataLen);
                 }
             }
 
-            foreach (var voxel in GetVoxels())
+            // Append the light image with a size header
+            var img = _runtime.GetCastMember("lightImage")?.image;
+            if (img != null)
             {
-                if (voxel == queuedVoxel)
-                {
-                    count++;
-                }
-                else
-                {
-                    WriteQueuedVoxels();
+                var imgData = new MemoryStream();
+                img.SaveAsPng(imgData);
+                imgData.Seek(0, SeekOrigin.Begin);
 
-                    queuedVoxel = voxel;
-                    count = 1;
-                }
+                bw.Write7BitEncodedInt((int)imgData.Length);
+                bw.Write(imgData.GetBuffer(), 0, (int)imgData.Length);
             }
-
-            WriteQueuedVoxels();
 
             // Done!
             bw.Dispose();
-
-#warning Temporary! Embed light cookie into file later.
-
-            var img = _runtime.GetCastMember("lightImage")?.image;
-            if (img != null)
-                img.SaveAsPng(File.Create(Path.Combine(LingoRuntime.MovieBasePath, "Levels", $"{Movie.gLoadedName}.png")));
         }
 
-        private IEnumerable<Voxel> GetVoxels()
+        private IEnumerable<Voxel> GetVoxels(int chunkX, int chunkY)
         {
             Voxel lastVoxel = default;
 
@@ -93,10 +88,10 @@ namespace Drizzle.Logic.Rendering
                 var imageWidth = image.Width;
                 var imageHeight = image.Height;
 
-                for (int y = 0; y < imageHeight; y++)
+                for (int y = chunkY * chunkSize, yMax = Math.Min((chunkY + 1) * chunkSize, imageHeight); y < yMax; y++)
                 {
 
-                    for (int x = 0; x < imageWidth; x++)
+                    for (int x = chunkX * chunkSize, xMax = Math.Min((chunkX + 1) * chunkSize, imageWidth); x < xMax; x++)
                     {
 
                         var color = image.getpixel(x, imageHeight - y);
@@ -106,7 +101,6 @@ namespace Drizzle.Logic.Rendering
 
                         int paletteColor;
                         int effectColor = 0;
-                        bool dark = false;
                         float effectAmount = 0f;
 
                         bool HasAdjacentAir(LingoImage? img)
@@ -169,17 +163,17 @@ namespace Drizzle.Logic.Rendering
                         else if (r == 150)
                         {
                             paletteColor = 1;
-                            dark = true;
+                            //dark = true;
                         }
                         else if (g == 150)
                         {
                             paletteColor = 2;
-                            dark = true;
+                            //dark = true;
                         }
                         else if (b == 150)
                         {
                             paletteColor = 3;
-                            dark = true;
+                            //dark = true;
                         }
                         else
                         {
