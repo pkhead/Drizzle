@@ -60,12 +60,20 @@ namespace Drizzle.Logic.Rendering
             var img = _runtime.GetCastMember("lightImage")?.image;
             if (img != null)
             {
-                var imgData = new MemoryStream();
-                img.SaveAsPng(imgData);
-                imgData.Seek(0, SeekOrigin.Begin);
+                if((string)Movie.gLevel.lightType != "No Light" && (LingoNumber)Movie.gLOprops.light > 0)
+                {
+                    var imgData = new MemoryStream();
+                    img.SaveAsPng(imgData);
+                    imgData.Seek(0, SeekOrigin.Begin);
 
-                bw.Write7BitEncodedInt((int)imgData.Length);
-                bw.Write(imgData.GetBuffer(), 0, (int)imgData.Length);
+                    bw.Write7BitEncodedInt((int)imgData.Length);
+                    bw.Write(imgData.GetBuffer(), 0, (int)imgData.Length);
+                }
+                else
+                {
+                    // Write -1 as length when sunlight is off
+                    bw.Write7BitEncodedInt(-1);
+                }
             }
 
             // Done!
