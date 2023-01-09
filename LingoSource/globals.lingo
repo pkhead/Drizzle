@@ -14,6 +14,10 @@ type gCurrentRenderCamera:        number
 type gRenderCameraTilePos:        point
 type gRenderCameraPixelPos:       point
 
+-- Size of the current camera in tiles, including buffer tiles.
+-- Only intended to be changed when rendering voxels.
+type gRenderCameraTileSize:       point
+
 -- Prop rendering stage: before or after effects?
 type afterEffects:                number
 

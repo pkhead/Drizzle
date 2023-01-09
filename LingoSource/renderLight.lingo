@@ -1,4 +1,4 @@
-global q, c, tm, pos, gLightEProps, gLevel, keepLooping, gViewRender, gLOprops
+global q, c, tm, pos, gLightEProps, gLevel, keepLooping, gViewRender, gLOprops, gRenderCameraTileSize
 
 on exitFrame me
   if gViewRender then
@@ -20,8 +20,8 @@ end
 
 on newFrame me
   -- member("layer"&c&"sh").image = image(gLOprops.size.loch*20, gLOprops.size.locv*20, 8)
-  cols: number = 100
-  rows: number = 60
+  cols: number = gRenderCameraTileSize.locH
+  rows: number = gRenderCameraTileSize.locV
   
   marginPixels: number = 150
   

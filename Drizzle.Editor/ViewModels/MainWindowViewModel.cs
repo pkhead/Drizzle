@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -112,9 +112,10 @@ public class MainWindowViewModel : ViewModelBase, ILingoRuntimeManager
     }
 
     public void RenderProject() => StartRendering();
+    public void RenderProjectVoxels() => StartRendering(voxels: true);
     public void RenderCamera(int camera) => StartRendering(camera);
 
-    private void StartRendering(int? singleCamera = null)
+    private void StartRendering(int? singleCamera = null, bool voxels = false)
     {
         if (SelectedTab?.Content == null)
             return;
@@ -122,7 +123,7 @@ public class MainWindowViewModel : ViewModelBase, ILingoRuntimeManager
         var runtime = SelectedTab.Content.Runtime;
 
         var renderViewModel = new RenderViewModel();
-        renderViewModel.StartRendering(runtime.Clone(), singleCamera);
+        renderViewModel.StartRendering(runtime.Clone(), singleCamera, voxels);
 
         var window = new RenderWindow { DataContext = renderViewModel };
         window.Show();

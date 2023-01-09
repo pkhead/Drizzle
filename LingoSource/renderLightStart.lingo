@@ -1,10 +1,10 @@
-global c, tm, dptsL, gLightEProps, pos, gLevel, gLEProps, gLOprops, keepLooping, fogDptsL,gRenderCameraTilePos, gAnyDecals, solidMtrx
+global c, tm, dptsL, gLightEProps, pos, gLevel, gLEProps, gLOprops, keepLooping, fogDptsL,gRenderCameraTilePos, gAnyDecals, solidMtrx, gRenderCameraTileSize
 
 on exitFrame me
   
   the randomSeed = gLOprops.tileSeed
   
-  member("layer0dc").image.copyPixels(member("blackOutImg2").image, rect(0,0,100*20, 60*20), rect(0,0,100*20, 60*20), {#ink:36, #color:color(255, 255, 255)})
+  member("layer0dc").image.copyPixels(member("blackOutImg2").image, rect(0,0,gRenderCameraTileSize.locH*20, gRenderCameraTileSize.locV*20), rect(0,0,gRenderCameraTileSize.locH*20, gRenderCameraTileSize.locV*20), {#ink:36, #color:color(255, 255, 255)})
   
   repeat with layer = 1 to 3 then
     repeat with q = 1 to gLOprops.size.loch then
@@ -29,8 +29,8 @@ on exitFrame me
     end repeat
   end repeat
   
-  cols: number = 100
-  rows: number = 60
+  cols: number = gRenderCameraTileSize.locH
+  rows: number = gRenderCameraTileSize.locV
   
   
   marginPixels: number = 150
@@ -128,14 +128,17 @@ on quadifyMember me, mem: string, fac: number
   
   global gCameraProps, gCurrentRenderCamera
   
-  newImg = member(mem).image.duplicate()
-  qd = [point(0,0), point(newImg.width, 0), point(newImg.width, newImg.height), point(0,newImg.height)]
-  
-  repeat with q = 1 to 4 then
-    qd[q] = qd[q] + DegToVec(gCameraProps.quads[gCurrentRenderCamera][q][1])*gCameraProps.quads[gCurrentRenderCamera][q][2]*fac*2.5--arbitrary number, seemed to give the right amount
-  end repeat
-  
-  member(mem).image.copypixels(newImg, qd, newImg.rect)
+  -- don't apply camera angles when rendering voxels
+  if gCurrentRenderCamera <> 0 then
+    newImg = member(mem).image.duplicate()
+    qd = [point(0,0), point(newImg.width, 0), point(newImg.width, newImg.height), point(0,newImg.height)]
+    
+    repeat with q = 1 to 4 then
+  	qd[q] = qd[q] + DegToVec(gCameraProps.quads[gCurrentRenderCamera][q][1])*gCameraProps.quads[gCurrentRenderCamera][q][2]*fac*2.5--arbitrary number, seemed to give the right amount
+    end repeat
+    
+    member(mem).image.copypixels(newImg, qd, newImg.rect)
+  end if
 end
 
 

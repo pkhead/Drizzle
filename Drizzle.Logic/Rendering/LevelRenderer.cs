@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Drizzle.Lingo.Runtime;
@@ -23,15 +23,18 @@ public sealed partial class LevelRenderer : ILingoRuntimeManager
 
     private readonly RenderStage? _pauseOnStage;
     private readonly int? _singleCamera;
+    private readonly bool _voxels;
+    private readonly VoxelSettings _voxelSettings = VoxelSettings.Default;
     private RenderStage _stage;
     private bool _isPaused;
     private bool _previewRequested;
 
-    public LevelRenderer(LingoRuntime runtime, RenderStage? pauseOnStage, int? singleCamera=null)
+    public LevelRenderer(LingoRuntime runtime, RenderStage? pauseOnStage, int? singleCamera=null, bool voxels = false)
     {
         _pauseOnStage = pauseOnStage;
         _singleCamera = singleCamera;
         _runtime = runtime;
+        _voxels = voxels;
 
         _cmdChannel = Channel.CreateUnbounded<RenderCmd>(new UnboundedChannelOptions
         {

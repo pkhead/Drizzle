@@ -1,4 +1,4 @@
-global vertRepeater, r, gEEprops, solidMtrx, gLEprops, colr, gdLayer, gLOProps, gLevel, gEffectProps, gViewRender, keepLooping, gRenderCameraTilePos, effectSeed
+global vertRepeater, r, gEEprops, solidMtrx, gLEprops, colr, gdLayer, gLOProps, gLevel, gEffectProps, gViewRender, keepLooping, gCurrentRenderCamera, gRenderCameraTilePos, gRenderCameraTileSize, effectSeed
 global effectIn3D, gAnyDecals
 
 on exitFrame me
@@ -34,7 +34,7 @@ on newFrame me
     me.initEffect()
   end if
   
-  if ((vertRepeater > 60)and(gEEprops.effects[r].crossScreen = 0))or((vertRepeater > gLOprops.size.locV)and(gEEprops.effects[r].crossScreen = 1)) then
+  if ((vertRepeater > gRenderCameraTileSize.locV)and(gEEprops.effects[r].crossScreen = 0))or((vertRepeater > gLOprops.size.locV)and(gEEprops.effects[r].crossScreen = 1)) then
     me.exitEffect()
     r = r + 1
     
@@ -52,7 +52,7 @@ on newFrame me
   
   if (gEEprops.effects[r].crossScreen = 0) then
     sprite(59).locV = vertRepeater*20
-    repeat with q = 1 to 100 then
+    repeat with q = 1 to gRenderCameraTileSize.locH then
       q2 = q + gRenderCameraTilePos.locH
       c2 = vertRepeater + gRenderCameraTilePos.locV
       if(q2 > 0)and(q2 <= gLOprops.size.locH)and(c2 > 0)and(c2 <= gLOprops.size.locV)then
@@ -187,8 +187,8 @@ on initEffect me
   
   case gEEprops.effects[r].nm of
     "blackGoo":
-      cols = 100
-      rows = 60
+      cols = gRenderCameraTileSize.locH
+      rows = gRenderCameraTileSize.locV
       type cols: number
       type rows: number
 
@@ -206,9 +206,9 @@ on initEffect me
       
       global gRenderCameraTilePos, gRenderCameraPixelPos
       
-      repeat with q = 1 to 100 then
+      repeat with q = 1 to cols then
         type q: number
-        repeat with c = 1 to 60 then
+        repeat with c = 1 to rows then
           type c: number
           q2: number = q + gRenderCameraTilePos.locH
           c2: number = c + gRenderCameraTilePos.locV
@@ -318,9 +318,13 @@ on exitEffect me
   case gEEprops.effects[r].nm of
     "blackGoo":
       
+      cols = gRenderCameraTileSize.locH
+      rows = gRenderCameraTileSize.locV
+      type cols: number
+      type rows: number
       
-      member("layer0").image.copyPixels(member("blackOutImg1").image, rect(0,0,100*20, 60*20), rect(0,0,100*20, 60*20), {#ink:36, #color:color(0, 255, 0)})
-      member("layer0").image.copyPixels(member("blackOutImg2").image, rect(0,0,100*20, 60*20), rect(0,0,100*20, 60*20), {#ink:36, #color:color(255, 0, 0)})
+      member("layer0").image.copyPixels(member("blackOutImg1").image, rect(0,0,cols*20, rows*20), rect(0,0,cols*20, rows*20), {#ink:36, #color:color(0, 255, 0)})
+      member("layer0").image.copyPixels(member("blackOutImg2").image, rect(0,0,cols*20, rows*20), rect(0,0,cols*20, rows*20), {#ink:36, #color:color(255, 0, 0)})
       
       
       member("blackOutImg1").image = image(1, 1, 1)
@@ -2387,7 +2391,7 @@ on applyWire me, q: number, c: number, eftc
     startPos = mdPnt+point(-11+random(21), -11+random(21))
     
     myCamera = me.closestCamera(startPos+gRenderCameraTilePos*20)
-    if(myCamera = 0)then
+    if(myCamera = 0)and(gCurrentRenderCamera <> 0)then
       exit
     end if
     
@@ -2517,7 +2521,7 @@ on applyChain me, q: number, c: number, eftc
     startPos = mdPnt+point(-11+random(21), -11+random(21))
     
     myCamera = me.closestCamera(startPos+gRenderCameraTilePos*20)
-    if(myCamera = 0)then
+    if(myCamera = 0)and(gCurrentRenderCamera <> 0)then
       exit
     end if
     
@@ -3283,12 +3287,15 @@ on closestCamera me, pos: point
   global gCameraProps
   closest = 1000
   bestCam = 0
-  repeat with camNum = 1 to gCameraProps.cameras.count then
-    if(me.seenByCamera(camNum, pos) = 1)and(diag(pos, gCameraProps.cameras[camNum]+point(1400/2, 800/2)) < closest )then
-      closest = diag(pos, gCameraProps.cameras[camNum]+point(1400/2, 800/2))
-      bestCam = camNum
-    end if
-  end repeat
+  
+  if gCurrentRenderCamera <> 0 then
+    repeat with camNum = 1 to gCameraProps.cameras.count then
+      if(me.seenByCamera(camNum, pos) = 1)and(diag(pos, gCameraProps.cameras[camNum]+point(1400/2, 800/2)) < closest )then
+        closest = diag(pos, gCameraProps.cameras[camNum]+point(1400/2, 800/2))
+        bestCam = camNum
+      end if
+    end repeat
+  end if
   
   return bestCam
 end
@@ -3297,6 +3304,10 @@ on seenByCamera me, camNum: number, pos: point
   type return: number
   type camerapos: point
   global gCameraProps
+  
+  if gCurrentRenderCamera = 0 then
+	return 1
+  end if
   
   cameraPos = gCameraProps.cameras[camNum]
   

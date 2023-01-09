@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -75,7 +75,7 @@ public sealed class RenderViewModel : ViewModelBase, ILingoRuntimeManager
         }
     }
 
-    public void StartRendering(LingoRuntime clonedRuntime, int? singleCamera)
+    public void StartRendering(LingoRuntime clonedRuntime, int? singleCamera, bool voxels)
     {
         var movie = (MovieScript)clonedRuntime.MovieScriptInstance;
         LevelName = movie.gLoadedName;
@@ -83,7 +83,7 @@ public sealed class RenderViewModel : ViewModelBase, ILingoRuntimeManager
 
         RenderProgressMax = countCameras * 10 + 1;
 
-        _renderer = new LevelRenderer(clonedRuntime, null, singleCamera);
+        _renderer = new LevelRenderer(clonedRuntime, null, singleCamera, voxels);
         _renderThread = new Thread(RenderThread) { Name = $"Render {LevelName}" };
         _renderer.StatusChanged += status => _statusObservable.OnNext(status);
 

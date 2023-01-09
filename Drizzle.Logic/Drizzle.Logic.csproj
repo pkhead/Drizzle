@@ -5,6 +5,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="K4os.Compression.LZ4" Version="1.3.5" />
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\Drizzle.Lingo.Runtime\Drizzle.Lingo.Runtime.csproj" />
         <ProjectReference Include="..\Drizzle.Ported\Drizzle.Ported.csproj" />
     </ItemGroup>
