@@ -4,12 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.IO.Compression;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static Drizzle.Lingo.Runtime.Parser.AstNode;
-using SixLabors.ImageSharp.Formats.Png;
-using SixLabors.ImageSharp;
 
 namespace Drizzle.Logic.Rendering;
 
@@ -22,9 +16,9 @@ public partial class LevelRenderer
         var fileName = Path.Combine(
             LingoRuntime.MovieBasePath,
             "Levels",
-            $"{Movie.gLoadedName}.vx2");
+            $"{Movie.gLoadedName}.vx2.gz");
 
-        using var bw = new BinaryWriter(new FileStream(fileName, FileMode.Create));
+        using var bw = new BinaryWriter(new MemoryStream());
 
         /*
          * File:
@@ -120,6 +114,13 @@ public partial class LevelRenderer
 
         LingoColor decalRainbow = Movie.gPEcolors[1]![2];
 
+        // Mask for visible voxels
+        int[]? visibility = null;
+        if(_voxelSettings.DoCulling)
+        {
+            visibility = ComputeVisibility();
+        }
+
         int chunkIndex = 0;
         for (int cy = 0; cy < yChunks; cy++)
         {
@@ -127,6 +128,7 @@ public partial class LevelRenderer
             {
                 int voxelIndex = 0;
                 bool anyEffects = false;
+                byte lastVoxel = 0b00100000;
 
                 // Loop through all voxels in the chunk
                 for (int z = 0; z < zVoxels; z++)
@@ -144,102 +146,121 @@ public partial class LevelRenderer
                     {
                         for (int x = cx * chunkWidth; x < (cx + 1) * chunkWidth; x++)
                         {
-                            // LPPDdREE = Terrain
-                            // L - lit
-                            // P - palette index (air, 0, 1, 2)
-                            // D - effect color dark
-                            // d - decal
-                            // R - rainbow
-                            // E - effect index (none, A, B, white)
-                            int voxel;
+                            bool visible = visibility == null
+                                || x >= xVoxels || y >= yVoxels
+                                || (visibility[x + y * xVoxels] & (1 << z)) != 0;
 
-                            LingoColor lc = layer.getpixel(x, layerHeight - 1 - y);
-                            int lcRgb = lc.BitPack & 0xFFFFFF;
-
-                            if (lcRgb == 0xFFFFFF)
+                            if (visible)
                             {
-                                // Sky
-                                voxel = 0;
+                                // Voxel is visible
+
+                                // LPPDdREE = Terrain
+                                // L - lit
+                                // P - palette index (air, 0, 1, 2)
+                                // D - effect color dark
+                                // d - decal
+                                // R - rainbow
+                                // E - effect index (none, A, B, white)
+                                int voxel;
+
+                                LingoColor lc = layer.getpixel(x, layerHeight - 1 - y);
+                                int lcRgb = lc.BitPack & 0xFFFFFF;
+
+                                if (lcRgb == 0xFFFFFF)
+                                {
+                                    // Sky
+                                    voxel = 0;
+                                }
+                                else
+                                {
+                                    // Terrain
+                                    bool lit = false;
+                                    int palette = 2;
+                                    int effect = 0;
+                                    bool decalEffect = false;
+                                    bool effectDark = false;
+                                    bool rainbow = false;
+
+                                    lit = shadow.getpixel(x + lightMargin, layerHeight - 1 - y + lightMargin).BlueByte == 0;
+
+                                    switch (lcRgb)
+                                    {
+                                        case 0xFF0000: palette = 1; break;
+                                        case 0x00FF00: palette = 2; break;
+                                        case 0x0000FF: palette = 3; break;
+                                        case 0xFF00FF: palette = 2; effect = 1; break;
+                                        case 0x00FFFF: palette = 2; effect = 2; break;
+                                        case 0x960000: palette = 1; effectDark = true; break;
+                                        case 0x009600: palette = 2; effectDark = true; break;
+                                        case 0x000096: palette = 3; effectDark = true; break;
+                                    }
+
+                                    if ((lcRgb & 0x00FFFF) == 0x00FF96)
+                                    {
+                                        palette = 1;
+                                        effect = 3;
+                                    }
+
+                                    // Find effect color amount
+                                    byte effectAmount = 0;
+
+                                    switch (effect)
+                                    {
+                                        // Gradients
+                                        case 3: effectAmount = lc.RedByte; break;
+                                        case 2: effectAmount = (byte)(255 - effectB.getpixel(x, layerHeight - 1 - y).RedByte); break;
+                                        case 1: effectAmount = (byte)(255 - effectA.getpixel(x, layerHeight - 1 - y).RedByte); break;
+
+                                        // Decals
+                                        case 0:
+                                        default:
+                                            var dc = decal.getpixel(x, layerHeight - 1 - y);
+                                            if (dc != new LingoColor(0, 0, 0) && dc != new LingoColor(255, 255, 255))
+                                            {
+                                                if (dc == decalRainbow)
+                                                    rainbow = true;
+                                                else
+                                                {
+                                                    int decalInd = decalColors.IndexOf(dc);
+                                                    if (decalInd != -1)
+                                                    {
+                                                        effectAmount = (byte)(255 - decalInd);
+                                                        decalEffect = true;
+                                                    }
+                                                }
+                                            }
+                                            break;
+                                    }
+
+
+                                    if (effectAmount != 0 && !anyEffects)
+                                    {
+                                        anyEffects = true;
+                                        Array.Clear(effectData);
+                                    }
+
+                                    if (effectAmount != 0)
+                                        effectData[voxelIndex] = effectAmount;
+
+                                    voxel = (lit ? 0b10000000 : 0)
+                                        | ((palette + 1) << 5)
+                                        | (effectDark ? 0b00010000 : 0)
+                                        | (decalEffect ? 0b00001000 : 0)
+                                        | (rainbow ? 0b00000100 : 0)
+                                        | effect;
+                                }
+
+                                lastVoxel = (byte)voxel;
+
+                                chunkData[voxelIndex] = (byte)voxel;
                             }
                             else
                             {
-                                // Terrain
-                                bool lit = false;
-                                int palette = 2;
-                                int effect = 0;
-                                bool decalEffect = false;
-                                bool effectDark = false;
-                                bool rainbow = false;
-
-                                lit = shadow.getpixel(x + lightMargin, layerHeight - 1 - y + lightMargin).BlueByte == 0;
-
-                                switch (lcRgb)
-                                {
-                                    case 0xFF0000: palette = 1; break;
-                                    case 0x00FF00: palette = 2; break;
-                                    case 0x0000FF: palette = 3; break;
-                                    case 0xFF00FF: palette = 2; effect = 1; break;
-                                    case 0x00FFFF: palette = 2; effect = 2; break;
-                                    case 0x960000: palette = 1; effectDark = true; break;
-                                    case 0x009600: palette = 2; effectDark = true; break;
-                                    case 0x000096: palette = 3; effectDark = true; break;
-                                }
-
-                                if ((lcRgb & 0x00FFFF) == 0x00FF96)
-                                {
-                                    palette = 1;
-                                    effect = 3;
-                                }
-
-                                // Find effect color amount
-                                byte effectAmount = 0;
-
-                                switch(effect)
-                                {
-                                    // Gradients
-                                    case 3: effectAmount = lc.RedByte; break;
-                                    case 2: effectAmount = (byte)(255 - effectB.getpixel(x, layerHeight - 1 - y).RedByte); break;
-                                    case 1: effectAmount = (byte)(255 - effectA.getpixel(x, layerHeight - 1 - y).RedByte); break;
-
-                                    // Decals
-                                    case 0:
-                                    default:
-                                        var dc = decal.getpixel(x, layerHeight - 1 - y);
-                                        if (dc != new LingoColor(0, 0, 0) && dc != new LingoColor(255, 255, 255))
-                                        {
-                                            if (dc == decalRainbow)
-                                                rainbow = true;
-                                            else
-                                            {
-                                                int decalInd = decalColors.IndexOf(dc);
-                                                if (decalInd != -1)
-                                                {
-                                                    effectAmount = (byte)(255 - decalInd);
-                                                    decalEffect = true;
-                                                }
-                                            }
-                                        }
-                                        break;
-                                }
-
-
-                                if (effectAmount != 0 && !anyEffects)
-                                {
-                                    anyEffects = true;
-                                    Array.Clear(effectData);
-                                }
-
-                                if(effectAmount != 0)
-                                effectData[voxelIndex] = effectAmount;
-
-                                voxel = (lit ? 0b10000000 : 0)
-                                    | ((palette + 1) << 5)
-                                    | (effectDark ? 0b00010000 : 0)
-                                    | (decalEffect ? 0b00001000 : 0)
-                                    | (rainbow ? 0b00000100 : 0)
-                                    | effect;
+                                // Voxel is obscured
+                                chunkData[voxelIndex] = lastVoxel;
                             }
-                            chunkData[voxelIndex++] = (byte)voxel;
+
+                            voxelIndex++;
                         }
                     }
                 }
@@ -277,6 +298,108 @@ public partial class LevelRenderer
             bw.Write(chunkOffsets[i]);
         for (int i = 0; i < effectOffsets.Length; i++)
             bw.Write(effectOffsets[i]);
+
+        using var fileStream = new GZipStream(new FileStream(fileName, FileMode.Create, FileAccess.Write), CompressionLevel.SmallestSize);
+        bw.Seek(0, SeekOrigin.Begin);
+        bw.BaseStream.CopyTo(fileStream);
+    }
+
+    private static readonly Vector2i[] _floodFillNeighbors = new Vector2i[] { (1, 0), (0, 1), (-1, 0), (0, -1) };
+    private int[] ComputeVisibility()
+    {
+        int xVoxels = _runtime.GetCastMember("layer0")!.image!.Width;
+        int yVoxels = _runtime.GetCastMember("layer0")!.image!.Height;
+        int zVoxels = 30;
+        int overhangDist = _voxelSettings.MaxOverhangCullDist;
+        if (overhangDist < 0)
+            overhangDist = xVoxels + yVoxels;
+
+        var vis = new int[xVoxels * yVoxels];
+
+        // First layer is fully visible
+        Array.Fill(vis, 1);
+
+        var open = new List<Vector2i>();
+        var nextOpen = new List<Vector2i>();
+
+        var white = new LingoColor(255, 255, 255);
+
+        for (int z = 1; z < zVoxels; z++)
+        {
+            LingoImage layer = _runtime.GetCastMember($"layer{z}")!.image!;
+            LingoImage aboveLayer = _runtime.GetCastMember($"layer{z - 1}")!.image!;
+
+            // Copy visibility from all visible air in the above layer
+            for(int x = 0; x < xVoxels; x++)
+            {
+                for(int y = 0; y < yVoxels; y++)
+                {
+                    bool visibleAbove = (vis[x + y * xVoxels] & (1 << (z - 1))) != 0;
+                    bool airAbove = aboveLayer.getpixel(x, yVoxels - 1 - y) == white;
+                    if (visibleAbove && airAbove)
+                        vis[x + y * xVoxels] |= 1 << z;
+                }
+            }
+
+            // Populate open set with all edge pixels
+            for (int x = 0; x < xVoxels; x++)
+            {
+                for (int y = 0; y < yVoxels; y++)
+                {
+                    bool visible = (vis[x + y * xVoxels] & (1 << z)) != 0;
+                    bool air = layer.getpixel(x, yVoxels - 1 - y) == white;
+
+                    if(visible && air)
+                    {
+                        // If any neighboring pixels are not visible, then this is on the edge
+                        for(int i = 0; i < _floodFillNeighbors.Length; i++)
+                        {
+                            int tx = x + _floodFillNeighbors[i].X;
+                            int ty = y + _floodFillNeighbors[i].Y;
+
+                            if (tx >= 0 && tx < xVoxels && ty >= 0 && ty < yVoxels
+                                && (vis[tx + ty * xVoxels] & (1 << z)) != 0)
+                            {
+                                open.Add((x, y));
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Flood fill visibility through air
+            for (int iter = 0; iter < overhangDist && open.Count > 0; iter++)
+            {
+                // Expand visible area by one pixel in each direction
+                foreach(var pxl in open)
+                {
+                    // Mark all neighbors as visible
+                    for (int i = 0; i < _floodFillNeighbors.Length; i++)
+                    {
+                        var neighbor = pxl + _floodFillNeighbors[i];
+
+                        if (neighbor.X >= 0 && neighbor.X < xVoxels && neighbor.Y >= 0 && neighbor.Y < yVoxels)
+                        {
+                            bool visible = (vis[neighbor.X + neighbor.Y * xVoxels] & (1 << z)) != 0;
+                            bool air = layer.getpixel(neighbor.X, yVoxels - 1 - neighbor.Y) == white;
+
+                            if (!visible)
+                            {
+                                vis[neighbor.X + neighbor.Y * xVoxels] |= 1 << z;
+
+                                if (air) nextOpen.Add(neighbor);
+                            }
+                        }
+                    }
+                }
+
+                (open, nextOpen) = (nextOpen, open);
+                nextOpen.Clear();
+            }
+        }
+
+        return vis;
     }
 
     private void FillEmptySubchunks(byte[] data, byte value)
