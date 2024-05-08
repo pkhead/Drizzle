@@ -32,9 +32,9 @@ public sealed partial class LevelRenderer
         var dptsL = (LingoList)Movie.dptsL;
         var fogDptsL = (LingoList)Movie.fogDptsL;
         var gDecalColors = (LingoList)Movie.gDecalColors;
-        var grimeActive = Movie.grimeActive > 0;
-        var grimeOnGradients = Movie.grimeOnGradients > 0;
-        var bkgFix = Movie.bkgFix > 0;
+        var grimeActive = (LingoNumber)Movie.grimeActive > 0;
+        var grimeOnGradients = (LingoNumber)Movie.grimeOnGradients > 0;
+        var bkgFix = (LingoNumber)Movie.bkgFix > 0;
 
         var c = (int)Movie.c - 1;
         for (var q = 0; q < 1400; q++)
@@ -163,7 +163,7 @@ public sealed partial class LevelRenderer
                 var greenCol = effectColor;
 
                 if(grimeActive
-                    && (grimeOnGradients || greenCol is not 1 or 2 or 3))
+                    && (grimeOnGradients || greenCol is not (1 or 2 or 3)))
                 {
                     if (rainBowFac > 5f)
                     {
@@ -202,7 +202,7 @@ public sealed partial class LevelRenderer
                             if (dcGet == Movie.gPEcolors[1][2])
                             {
                                 if (grimeActive
-                                    && (grimeOnGradients || greenCol is not 1 or 2 or 3)
+                                    && (grimeOnGradients || greenCol is not (1 or 2 or 3))
                                     && !DoesGreenValueMeanRainbow(greenCol))
                                 {
                                     greenCol += 4;

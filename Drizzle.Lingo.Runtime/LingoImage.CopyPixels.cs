@@ -1207,7 +1207,7 @@ public sealed unsafe partial class LingoImage
                     parameters);
                 break;
             case ImageType.L8:
-                CopyPixelsPxlRectCore<L8, PixelOpsPalette8>(
+                CopyPixelsPxlRectCore<L8, PixelOpsL8>(
                     dst,
                     dstBox,
                     parameters);
