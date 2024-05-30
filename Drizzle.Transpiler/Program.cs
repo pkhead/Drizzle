@@ -130,7 +130,7 @@ internal static class Program
         IEnumerable<KeyValuePair<string, AstNode.Script>> scripts,
         GlobalContext ctx)
     {
-        foreach (var (name, script) in scripts)
+        foreach (var (name, script) in scripts.OrderBy(pair => pair.Key))
         {
             var path = Path.Combine(ctx.SourcesDest, $"Behavior.{name}.cs");
             using var file = new StreamWriter(path);
@@ -160,7 +160,7 @@ internal static class Program
         IEnumerable<KeyValuePair<string, AstNode.Script>> scripts,
         GlobalContext ctx)
     {
-        foreach (var (name, script) in scripts)
+        foreach (var (name, script) in scripts.OrderBy(pair => pair.Key))
         {
             var path = Path.Combine(ctx.SourcesDest, $"Parent.{name}.cs");
             using var file = new StreamWriter(path);
@@ -209,7 +209,7 @@ internal static class Program
         IEnumerable<KeyValuePair<string, AstNode.Script>> scripts,
         GlobalContext ctx)
     {
-        foreach (var (name, script) in scripts)
+        foreach (var (name, script) in scripts.OrderBy(pair => pair.Key))
         {
             var path = Path.Combine(ctx.SourcesDest, $"Movie.{name}.cs");
             Directory.CreateDirectory(ctx.SourcesDest);

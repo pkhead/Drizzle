@@ -82,3 +82,29 @@ type tm:                          number
 type wireBunchSav:                list
 
 type gSaveProps:                  list
+
+-- Community editor globals
+type INT_EXIT:                    string
+type INT_EXRD:                    string
+type DRInternalList:              list
+type DRFirstTileCat:              number
+type DRLastMatCat:                number
+type RandomMetals_allowed:        list
+type RandomMetals_grabTiles:      list
+type ChaoticStone2_needed:        list
+type DRRandomMetal_needed:        list
+type SmallMachines_grabTiles:     list
+type SmallMachines_forbidden:     list
+type RandomMachines_forbidden:    list
+type RandomMachines_grabTiles:    list
+type RandomMachines2_forbidden:   list
+type RandomMachines2_grabTiles:   list
+type gDRMatFixes:                 number
+type gDRInvI:                     number
+type grimeActive:                 number
+type grimeOnGradients:            number
+type bkgFix:                      number
+type gRRSpreadsMore:              number
+type slimeFxt:                    number
+type showConstrols:               number
+type rndDisF:                     number
