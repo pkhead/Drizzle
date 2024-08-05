@@ -3255,6 +3255,9 @@ on ApplyGarbageSpiral me, q, c, eftc
   q2 = q + gRenderCameraTilePos.locH
   c2 = c + gRenderCameraTilePos.locV
   
+  frontWall = 1
+  backWall = 29
+  
   case lrSup of--["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]
     "All":
       d = random(29)
@@ -6432,7 +6435,7 @@ on applyIvy me, q, c, eftc
       end if
       if(ivyrandom<leafDensity)then
         member("layer"&string(d)).image.copyPixels(member("IvyLeafGraf").image, fuck, member("IvyLeafGraf").image.rect, {#color:colr, #ink:10})
-        if(colrIntensity<>"N")then
+        if(colrIntensity<>"N" and gdLayer <> "C")then
           member("gradient"&gdLayer&string(d)).image.copyPixels(ivygrad, fuck, ivygrad.rect, {ink:39}) 
         end if
       end if
