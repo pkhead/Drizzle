@@ -148,7 +148,7 @@ internal static class Program
         WriteFileHeader(writer);
         writer.WriteLine($"//\n// Behavior script: {name}\n//");
         writer.WriteLine("[BehaviorScript]");
-        writer.WriteLine($"public sealed partial class {name} : LingoBehaviorScript {{");
+        writer.WriteLine($"public sealed partial class {name} : LingoBehaviorScript\n{{");
 
         EmitScriptBody(name, script, writer, ctx, isMovieScript: false);
 
@@ -267,7 +267,7 @@ internal static class Program
         foreach (var prop in script.Nodes.OfType<AstNode.Property>().SelectMany(p => p.Identifiers))
         {
             props.Add(prop);
-            writer.WriteLine($"[LingoProperty] public dynamic {prop};");
+            writer.WriteLine($"{Indent(1)}[LingoProperty] public dynamic {prop};");
         }
 
         var quirks = Quirks.GetValueOrDefault(name);
@@ -286,12 +286,12 @@ internal static class Program
             // Writing statements discovers some property of the code we need to know, like type declarations.
             try
             {
-                WriteStatementBlock(handler.Body, handlerContext);
+                WriteStatementBlock(handler.Body, handlerContext, 2);
             }
             catch (Exception e)
             {
                 Console.WriteLine($"Failed to write handler {handler.Name}:\n{e}");
-                writer.WriteLine("throw new System.NotImplementedException(\"Compilation failed\");\n}");
+                writer.WriteLine($"{Indent(2)}throw new System.NotImplementedException(\"Compilation failed\");\n}}");
                 continue;
             }
 
@@ -309,64 +309,64 @@ internal static class Program
             var paramsText = string.Join(", ", paramsList.Select(p => $"{MapType(p.Name, types)} {p.Name.ToLower()} = default"));
             var handlerLower = handler.Name.ToLower();
             var returnType = MapType("return", types);
-            writer.WriteLine($"public {returnType} {WriteSanitizeIdentifier(handlerLower)}({paramsText}) {{");
+            writer.WriteLine($"{Indent(1)}public {returnType} {WriteSanitizeIdentifier(handlerLower)}({paramsText})\n{Indent(1)}{{");
 
             foreach (var local in handlerContext.DeclaredLocals)
             {
-                writer.WriteLine($"{MapType(local, types)} {local.ToLower()} = default;");
+                writer.WriteLine($"{Indent(2)}{MapType(local, types)} {local.ToLower()} = default;");
             }
 
             writer.WriteLine(tempWriter.GetStringBuilder());
 
             if (handler.Body.Statements.Length == 0 || handler.Body.Statements[^1] is not AstNode.Return)
-                writer.WriteLine("return default;");
+                writer.WriteLine($"{Indent(2)}return default;");
 
             // Handler end.
-            writer.WriteLine("}");
+            writer.WriteLine($"{Indent(1)}}}");
         }
     }
 
-    private static void WriteStatementBlock(AstNode.StatementBlock node, HandlerContext ctx)
+    private static void WriteStatementBlock(AstNode.StatementBlock node, HandlerContext ctx, int indent)
     {
         foreach (var statement in node.Statements)
         {
-            WriteStatement(statement, ctx);
+            WriteStatement(statement, ctx, indent);
         }
     }
 
-    private static void WriteStatement(AstNode.Base node, HandlerContext ctx)
+    private static void WriteStatement(AstNode.Base node, HandlerContext ctx, int indent)
     {
         switch (node)
         {
             case AstNode.Assignment ass:
-                WriteAssignment(ass, ctx);
+                WriteAssignment(ass, ctx, indent);
                 break;
             case AstNode.Return ret:
-                WriteReturn(ret, ctx);
+                WriteReturn(ret, ctx, indent);
                 break;
             case AstNode.ExitRepeat exitRepeat:
-                WriteExitRepeat(exitRepeat, ctx);
+                WriteExitRepeat(exitRepeat, ctx, indent);
                 break;
             case AstNode.Case @case:
-                WriteCase(@case, ctx);
+                WriteCase(@case, ctx, indent);
                 break;
             case AstNode.RepeatWhile repeatWhile:
-                WriteRepeatWhile(repeatWhile, ctx);
+                WriteRepeatWhile(repeatWhile, ctx, indent);
                 break;
             case AstNode.RepeatWithCounter repeatWithCounter:
-                WriteRepeatWithCounter(repeatWithCounter, ctx);
+                WriteRepeatWithCounter(repeatWithCounter, ctx, indent);
                 break;
             case AstNode.RepeatWithList repeatWithList:
-                WriteRepeatWithList(repeatWithList, ctx);
+                WriteRepeatWithList(repeatWithList, ctx, indent);
                 break;
             case AstNode.If @if:
-                WriteIf(@if, ctx);
+                WriteIf(@if, ctx, indent);
                 break;
             case AstNode.PutInto putInto:
-                WritePutInto(putInto, ctx);
+                WritePutInto(putInto, ctx, indent);
                 break;
             case AstNode.Global global:
-                WriteGlobal(global, ctx);
+                WriteGlobal(global, ctx, indent);
                 break;
             case AstNode.Property prop:
 
@@ -385,11 +385,14 @@ internal static class Program
                 }
 
                 var exprValue = WriteExpression(node, ctx);
+                ctx.Writer.Write(Indent(indent));
                 ctx.Writer.Write(exprValue);
                 ctx.Writer.WriteLine(';');
                 break;
         }
     }
+
+    private static string Indent(int indent) => new string(' ', 4 * indent);
 
     private static void MergeTypeSpec(HandlerContext ctx, string name, string? type)
     {
@@ -408,7 +411,7 @@ internal static class Program
         }
     }
 
-    private static void WriteGlobal(AstNode.Global node, HandlerContext ctx)
+    private static void WriteGlobal(AstNode.Global node, HandlerContext ctx, int indent)
     {
         foreach (var declared in node.Identifiers.Except(ctx.Globals))
         {
@@ -420,76 +423,78 @@ internal static class Program
         }
     }
 
-    private static void WritePutInto(AstNode.PutInto node, HandlerContext ctx)
+    private static void WritePutInto(AstNode.PutInto node, HandlerContext ctx, int indent)
     {
         if (node.Type != AstNode.PutType.After)
             throw new NotSupportedException();
 
         var coll = WriteExpression(node.Collection, ctx);
         var expr = WriteExpression(node.Expression, ctx);
-        ctx.Writer.WriteLine($"{coll} += {expr}.ToString();");
+        ctx.Writer.WriteLine($"{Indent(indent)}{coll} += {expr}.ToString();");
     }
 
-    private static void WriteIf(AstNode.If node, HandlerContext ctx)
+    private static void WriteIf(AstNode.If node, HandlerContext ctx, int indent, bool initialIndent = true)
     {
         var exprParams = new ExpressionParams { WantBool = true };
         var cond = WriteExpression(node.Condition, ctx, exprParams);
 
         ctx.Writer.WriteLine(exprParams.BoolGranted
-            ? $"if ({cond}) {{"
-            : $"if (LingoGlobal.ToBool({cond})) {{");
+            ? $"{Indent(initialIndent ? indent : 0)}if ({cond})\n{Indent(indent)}{{"
+            : $"{Indent(initialIndent ? indent : 0)}if (LingoGlobal.ToBool({cond}))\n{Indent(indent)}{{");
 
-        WriteStatementBlock(node.Statements, ctx);
-        ctx.Writer.WriteLine('}');
+        WriteStatementBlock(node.Statements, ctx, indent + 1);
+        ctx.Writer.WriteLine($"{Indent(indent)}}}");
 
         if (node.Else != null && node.Else.Statements.Length > 0)
         {
-            var elseIf = node.Else.Statements.Length == 1 && node.Else.Statements[0] is AstNode.If;
-
-            ctx.Writer.Write("else ");
-            // If the else clause is another if it's an else-if chain
-            // and we forego the braces around the else.
-            if (!elseIf)
-                ctx.Writer.WriteLine('{');
-
-            WriteStatementBlock(node.Else, ctx);
-            if (!elseIf)
-                ctx.Writer.WriteLine('}');
+            if(node.Else.Statements.Length == 1 && node.Else.Statements[0] is AstNode.If nextIf)
+            {
+                // If the else clause is another if it's an else-if chain
+                // and we forego the braces around the else.
+                ctx.Writer.Write($"{Indent(indent)}else ");
+                WriteIf(nextIf, ctx, indent, initialIndent: false);
+            }
+            else
+            {
+                ctx.Writer.WriteLine($"{Indent(indent)}else\n{Indent(indent)}{{");
+                WriteStatementBlock(node.Else, ctx, indent + 1);
+                ctx.Writer.WriteLine($"{Indent(indent)}}}");
+            }
         }
     }
 
-    private static void WriteRepeatWithList(AstNode.RepeatWithList node, HandlerContext ctx)
+    private static void WriteRepeatWithList(AstNode.RepeatWithList node, HandlerContext ctx, int indent)
     {
         var expr = WriteExpression(node.ListExpr, ctx);
         var name = node.Variable;
         var loopTmp = $"tmp_{name}";
-        ctx.Writer.WriteLine($"foreach (dynamic {loopTmp} in {expr}) {{");
+        ctx.Writer.WriteLine($"{Indent(indent)}foreach (dynamic {loopTmp} in {expr})\n{Indent(indent)}{{");
 
-        MakeLoopTmp(ctx, name, loopTmp, number: false);
-        WriteStatementBlock(node.Block, ctx);
+        MakeLoopTmp(ctx, name, loopTmp, number: false, indent + 1);
+        WriteStatementBlock(node.Block, ctx, indent + 1);
 
-        ctx.Writer.WriteLine("}");
+        ctx.Writer.WriteLine($"{Indent(indent)}}}");
     }
 
-    private static void WriteRepeatWithCounter(AstNode.RepeatWithCounter node, HandlerContext ctx)
+    private static void WriteRepeatWithCounter(AstNode.RepeatWithCounter node, HandlerContext ctx, int indent)
     {
         var start = WriteExpression(node.Start, ctx);
         var end = WriteExpression(node.Finish, ctx);
         var name = node.Variable;
         var loopTmp = $"tmp_{name}";
 
-        ctx.Writer.WriteLine($"for (int {loopTmp} = (int) ({start}); {loopTmp} <= {end}; {loopTmp}++) {{");
+        ctx.Writer.WriteLine($"{Indent(indent)}for (int {loopTmp} = (int) ({start}); {loopTmp} <= {end}; {loopTmp}++)\n{Indent(indent)}{{");
 
-        MakeLoopTmp(ctx, name, $"(LingoNumber){loopTmp}", number: true);
-        WriteStatementBlock(node.Block, ctx);
+        MakeLoopTmp(ctx, name, $"(LingoNumber){loopTmp}", number: true, indent + 1);
+        WriteStatementBlock(node.Block, ctx, indent + 1);
 
-        ctx.Writer.WriteLine($"{loopTmp} = (int){WriteVariableNameCore(name, ctx)};");
-        ctx.Writer.WriteLine("}");
+        ctx.Writer.WriteLine($"{Indent(indent + 1)}{loopTmp} = (int){WriteVariableNameCore(name, ctx)};");
+        ctx.Writer.WriteLine($"{Indent(indent)}}}");
 
         // ctx.LoopTempIdx--;
     }
 
-    private static void MakeLoopTmp(HandlerContext ctx, string name, string loopTmp, bool number)
+    private static void MakeLoopTmp(HandlerContext ctx, string name, string loopTmp, bool number, int indent)
     {
         if (!IsGlobal(name, ctx, out _) && ctx.Locals.Add(name))
         {
@@ -498,24 +503,24 @@ internal static class Program
                 MergeTypeSpec(ctx, name, "number");
         }
 
-        ctx.Writer.WriteLine($"{WriteVariableNameCore(name, ctx)} = {loopTmp};");
+        ctx.Writer.WriteLine($"{Indent(indent)}{WriteVariableNameCore(name, ctx)} = {loopTmp};");
     }
 
-    private static void WriteRepeatWhile(AstNode.RepeatWhile node, HandlerContext ctx)
+    private static void WriteRepeatWhile(AstNode.RepeatWhile node, HandlerContext ctx, int indent)
     {
         var exprParams = new ExpressionParams { WantBool = true };
         var expr = WriteExpression(node.Condition, ctx);
 
         ctx.Writer.WriteLine(exprParams.BoolGranted
-            ? $"while ({expr}) {{"
-            : $"while (LingoGlobal.ToBool({expr})) {{");
+            ? $"{Indent(indent)}while ({expr})\n{Indent(indent)}{{"
+            : $"{Indent(indent)}while (LingoGlobal.ToBool({expr}))\n{Indent(indent)}{{");
 
-        WriteStatementBlock(node.Block, ctx);
+        WriteStatementBlock(node.Block, ctx, indent + 1);
 
-        ctx.Writer.WriteLine('}');
+        ctx.Writer.WriteLine($"{Indent(indent)}}}");
     }
 
-    private static void WriteCase(AstNode.Case node, HandlerContext ctx)
+    private static void WriteCase(AstNode.Case node, HandlerContext ctx, int indent)
     {
         // Check if all expressions are literal.
         // If so we can translate it as a switch statement.
@@ -526,7 +531,7 @@ internal static class Program
 
         if (literals)
         {
-            ctx.Writer.Write("switch (");
+            ctx.Writer.Write($"{Indent(indent)}switch (");
             if (allInts)
                 ctx.Writer.Write("(int?)");
             ctx.Writer.Write(WriteExpression(node.Expression, ctx));
@@ -541,13 +546,14 @@ internal static class Program
                 ctx.Writer.Write("?? int.MaxValue");
             }
 
-            ctx.Writer.WriteLine(") {");
+            ctx.Writer.WriteLine(")");
+            ctx.Writer.WriteLine($"{Indent(indent)}{{");
 
             foreach (var (exprs, block) in node.Cases)
             {
                 foreach (var expr in exprs)
                 {
-                    ctx.Writer.Write("case ");
+                    ctx.Writer.Write($"{Indent(indent + 1)}case ");
                     if (expr is AstNode.String str)
                         ctx.Writer.Write(DoWriteString(str.Value.ToLowerInvariant()));
                     else if (expr is AstNode.Number num)
@@ -561,19 +567,19 @@ internal static class Program
                     ctx.Writer.WriteLine(':');
                 }
 
-                WriteStatementBlock(block, ctx);
+                WriteStatementBlock(block, ctx, indent + 2);
 
-                ctx.Writer.WriteLine("break;");
+                ctx.Writer.WriteLine($"{Indent(indent + 2)}break;");
             }
 
             if (node.Otherwise != null)
             {
-                ctx.Writer.WriteLine("default:");
-                WriteStatementBlock(node.Otherwise, ctx);
-                ctx.Writer.WriteLine("break;");
+                ctx.Writer.WriteLine($"{Indent(indent + 1)}default:");
+                WriteStatementBlock(node.Otherwise, ctx, indent + 2);
+                ctx.Writer.WriteLine($"{Indent(indent + 2)}break;");
             }
 
-            ctx.Writer.WriteLine("}");
+            ctx.Writer.WriteLine($"{Indent(indent)}}}");
         }
         else
         {
@@ -584,25 +590,25 @@ internal static class Program
         }
     }
 
-    private static void WriteExitRepeat(AstNode.ExitRepeat node, HandlerContext ctx)
+    private static void WriteExitRepeat(AstNode.ExitRepeat node, HandlerContext ctx, int indent)
     {
-        ctx.Writer.WriteLine("break;");
+        ctx.Writer.WriteLine($"{Indent(indent)}break;");
     }
 
-    private static void WriteReturn(AstNode.Return ret, HandlerContext ctx)
+    private static void WriteReturn(AstNode.Return ret, HandlerContext ctx, int indent)
     {
         if (ret.Value != null)
         {
             var value = WriteExpression(ret.Value, ctx);
-            ctx.Writer.WriteLine($"return {value};");
+            ctx.Writer.WriteLine($"{Indent(indent)}return {value};");
         }
         else
         {
-            ctx.Writer.WriteLine($"return default;");
+            ctx.Writer.WriteLine($"{Indent(indent)}return default;");
         }
     }
 
-    private static void WriteAssignment(AstNode.Assignment node, HandlerContext ctx)
+    private static void WriteAssignment(AstNode.Assignment node, HandlerContext ctx, int indent)
     {
         if (node.Assigned is AstNode.VariableName simpleTarget)
         {
@@ -630,7 +636,7 @@ internal static class Program
         var lhs = WriteExpression(node.Assigned, ctx);
         var rhs = WriteExpression(node.Value, ctx);
 
-        ctx.Writer.WriteLine($"{lhs} = {rhs};");
+        ctx.Writer.WriteLine($"{Indent(indent)}{lhs} = {rhs};");
     }
 
     private static string WriteExpression(AstNode.Base node, HandlerContext ctx, ExpressionParams? param = null)
