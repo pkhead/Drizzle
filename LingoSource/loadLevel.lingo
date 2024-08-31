@@ -467,7 +467,7 @@ on versionFix me
       end if
     end if
     ----Effect update
-    if(["Arm Growers", "Growers", "Mini Growers", "Rollers", "Thorn Growers", "Garbage Spirals", "Spinets", "Small Springs", "Wires", "Chains", "Colored Wires", "Colored Chains", "Hang Roots", "Thick Roots", "Shadow Plants", "Colored Hang Roots", "Colored Thick Roots", "Colored Shadow Plants", "Root Plants"].getPos(ef.nm)>0)then
+    if(["Arm Growers", "Growers", "Mini Growers", "Rollers", "Thorn Growers", "Garbage Spirals", "Fuzzy Growers", "Spinets", "Small Springs", "Wires", "Chains", "Colored Wires", "Colored Chains", "Hang Roots", "Thick Roots", "Shadow Plants", "Colored Hang Roots", "Colored Thick Roots", "Colored Shadow Plants", "Root Plants", "Coral Growers", "Leaf Growers", "Meat Growers", "Horror Growers", "Thunder Growers", "Ice Growers", "Grass Growers", "Fancy Growers"].getPos(ef.nm)>0)then
       ef.crossScreen = 1
     else
       ef.crossScreen = 0
@@ -526,7 +526,6 @@ on versionFix me
       ef.affectOpenAreas = 0.5
     end if
   end repeat
-  
 end
 
 

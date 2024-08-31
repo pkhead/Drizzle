@@ -1,5 +1,5 @@
 global gViewRender, c, gPEprops, keepLooping, gRenderCameraTilePos, gLastImported, gLastImportedImage, gProps, afterEffects, gAnyDecals, gRenderTrashProps, gCurrentlyRenderingTrash, gESoftProp
-global softProp, propsToRender, lG
+global softProp, propsToRender, altGrafLG, DRPxl, DRRopeVari, DRBevelColors
 
 on exitFrame me
   if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
@@ -172,10 +172,14 @@ on renderProp(prop, dp: number, qd: list, mdPoint: point, data: object)
     end repeat
 
     type path: string
-    if(tileAsProp)then
-      path = "Graphics" & the dirSeparator &prop.nm&".png"
+    if (tileAsProp) then
+      path = "Graphics" & the dirSeparator & prop.nm & ".png"
+    else if (prop.tp = "customRope") then
+      path = "Props" & the dirSeparator & prop.nm & "Segment.png"
+    else if (prop.tp = "customLong") then
+      path = "Props" & the dirSeparator & prop.nm & "Segment.png"
     else
-      path = "Props" & the dirSeparator &prop.nm&".png"
+      path = "Props" & the dirSeparator & prop.nm & ".png"
     end if
 
     propImage = cacheLoadImage(path)
@@ -189,15 +193,13 @@ on renderProp(prop, dp: number, qd: list, mdPoint: point, data: object)
   if (checkDRInternal(prop.nm)) then
     propImage = member(prop.nm).image
   end if
-  
-  -- put prop.nm && prop.tp && qd
-  case prop.tp of
+  case (prop.tp) of
     "standard", "variedStandard":
       renderVoxelProp(prop, dp, qd, mdPoint, data, propImage)
     "simpleDecal", "variedDecal":
       gAnyDecals = 1
       renderDecal(prop, dp, qd, mdPoint, data, propImage)
-    "rope":
+    "rope", "customRope":
       renderRope(prop, propsToRender[c][5], dp)
     "soft", "variedSoft", "antimatter", "coloredSoft":
       gESoftProp = 0
@@ -205,10 +207,9 @@ on renderProp(prop, dp: number, qd: list, mdPoint: point, data: object)
     "softEffect":
       gESoftProp = 1
       initRenderSoftProp(prop, qd, data, dp, propImage)
-    "long":
+    "long", "customLong":
       renderLongProp(qd, prop, propsToRender[c][5], dp)
   end case
-  
   DoPropTags(prop, dp, qd)
 end
 
@@ -219,89 +220,86 @@ on renderVoxelProp(prop, dp: number, qd: list, mdPoint: point, propData, propIma
   type gtrect: rect
   type dumpimg: image
   type inverseimg: image
+  type layerDpImg: image
   type a: list
-  var = 1
-  if(prop.tp = "variedStandard")then
-    var = propData.settings.variation
+  type variedStandard: number
+  var = 0
+  variedStandard = (prop.tp = "variedStandard")
+  if (variedStandard) then
+    var = propData.settings.variation - 1
   end if
-  ps = 1
+  ps = 0
   --INTERNAL
   if (checkDRInternal(prop.nm)) then
     propImage = member(prop.nm).image
   end if
-  
-  colored = (prop.tags.GetPos("colored") > 0)
-  if(colored)then
+  colored = (prop.tags.getPos("colored") > 0)
+  if (colored) then
     gAnyDecals = 1
   end if
-  
   effectColorA = (prop.tags.getPos("effectColorA") > 0)
   effectColorB = (prop.tags.getPos("effectColorB") > 0)
-  
   repeat with q = 1 to prop.repeatL.count
-    gtRect = rect(0,0,prop.sz.locH*20, prop.sz.locV*20) 
-    gtRect = gtRect + rect(gtRect.width*(var-1),gtRect.height*(ps-1), gtRect.width*(var-1), gtRect.height*(ps-1))+rect(0,1,0,1)
+    gtRect = rect(0, 1, prop.sz.locH * 20, prop.sz.locV * 20 + 1) 
+    gtRect = gtRect + rect(gtRect.width * var, gtRect.height * ps, gtRect.width * var, gtRect.height * ps)
     repeat with q2 = 1 to prop.repeatL[q]
+      layerDpImg = member("layer" & string(dp)).image
       case (prop.colorTreatment) of
         "standard":
-          member("layer" & string(dp)).image.copyPixels(propImage, qd, gtRect, {#ink:36})
+          layerDpImg.copyPixels(propImage, qd, gtRect, {#ink:36})
           if (effectColorA) then
-            if (prop.tp = "variedStandard") then
+            if (variedStandard) then
               member("gradientA" & string(dp)).image.copyPixels(propImage, qd, gtRect + rect(prop.sz.locH * 20 * prop.vars, 0, prop.sz.locH * 20 * prop.vars, 0), {#ink:39})
             else
               member("gradientA" & string(dp)).image.copyPixels(propImage, qd, gtRect + rect(prop.sz.locH * 20, 0, prop.sz.locH * 20, 0), {#ink:39})
             end if
           end if
           if (effectColorB) then
-            if (prop.tp = "variedStandard") then
+            if (variedStandard) then
               member("gradientB" & string(dp)).image.copyPixels(propImage, qd, gtRect + rect(prop.sz.locH * 20 * prop.vars, 0, prop.sz.locH * 20 * prop.vars, 0), {#ink:39})
             else
               member("gradientB" & string(dp)).image.copyPixels(propImage, qd, gtRect + rect(prop.sz.locH * 20, 0, prop.sz.locH * 20, 0), {#ink:39})
             end if
           end if
         "bevel":
-          dumpImg = image( gtRect.width,  gtRect.height, 1)
+          dumpImg = image(gtRect.width, gtRect.height, 1)
           dumpImg.copyPixels(propImage, dumpImg.rect, gtRect)
           inverseImg = makeSilhoutteFromImg(dumpImg, 1)
-          dumpImg = image( member("layer"&string(dp)).image.width,  member("layer"&string(dp)).image.height, 32)
-          dumpImg.copyPixels(member("pxl").image, qd, rect(0,0,1,1), {#color:color(0, 255, 0)})
-          
-          
-          repeat with b = 1 to prop.bevel then
-            repeat with a in [[color(255, 0, 0), point(-1, -1)],[color(255, 0, 0), point(0, -1)],[color(255, 0, 0), point(-1, 0)], [color(0, 0, 255), point(1, 1)],[color(0, 0, 255), point(0, 1)],[color(0, 0, 255), point(1, 0)]] then
-              dumpImg.copyPixels(inverseImg, qd + [a[2]*b,a[2]*b,a[2]*b,a[2]*b], inverseImg.rect, {#color:a[1], #ink:36})
+          dumpImg = image(layerDpImg.width, layerDpImg.height, 32)
+          dumpImg.copyPixels(DRPxl, qd, rect(0, 0, 1, 1), {#color:color(0, 255, 0)})
+          repeat with b = 1 to prop.bevel
+            repeat with a in DRBevelColors
+              a2mb = a[2] * b
+              dumpImg.copyPixels(inverseImg, qd + [a2mb, a2mb, a2mb, a2mb], inverseImg.rect, {#color:a[1], #ink:36})
             end repeat
           end repeat
-          
           dumpImg.copyPixels(inverseImg, qd, inverseImg.rect, {#color:color(255, 255, 255), #ink:36})
-          
-          inverseImg = image( dumpImg.width,  dumpImg.height, 1)
-          inverseImg.copyPixels(member("pxl").image, inverseImg.rect, rect(0,0,1,1))
-          inverseImg.copyPixels(member("pxl").image, qd, rect(0,0,1,1), {#color:color(255, 255, 255)})
-          
+          inverseImg = image(dumpImg.width, dumpImg.height, 1)
+          inverseImg.copyPixels(DRPxl, inverseImg.rect, rect(0, 0, 1, 1))
+          inverseImg.copyPixels(DRPxl, qd, rect(0, 0, 1, 1), {#color:color(255, 255, 255)})
           dumpImg.copyPixels(inverseImg, dumpImg.rect, inverseImg.rect, {#color:color(255, 255, 255), #ink:36})
-          
-          member("layer"&string(dp)).image.copyPixels(dumpImg, dumpImg.rect, dumpImg.rect, {#ink:36})
+          layerDpImg.copyPixels(dumpImg, dumpImg.rect, dumpImg.rect, {#ink:36})
       end case
-      
-      if (colored) and (effectColorA = false) and (effectColorB = false) then
-        if (prop.tp = "variedStandard") then
-          member("layer" & string(dp) & "dc").image.copyPixels(propImage, qd, gtRect + rect(prop.sz.locH * 20 * prop.vars, 0, prop.sz.locH * 20 * prop.vars, 0), {#ink:36})
-        else
-          member("layer" & string(dp) & "dc").image.copyPixels(propImage, qd, gtRect + rect(prop.sz.locH * 20, 0, prop.sz.locH * 20, 0), {#ink:36})
+      if (colored) then
+        if (effectColorA = FALSE) then
+          if (effectColorB = FALSE) then
+            if (variedStandard) then
+              member("layer" & string(dp) & "dc").image.copyPixels(propImage, qd, gtRect + rect(prop.sz.locH * 20 * prop.vars, 0, prop.sz.locH * 20 * prop.vars, 0), {#ink:36})
+            else
+              member("layer" & string(dp) & "dc").image.copyPixels(propImage, qd, gtRect + rect(prop.sz.locH * 20, 0, prop.sz.locH * 20, 0), {#ink:36})
+            end if
+          end if
         end if
       end if
-      
       dp = dp + 1
-      if(dp > 29)then
+      if (dp > 29) then
         exit repeat
       end if
     end repeat
-    ps = ps + 1
-    if(dp > 29)then
+    if (dp > 29) then
       exit repeat
     end if
-    
+    ps = ps + 1
   end repeat
 end
 
@@ -365,6 +363,7 @@ on renderDecal(prop, dp: number, qd: list, mdPoint: point, data, propImage: imag
   end repeat
 end
 
+--used by renderDecal
 on directionsQuad()
   type return: list
   type qdirs: list
@@ -400,29 +399,43 @@ on renderRope(prop, data, dp: number)
   type dir: point
   type perp: point
   lastPos = data.points[1]
-  lastDir = MoveToPoint(data.points[1], data.points[2], 1.0)
+  lastDir = MoveToPoint(lastPos, data.points[2], 1.0)
   lastPerp = CorrectPerp(lastDir)
-  
-  --[gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20]
-  repeat with q = 1 to data.points.count then
-    pos = data.points[q]
-    
-    
-    if(q < data.points.count)then
-      dir = MoveToPoint(data.points[q], data.points[q+1], 1.0)
+  if (prop.tp = "customRope") then
+    diffSeg = (prop.pixelSize.locV - prop.segmentLength) * 0.5
+    if (prop.random) then
+      DRRopeVari = random(prop.vars) - 1
     else
-      dir = lastDir
+      DRRopeVari = 0
     end if
-    perp = CorrectPerp(dir)
-    
-    renderRopeSegment(q, prop, data, dp, pos, dir, perp, lastPos, lastDir, lastPerp)
-    
-    lastPos = pos
-    lastDir = dir
-    lastPerp = perp
-    -- end if
-  end repeat
-  
+    repeat with q = 1 to data.points.count
+      pos = data.points[q]
+      if (q < data.points.count) then
+        dir = dirVecLB(pos, data.points[q + 1])
+      else
+        dir = lastDir
+      end if
+      perp = CorrectPerp(dir)
+      renderCustomRopeSegment(q, prop, data, dp, pos, dir, perp, lastPos, lastDir, lastPerp, diffSeg)
+      lastPos = pos
+      lastDir = dir
+      lastPerp = perp
+    end repeat
+  else
+    repeat with q = 1 to data.points.count
+      pos = data.points[q]
+      if (q < data.points.count) then
+        dir = MoveToPoint(pos, data.points[q + 1], 1.0)
+      else
+        dir = lastDir
+      end if
+      perp = CorrectPerp(dir)
+      renderRopeSegment(q, prop, data, dp, pos, dir, perp, lastPos, lastDir, lastPerp)
+      lastPos = pos
+      lastDir = dir
+      lastPerp = perp
+    end repeat
+  end if
 end
 
 on CorrectPerp(dir: point)
@@ -440,36 +453,146 @@ on CorrectPerp(dir: point)
   -- end if
 end
 
+on renderBigChainSegment(ropePointIndex, ropeDepth, segmentStartPos, segmentEndPos)
+  segmentDirection = MoveToPoint(segmentEndPos, segmentStartPos, 1.0)
+  segmentPerpendicularDirection = point(segmentDirection.locV, -segmentDirection.locH)
+  
+  -- chains alternate between thick and thin segments.
+  isThickChainSegment = ((ropePointIndex mod 2) = 0)
+  isThinChainSegment = not isThickChainSegment
+  
+  if (isThickChainSegment) then
+    wdth = 20
+  else
+    wdth = 7
+  end if
+  
+  -- calculating the start and end pos for the chain sprite
+  -- different from the segmentStartPos / segmentEndPos, for some reason.
+  pntA = segmentStartPos + segmentDirection * 11
+  pntB = segmentEndPos   - segmentDirection * 11
+  
+  -- box defining where the chain is drawn on the screen
+  drawBox = [pntA - segmentPerpendicularDirection * wdth, pntA + segmentPerpendicularDirection * wdth, pntB + segmentPerpendicularDirection * wdth, pntB - segmentPerpendicularDirection * wdth]
+  -- get it into camera space
+  drawBox = drawBox - [gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20]
+  
+  highlightOffset = [point(-2,-2), point(-2,-2), point(-2,-2), point(-2,-2)]
+  
+  spriteHeight = 100
+  thickSpriteWidth = 40
+  thinSpriteWidth = 14
+  
+  repeat with graphicLayer = 0 to 5 then
+    
+    layerDepth = restrict(ropeDepth + graphicLayer, 0, 29)
+    
+    spriteRect = rect(0, 1 + (graphicLayer * spriteHeight), thickSpriteWidth, 1 + ((graphicLayer+1) * spriteHeight))
+    if (isThinChainSegment) then
+      spriteRect = spriteRect + rect(thickSpriteWidth, 0, thinSpriteWidth, 0)
+    end if
+    
+    member("layer" & layerDepth).image.copyPixels(member("bigChainGraf").image, drawBox, spriteRect, {#ink:36})
+    member("layer" & layerDepth).image.copyPixels(member("bigChainGrafHighLight").image, drawBox + highlightOffset, spriteRect, {#ink:36})
+    
+    -- draws the back side of the chain
+    layerDepth = restrict(ropeDepth + 4 + graphicLayer, 0, 29)
+    reverseGraphicLayer = 5 - graphicLayer
+    
+    spriteRect = rect(0, 1 + (reverseGraphicLayer * spriteHeight), thickSpriteWidth, 1 + ((reverseGraphicLayer+1) * spriteHeight))
+    if (isThinChainSegment) then
+      spriteRect = spriteRect + rect(thickSpriteWidth, 0, thinSpriteWidth, 0)
+    end if
+    
+    member("layer" & layerDepth).image.copyPixels(member("bigChainGraf").image, drawBox, spriteRect, {#ink:36})
+    member("layer" & layerDepth).image.copyPixels(member("bigChainGrafHighLight").image, drawBox + highlightOffset, spriteRect, {#ink:36})
+  end repeat
+end
+
+on renderCustomRopeSegment(num, prop, data, dp, pos, dir, perp, lastPos, lastDir, lastPerp, diffSeg)
+  dr = dirVecLB(pos, lastPos) * diffSeg
+  wdth = prop.segmentLength
+  if (num = 1) then
+    pntA = lastPos + (dr + lastDir * wdth) * 0.5
+    pntB = pos - 1.5 * dr - lastDir * wdth
+  else
+    pntA = lastPos + dr
+    pntB = pos - dr
+  end if
+  pastQd = [pntA - lastPerp * wdth, pntA + lastPerp * wdth, pntB + lastPerp * wdth, pntB - lastPerp * wdth]
+  renderCamMul = gRenderCameraTilePos * 20
+  pastQd = pastQd - [renderCamMul, renderCamMul, renderCamMul, renderCamMul]
+  sav2 = member("previewImprt")
+  colored = (prop.tags.getPos("colored") > 0)
+  if (colored) then
+    gAnyDecals = 1
+  end if
+  effectColorA = (prop.tags.getPos("effectColorA") > 0)
+  effectColorB = (prop.tags.getPos("effectColorB") > 0)
+  baseDp = dp
+  ps = 0
+  repeat with q = 1 to prop.repeatL.count
+    gtRect = rect(0, 1, prop.pixelSize.locH, prop.pixelSize.locV + 1)
+    gtRect = gtRect + rect(gtRect.width * DRRopeVari, gtRect.height * ps, gtRect.width * DRRopeVari, gtRect.height * ps)
+    dp = baseDp
+    repeat with q2 = 1 to prop.repeatL[q]
+      layerImg = member("layer" & string(dp)).image
+      case (prop.colorTreatment) of
+        "standard":
+          layerImg.copyPixels(sav2.image, pastQd, gtRect, {#ink:36})
+          if (effectColorA) then
+            member("gradientA" & string(dp)).image.copyPixels(sav2.image, pastQd, gtRect + rect(prop.pixelSize.locH * prop.vars, 0, prop.pixelSize.locH * prop.vars, 0), {#ink:39})
+          end if
+          if (effectColorB) then
+            member("gradientB" & string(dp)).image.copyPixels(sav2.image, pastQd, gtRect + rect(prop.pixelSize.locH * prop.vars, 0, prop.pixelSize.locH * prop.vars, 0), {#ink:39})
+          end if
+        "bevel":
+          dumpImg = image(gtRect.width,  gtRect.height, 1)
+          dumpImg.copyPixels(sav2.image, dumpImg.rect, gtRect)
+          inverseImg = makeSilhoutteFromImg(dumpImg, 1)
+          dumpImg = image(layerImg.width, layerImg.height, 32)
+          dumpImg.copyPixels(DRPxl, pastQd, rect(0, 0, 1, 1), {#color:color(0, 255, 0)})
+          repeat with bbvl = 1 to prop.bevel
+            repeat with abvl in DRBevelColors
+              a2mb = abvl[2] * bbvl
+              dumpImg.copyPixels(inverseImg, pastQd + [a2mb, a2mb, a2mb, a2mb], inverseImg.rect, {#color:abvl[1], #ink:36})
+            end repeat
+          end repeat
+          dumpImg.copyPixels(inverseImg, pastQd, inverseImg.rect, {#color:color(255, 255, 255), #ink:36})
+          inverseImg = image(dumpImg.width, dumpImg.height, 1)
+          inverseImg.copyPixels(DRPxl, inverseImg.rect, rect(0, 0, 1, 1))
+          inverseImg.copyPixels(DRPxl, pastQd, rect(0, 0, 1, 1), {#color:color(255, 255, 255)})
+          dumpImg.copyPixels(inverseImg, dumpImg.rect, inverseImg.rect, {#color:color(255, 255, 255), #ink:36})
+          layerImg.copyPixels(dumpImg, dumpImg.rect, dumpImg.rect, {#ink:36})
+      end case
+      if (colored) then
+        if (effectColorA = FALSE) then
+          if (effectColorB = FALSE) then
+            member("layer" & string(dp) & "dc").image.copyPixels(sav2.image, pastQd, gtRect + rect(prop.pixelSize.locH * prop.vars, 0, prop.pixelSize.locH * prop.vars, 0), {#ink:36})
+          end if
+        end if
+      end if
+      dp = dp + 1
+      if (dp > 29) then
+        exit repeat
+      end if
+    end repeat
+    if (dp > 29) then
+      exit repeat
+    end if
+    ps = ps + 1
+  end repeat
+  if (prop.random) then
+    DRRopeVari = random(prop.vars) - 1
+  else
+    DRRopeVari = DRRopeVari + 1
+    if (DRRopeVari >= prop.vars) then
+      DRRopeVari = 0
+    end if
+  end if
+end
+
 on renderRopeSegment(num: number, prop, data, dp: number, pos: point, dir: point, perp: point, lastPos: point, lastDir: point, lastPerp: point)
-  type wdth: number
-  type pastqd: list
-  type jointsize: number
-  type col: color
-  type myperp: point
-  type dr: point
-  type dst: number
-  type pnta: point
-  type pntb: point
-  type aprp: point
-  type bprp: point
-  type pstdp: number
-  type mdpnt: point
-  type possiblepositions: list
-  type uselastpos: point
-  type uselastdir: point
-  type uselastperp: point
-  type apoint: point
-  type indx: number
-  type bpoint: point
-  type apos: point
-  type adp: number
-  type bpos: point
-  type bdp: number
-  type ahandle: point
-  type bHandle: point
-  type c2: point
-  type cpos: point
-  type mnclamp: number
   case prop.nm of
     "wire", "Zero-G Wire":
       wdth = data.settings.thickness/2.0
@@ -484,13 +607,13 @@ on renderRopeSegment(num: number, prop, data, dp: number, pos: point, dir: point
       pastQd = [pos + perp*wdth, pos - perp*wdth, lastPos - lastPerp*wdth, lastPos + lastPerp*wdth]
       pastQd = pastQd - [gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20]
       
-      member("layer"&string(dp)).image.copyPixels(member("christmasWireGraf"&lG).image, pastQd, rect(0,1,17,25), {#ink:36})
+      member("layer"&string(dp)).image.copyPixels(member("christmasWireGraf"&altGrafLG).image, pastQd, rect(0,1,17,25), {#ink:36})
       member("gradientA"&string(dp)).image.copyPixels(member("christmasWireGrad").image, pastQd, rect(0,1,17,25), {#ink:39})
       member("gradientB"&string(dp)).image.copyPixels(member("christmasWireGrad").image, pastQd, rect(0,1,17,25), {#ink:39})
-      if lG = "1" then
-        lG = "2"
+      if altGrafLG = "1" then
+        altGrafLG = "2"
       else
-        lG = "1"
+        altGrafLG = "1"
       end if
       
     "Ornate Wire":
@@ -672,6 +795,9 @@ on renderRopeSegment(num: number, prop, data, dp: number, pos: point, dir: point
         end repeat
       end if
       
+    "Big Chain", "Chunky Chain":
+      renderBigChainSegment(num, dp, lastPos, pos)
+      
     "Bike Chain":
       dr = MoveToPoint(pos, lastPos, 1.0)
       dst = diag(pos, lastPos)
@@ -711,6 +837,127 @@ on renderRopeSegment(num: number, prop, data, dp: number, pos: point, dir: point
         pstDp = restrict(dp + 7, 0, 29)
         member("layer"&string(pstDp)).image.copyPixels(member("BikeChainSegment").image, pastQd, member("BikeChainSegment").image.rect, {#ink:36, #color:color(0,255,0)})
       end if
+      
+    "Big Bike Chain":
+      dr = MoveToPoint(pos, lastPos, 1.0)
+      dst = diag(pos, lastPos)
+      wdth = 34
+      
+      pntA = lastPos + dr*34
+      pntB = pos - dr*34
+      
+      pastQd = [pntA - lastPerp*wdth, pntA + lastPerp*wdth, pntB + lastPerp*wdth, pntB - lastPerp*wdth]
+      pastQd = pastQd - [gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20]
+      
+      renderBeveledImage(member("BigBikeChainBolt").image, dp, [lastPos + point(-16,-16), lastPos + point(16,-16), lastPos + point(16,16), lastPos + point(-16,16)] - [gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20], 2)
+      if (num = 1) then
+        return
+      end if
+      
+      repeat with a = 1 to 9 then
+        pstDp = restrict(dp + a, 0, 58)
+        member("layer"&string(pstDp)).image.copyPixels(member("BigBikeChainBolt").image, rect(lastPos, lastPos) + rect(-16,-16,16,16)-rect(gRenderCameraTilePos*20, gRenderCameraTilePos*20), member("BigBikeChainBolt").image.rect, {#ink:36, #color:color(0, 255, 0)})
+      end repeat
+      
+      if((num mod 2)=0)then
+        pstDp = restrict(dp + 1, 0, 58)
+        renderBeveledImage(member("BigBikeChainSegment").image, pstDp, pastQd, 1)
+        pstDp = restrict(dp + 2, 0, 58)
+        member("layer"&string(pstDp)).image.copyPixels(member("BigBikeChainSegment").image, pastQd, member("BigBikeChainSegment").image.rect, {#ink:36, #color:color(0,255,0)})
+        
+        pstDp = restrict(dp + 8, 0, 58)
+        renderBeveledImage(member("BigBikeChainSegment").image, pstDp, pastQd, 1)
+        pstDp = restrict(dp + 9, 0, 58)
+        member("layer"&string(pstDp)).image.copyPixels(member("BigBikeChainSegment").image, pastQd, member("BigBikeChainSegment").image.rect, {#ink:36, #color:color(0,255,0)})
+      else
+        pstDp = restrict(dp + 3, 0, 58)
+        renderBeveledImage(member("BigBikeChainSegment").image, pstDp, pastQd, 1)
+        pstDp = restrict(dp + 4, 0, 58)
+        member("layer"&string(pstDp)).image.copyPixels(member("BigBikeChainSegment").image, pastQd, member("BigBikeChainSegment").image.rect, {#ink:36, #color:color(0,255,0)})
+        
+        pstDp = restrict(dp + 6, 0, 58)
+        renderBeveledImage(member("BigBikeChainSegment").image, pstDp, pastQd, 1)
+        pstDp = restrict(dp + 7, 0, 58)
+        member("layer"&string(pstDp)).image.copyPixels(member("BigBikeChainSegment").image, pastQd, member("BigBikeChainSegment").image.rect, {#ink:36, #color:color(0,255,0)})
+      end if
+      
+    "Huge Bike Chain":
+      dr = MoveToPoint(pos, lastPos, 1.0)
+      dst = diag(pos, lastPos)
+      wdth = 68
+      
+      pntA = lastPos + dr*68
+      pntB = pos - dr*68
+      
+      pastQd = [pntA - lastPerp*wdth, pntA + lastPerp*wdth, pntB + lastPerp*wdth, pntB - lastPerp*wdth]
+      pastQd = pastQd - [gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20]
+      
+      renderBeveledImage(member("HugeBikeChainBolt").image, dp, [lastPos + point(-32,-32), lastPos + point(32,-32), lastPos + point(32,32), lastPos + point(-32,32)] - [gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20], 2)
+      if (num = 1) then
+        return
+      end if
+      repeat with a = 1 to 9 then
+        pstDp = restrict(dp + a, 0, 116)
+        member("layer"&string(pstDp)).image.copyPixels(member("HugeBikeChainBolt").image, rect(lastPos, lastPos) + rect(-32,-32,32,32)-rect(gRenderCameraTilePos*20, gRenderCameraTilePos*20), member("HugeBikeChainBolt").image.rect, {#ink:36, #color:color(0, 255, 0)})
+      end repeat
+      
+      if((num mod 2)=0)then
+        pstDp = restrict(dp + 1, 0, 116)
+        renderBeveledImage(member("HugeBikeChainSegment").image, pstDp, pastQd, 1)
+        pstDp = restrict(dp + 2, 0, 116)
+        member("layer"&string(pstDp)).image.copyPixels(member("HugeBikeChainSegment").image, pastQd, member("HugeBikeChainSegment").image.rect, {#ink:36, #color:color(0,255,0)})
+        
+        pstDp = restrict(dp + 8, 0, 116)
+        renderBeveledImage(member("HugeBikeChainSegment").image, pstDp, pastQd, 1)
+        pstDp = restrict(dp + 9, 0, 116)
+        member("layer"&string(pstDp)).image.copyPixels(member("HugeBikeChainSegment").image, pastQd, member("HugeBikeChainSegment").image.rect, {#ink:36, #color:color(0,255,0)})
+      else
+        pstDp = restrict(dp + 3, 0, 116)
+        renderBeveledImage(member("HugeBikeChainSegment").image, pstDp, pastQd, 1)
+        pstDp = restrict(dp + 4, 0, 116)
+        member("layer"&string(pstDp)).image.copyPixels(member("HugeBikeChainSegment").image, pastQd, member("HugeBikeChainSegment").image.rect, {#ink:36, #color:color(0,255,0)})
+        
+        pstDp = restrict(dp + 6, 0, 116)
+        renderBeveledImage(member("HugeBikeChainSegment").image, pstDp, pastQd, 1)
+        pstDp = restrict(dp + 7, 0, 116)
+        member("layer"&string(pstDp)).image.copyPixels(member("HugeBikeChainSegment").image, pastQd, member("HugeBikeChainSegment").image.rect, {#ink:36, #color:color(0,255,0)})
+      end if
+      
+    "Small Chain":
+      -- chainSegment graphic has two parts: a 6x10 head-on bit and a 2x10 side-on bit. We need to draw both in alternating order.
+      
+      dst = diag(pos, lastPos)
+      len = (dst / 20 + 0.4999).integer -- How many double chain segments can we fit between the two points :3
+      if len < 1 then len = 1
+      lookPt = lookAtpoint(lastPos, pos)
+      repeat with a = 0 to len then
+        -- First half: the head-on chain link (the O)
+        b = (a + 0.25) / len
+        pt = lastPos * [1 - b, 1 - b] + pos * [b, b]
+        member("layer"&string(dp)).image.copyPixels(member("chainSegment").image, rotateToQuad(rect(pt,pt)+rect(-3,-5,3,5)-rect(gRenderCameraTilePos*20,gRenderCameraTilePos*20), lookPt), rect(0,0,6,10), {#color: color(255,0,0)})
+        -- Second half: the side-on chain link (the line)
+        b = (a + 0.75) / len
+        pt = lastPos * [1 - b, 1 - b] + pos * [b, b]
+        member("layer"&string(dp)).image.copyPixels(member("chainSegment").image, rotateToQuad(rect(pt,pt)+rect(-1,-5,1,5)-rect(gRenderCameraTilePos*20,gRenderCameraTilePos*20), lookPt), rect(7,0,8,10), {#color: color(255,0,0)})
+      end repeat
+      
+    "Fat Chain":
+      -- bigChainSegment graphic is like the chainSegment graphic except everything is twice as big so every number relating to the tile size is doubled.
+      
+      dst = diag(pos, lastPos)
+      len = (dst / 40 + 0.4999).integer
+      if len < 1 then len = 1
+      lookPt = lookAtpoint(lastPos, pos)
+      repeat with a = 0 to len then
+        -- First half: the head-on chain link (the O)
+        b = (a + 0.25) / len
+        pt = lastPos * [1 - b, 1 - b] + pos * [b, b]
+        member("layer"&string(dp)).image.copyPixels(member("bigChainSegment").image, rotateToQuad(rect(pt,pt)+rect(-6,-10,6,10)-rect(gRenderCameraTilePos*20,gRenderCameraTilePos*20), lookPt), rect(0,0,12,20), {#color: color(255,0,0)})
+        -- Second half: the side-on chain link (the line)
+        b = (a + 0.75) / len
+        pt = lastPos * [1 - b, 1 - b] + pos * [b, b]
+        member("layer"&string(dp)).image.copyPixels(member("bigChainSegment").image, rotateToQuad(rect(pt,pt)+rect(-2,-10,2,10)-rect(gRenderCameraTilePos*20,gRenderCameraTilePos*20), lookPt), rect(13,0,16,20), {#color: color(255,0,0)})
+      end repeat
       
     "Fat Hose":
       wdth = 20
@@ -980,7 +1227,7 @@ on initRenderSoftProp(prop, qd: list, propData, dp, propImage: image)
   end if
   
   if(prop.tp = "coloredSoft")then
-    getRect = rect(prop.pxlSize.locH, 0, prop.pxlSize.locH, prop.pxlSize.locV) + rect(0,1,0,1)
+    getRect = rect(0, 0, prop.pxlSize.locH, prop.pxlSize.locV) + rect(0,1,0,1)
   end if
   
   member("softPropRender").image.copyPixels(propImage, qd-[offsetPnt, offsetPnt, offsetPnt, offsetPnt], getRect)
@@ -1327,216 +1574,301 @@ end
 
 
 on renderLongProp(qd, prop, data, dp)
-  A = (qd[1]+qd[4])/2.0
-  B = (qd[2]+qd[3])/2.0
+  A = (qd[1] + qd[4]) / 2.0
+  B = (qd[2] + qd[3]) / 2.0
   
   dir: point = MoveToPoint(A, B, 1.0)
   perp = CorrectPerp(dir)
   dist: number = Diag(A, B)
   
   
-  
-  case (prop.nm) of
-    "Cabinet Clamp":
-      mem = member("clampSegmentGraf")
-      totalSegments = ((dist/mem.image.height)-0.5).integer
-      buffer = dist - (totalSegments * mem.image.height)
-      
-      qd2 = [A - (perp*mem.image.width*0.5) + (dir*buffer*0.5), A + (perp*mem.image.width*0.5) + (dir*buffer*0.5), A + (perp*mem.image.width*0.5), (A - perp*mem.image.width*0.5)]
-      member("layer" & dp).image.copyPixels(member("pxl").image, qd2, rect(0,0,1,1), {#color:color(0, 255, 0)})
-      qd2 = [B - (perp*mem.image.width*0.5) - (dir*buffer*0.5), B + (perp*mem.image.width*0.5) - (dir*buffer*0.5), B + (perp*mem.image.width*0.5), (B - perp*mem.image.width*0.5)]
-      member("layer" & dp).image.copyPixels(member("pxl").image, qd2, rect(0,0,1,1), {#color:color(0, 255, 0)})
-      
-      d = buffer/2.0
-      
-      repeat with q = 1 to totalSegments then
-        
-        pnt = A + d*dir
-        qd2 = [pnt - (perp*mem.image.width*0.5) + (dir*mem.image.height), pnt + (perp*mem.image.width*0.5) + (dir*mem.image.height), pnt + (perp*mem.image.width*0.5), (pnt - perp*mem.image.width*0.5)]
-        member("layer" & dp).image.copyPixels(mem.image, qd2, mem.image.rect, {#color:color(0, 255, 0), #ink:36})
-        
-        d = d + mem.image.height
-      end repeat
-      
-      mem = member("clampBoltGraf")
-      member("layer" & dp).image.copyPixels(mem.image, rect(A,A) + rect(-mem.image.width/2, -mem.image.height/2, mem.image.width/2, mem.image.height/2), mem.image.rect, {#ink:36})
-      member("layer" & dp).image.copyPixels(mem.image, rect(B,B) + rect(-mem.image.width/2, -mem.image.height/2, mem.image.width/2, mem.image.height/2), mem.image.rect, {#ink:36})
-      
-    "Stretched Pipe":
-      
-      steps = ((diag(A, B)/20.0)+0.4999).integer
-      degDir = lookatpoint(A, B)
-      stp = random(100)*0.01
-      repeat with q = 1 to steps then
-        pos = A+(dir*20.0*(q-stp))
-        rct = rect(pos,pos)+rect(-10,-11,10,11)
-        
-        repeat with e = 0 to 0 then
-          member("layer"&string(restrict(dp+e, 0, 29))).image.copypixels(member("stretchedPipeGraf").image, rotateToQuad(rct, degDir), rect(0, 0, 20, 22), {#ink:36})
+  if (prop.tp = "customLong") then
+    wdth = prop.segmentLength
+    steps = ((dist / wdth) + 0.4999).integer
+    diffSeg = ((prop.pixelSize.locV - wdth) + prop.pixelSize.locH) * 0.5
+    sav2 = member("previewImprt")
+    colored = (prop.tags.getPos("colored") > 0)
+    if (colored) then
+      gAnyDecals = 1
+    end if
+    effectColorA = (prop.tags.getPos("effectColorA") > 0)
+    effectColorB = (prop.tags.getPos("effectColorB") > 0)
+    baseDp = dp
+    if (prop.random) then
+      vari = random(prop.vars) - 1
+    else
+      vari = 0
+    end if
+    prlAng = vecToRadLB(dir)
+    cosAng = diffSeg * cos(prlAng)
+    sinAng = diffSeg * sin(prlAng)
+    repeat with n = 1 to steps
+      ps = 0
+      posProp = A + (dir * wdth * n)
+      pastQd = rotateToQuadLB(rect(posProp, posProp) + rect(-prop.pixelSize.locH * 0.5 - cosAng, -prop.pixelSize.locV * 0.5 - sinAng, prop.pixelSize.locH * 0.5 - cosAng, prop.pixelSize.locV * 0.5 - sinAng), dir)
+      repeat with q = 1 to prop.repeatL.count
+        gtRect = rect(0, 1, prop.pixelSize.locH, prop.pixelSize.locV + 1)
+        gtRect = gtRect + rect(gtRect.width * vari, gtRect.height * ps, gtRect.width * vari, gtRect.height * ps)
+        dp = baseDp
+        repeat with q2 = 1 to prop.repeatL[q]
+          layerImg = member("layer" & string(dp)).image
+          case (prop.colorTreatment) of
+            "standard":
+              layerImg.copyPixels(sav2.image, pastQd, gtRect, {#ink:36})
+              if (effectColorA) then
+                member("gradientA" & string(dp)).image.copyPixels(sav2.image, pastQd, gtRect + rect(prop.pixelSize.locH * prop.vars, 0, prop.pixelSize.locH * prop.vars, 0), {#ink:39})
+              end if
+              if (effectColorB) then
+                member("gradientB" & string(dp)).image.copyPixels(sav2.image, pastQd, gtRect + rect(prop.pixelSize.locH * prop.vars, 0, prop.pixelSize.locH * prop.vars, 0), {#ink:39})
+              end if
+            "bevel":
+              dumpImg = image(gtRect.width,  gtRect.height, 1)
+              dumpImg.copyPixels(sav2.image, dumpImg.rect, gtRect)
+              inverseImg = makeSilhoutteFromImg(dumpImg, 1)
+              dumpImg = image(layerImg.width, layerImg.height, 32)
+              dumpImg.copyPixels(DRPxl, pastQd, rect(0, 0, 1, 1), {#color:color(0, 255, 0)})
+              repeat with bbvl = 1 to prop.bevel
+                repeat with abvl in DRBevelColors
+                  a2mb = abvl[2] * bbvl
+                  dumpImg.copyPixels(inverseImg, pastQd + [a2mb, a2mb, a2mb, a2mb], inverseImg.rect, {#color:abvl[1], #ink:36})
+                end repeat
+              end repeat
+              dumpImg.copyPixels(inverseImg, pastQd, inverseImg.rect, {#color:color(255, 255, 255), #ink:36})
+              inverseImg = image(dumpImg.width, dumpImg.height, 1)
+              inverseImg.copyPixels(DRPxl, inverseImg.rect, rect(0, 0, 1, 1))
+              inverseImg.copyPixels(DRPxl, pastQd, rect(0, 0, 1, 1), {#color:color(255, 255, 255)})
+              dumpImg.copyPixels(inverseImg, dumpImg.rect, inverseImg.rect, {#color:color(255, 255, 255), #ink:36})
+              layerImg.copyPixels(dumpImg, dumpImg.rect, dumpImg.rect, {#ink:36})
+          end case
+          if (colored) then
+            if (effectColorA = FALSE) then
+              if (effectColorB = FALSE) then
+                member("layer" & string(dp) & "dc").image.copyPixels(sav2.image, pastQd, gtRect + rect(prop.pixelSize.locH * prop.vars, 0, prop.pixelSize.locH * prop.vars, 0), {#ink:36})
+              end if
+            end if
+          end if
+          dp = dp + 1
+          if (dp > 29) then
+            exit repeat
+          end if
         end repeat
-      end repeat
-      
-    "Stretched Wire":
-      
-      steps = ((diag(A, B)/2.0)+0.4999).integer
-      degDir = lookatpoint(A, B)
-      stp = random(100)*0.01
-      repeat with q = 1 to steps then
-        pos = A+(dir*2.0*(q-stp))
-        rct = rect(pos,pos)+rect(-1,-2,1,2)
-        
-        repeat with e = 0 to 0 then
-          member("layer"&string(restrict(dp+e, 0, 29))).image.copypixels(member("stretchedWireGraf").image, rotateToQuad(rct, degDir), rect(0, e*2, 2, (e+1)*2 + 2), {#ink:36})
-        end repeat
-      end repeat
-      
-    "Twisted Thread":
-      
-      steps = ((diag(A, B)/8.0)+0.4999).integer
-      degDir = lookatpoint(A, B)
-      stp = random(100)*0.01
-      repeat with q = 1 to steps then
-        pos = A+(dir*8.0*(q-stp))
-        rct = rect(pos,pos)+rect(-4,-4,4,4)
-        
-        repeat with e = 0 to 0 then
-          member("layer"&string(restrict(dp+e, 0, 29))).image.copypixels(member("twistedThreadGraf").image, rotateToQuad(rct, degDir), rect(0, e*8, 8, (e+1)*8), {#ink:36})
-        end repeat
-      end repeat
-      
-    "Thick Chain":
-      
-      steps = ((diag(A, B)/12.0)+0.4999).integer
-      ornt = random(2)-1
-      degDir = lookatpoint(A, B)
-      stp = random(100)*0.01
-      repeat with q = 1 to steps then
-        pos = A+(dir*12*(q-stp))
-        if ornt then
-          --   pos = (pnt+lastPnt)*0.5
-          rct = rect(pos,pos)+rect(-6,-10,6,10)
-          gtRect = rect(0,0,12,20)
-          ornt = 0
-        else
-          -- pos = (pnt+lastPnt)*0.5
-          rct = rect(pos,pos)+rect(-2,-10,2,10)
-          gtRect = rect(13,0,16,20)
-          ornt = 1
+        if (dp > 29) then
+          exit repeat
         end if
-        -- put rct
-        member("layer"&string(dp)).image.copypixels(member("bigChainSegment").image, rotateToQuad(rct, degDir), gtRect, {#color:color(255, 0, 5), #ink:36})
-        -- member("layer"&string(dp)).image.copypixels(member("bigChainSegment").image, rct, member("bigChainSegment").image.rect, {#color:color(255,0,0), #ink:36})
+        ps = ps + 1
       end repeat
-      
-    "Drill Suspender":
-      thirdDist = dist/4.0
-      
-      repeat with q = 1 to 2 then
-        ps = A
-        dr = dir
-        if(q = 2) then
-          ps = B
-          dr = -dir
+      if (prop.random) then
+        vari = random(prop.vars) - 1
+      else
+        vari = vari + 1
+        if (vari >= prop.vars) then
+          vari = 0
         end if
+      end if
+    end repeat
+  else
+    case (prop.nm) of
+      "Cabinet Clamp":
+        mem = member("clampSegmentGraf")
+        totalSegments = ((dist/mem.image.height)-0.5).integer
+        buffer = dist - (totalSegments * mem.image.height)
         
-        QD = [ps - perp, ps + perp, ps + dr*thirdDist + perp, ps + dr*thirdDist - perp]
-        member("layer" & restrict(dp+3, 0, 29)).image.copyPixels(member("pxl").image, QD, rect(0,0,1,1), {#ink:36, #color:color(0, 255, 0)})
+        qd2 = [A - (perp*mem.image.width*0.5) + (dir*buffer*0.5), A + (perp*mem.image.width*0.5) + (dir*buffer*0.5), A + (perp*mem.image.width*0.5), (A - perp*mem.image.width*0.5)]
+        member("layer" & dp).image.copyPixels(member("pxl").image, qd2, rect(0,0,1,1), {#color:color(0, 255, 0)})
+        qd2 = [B - (perp*mem.image.width*0.5) - (dir*buffer*0.5), B + (perp*mem.image.width*0.5) - (dir*buffer*0.5), B + (perp*mem.image.width*0.5), (B - perp*mem.image.width*0.5)]
+        member("layer" & dp).image.copyPixels(member("pxl").image, qd2, rect(0,0,1,1), {#color:color(0, 255, 0)})
         
-        QD = [ps - perp*2, ps + perp*2, ps + dr*10.0 + perp*2, ps + dr*10.0 - perp*2]
-        member("layer" & restrict(dp+3, 0, 29)).image.copyPixels(member("pxl").image, QD, rect(0,0,1,1), {#ink:36, #color:color(0, 255, 0)})
+        d = buffer/2.0
         
-        rodWidth = 18.0
-        QD =  [ps + dr*thirdDist - perp*rodWidth, ps + dr*thirdDist + perp*rodWidth, ps + dr*(thirdDist - 2.5) + perp*rodWidth, ps + dr*(thirdDist - 2.5) - perp*rodWidth]
-        member("layer" & restrict(dp+3, 0, 29)).image.copyPixels(member("pxl").image, QD, rect(0,0,1,1), {#ink:36, #color:color(0, 255, 0)})
-        
-        QD =  [ps + dr*thirdDist - perp*3, ps + dr*thirdDist + perp*3, ps + dr*thirdDist - perp*3 - dr*28, ps + dr*thirdDist + perp*3 - dr*28]
-        QD = QD + [dr*2, dr*2, dr*2, dr*2]
-        repeat with e = 0 to 2 then
-          member("layer" & restrict(dp+2+e, 0, 29)).image.copyPixels(member("DrillSuspenderClamp").image, QD, rect(0, restrict(e, 0, 1)*28, 6, (restrict(e, 0, 1)+1)*28), {#ink:36})
+        repeat with q = 1 to totalSegments then
+          
+          pnt = A + d*dir
+          qd2 = [pnt - (perp*mem.image.width*0.5) + (dir*mem.image.height), pnt + (perp*mem.image.width*0.5) + (dir*mem.image.height), pnt + (perp*mem.image.width*0.5), (pnt - perp*mem.image.width*0.5)]
+          member("layer" & dp).image.copyPixels(mem.image, qd2, mem.image.rect, {#color:color(0, 255, 0), #ink:36})
+          
+          d = d + mem.image.height
         end repeat
         
-        member("layer" & restrict(dp+2, 0, 29)).image.copyPixels(member("DrillSuspenderBolt").image, rect(ps,ps)+rect(-3,-3,3,3), rect(0,0,6,6), {#ink:36})
-        repeat with e = 3 to 4 then
-          member("layer" & restrict(dp+e, 0, 29)).image.copyPixels(member("DrillSuspenderBolt").image, rect(ps,ps)+rect(-4,-4,4,4), rect(0,6,8,14), {#ink:36})
+        mem = member("clampBoltGraf")
+        member("layer" & dp).image.copyPixels(mem.image, rect(A,A) + rect(-mem.image.width/2, -mem.image.height/2, mem.image.width/2, mem.image.height/2), mem.image.rect, {#ink:36})
+        member("layer" & dp).image.copyPixels(mem.image, rect(B,B) + rect(-mem.image.width/2, -mem.image.height/2, mem.image.width/2, mem.image.height/2), mem.image.rect, {#ink:36})
+        
+      "Stretched Pipe":
+        
+        steps = ((diag(A, B)/20.0)+0.4999).integer
+        degDir = lookatpoint(A, B)
+        stp = random(100)*0.01
+        repeat with q = 1 to steps then
+          pos = A+(dir*20.0*(q-stp))
+          rct = rect(pos,pos)+rect(-10,-11,10,11)
+          member("layer"&string(restrict(dp, 0, 29))).image.copypixels(member("stretchedPipeGraf").image, rotateToQuad(rct, degDir), rect(0, 0, 20, 22), {#ink:36})
         end repeat
-      end repeat
-      
-      repeat with q = 1 to 2 then
-        perpOffset = -10.0
-        if(q = 2)then
-          perpOffset = 10.0
-        end if
         
-        rodWidth = 0.65
+      "Stretched Wire":
         
-        QD = [A + dir*thirdDist - perp*(-rodWidth + perpOffset), A + dir*thirdDist - perp*(rodWidth + perpOffset), B - dir*thirdDist - perp*(rodWidth + perpOffset), B - dir*thirdDist - perp*(-rodWidth + perpOffset)]
-        member("layer" & restrict(dp+3, 0, 29)).image.copyPixels(member("pxl").image, QD, rect(0,0,1,1), {#ink:36, #color:color(0, 255, 0)})
+        steps = ((diag(A, B)/2.0)+0.4999).integer
+        degDir = lookatpoint(A, B)
+        stp = random(100)*0.01
+        repeat with q = 1 to steps then
+          pos = A+(dir*2.0*(q-stp))
+          rct = rect(pos,pos)+rect(-1,-2,1,2)
+          member("layer"&string(restrict(dp, 0, 29))).image.copypixels(member("stretchedWireGraf").image, rotateToQuad(rct, degDir), rect(0, 0, 2, 4), {#ink:36})
+        end repeat
         
-        repeat with e = 1 to 2 then
-          pos = A + dir*thirdDist - perp*perpOffset
-          if(e = 2)then
-            pos = B - dir*thirdDist - perp*perpOffset
+      "Barbed Wire":
+        steps = ((diag(A, B) / 20.0) + 0.4999).integer
+        degDir = lookatpoint(A, B)
+        stp = random(100) * 0.01
+        repeat with q = 1 to steps
+          pos = A + (dir * 20.0 * (q - stp))
+          rct = rect(pos, pos) + rect(-2.5, -10.0, 2.5, 10.0)
+          member("layer" & string(restrict(dp, 0, 29))).image.copypixels(member("barbedWireGraf").image, rotateToQuad(rct, degDir), rect(0, 0, 5, 20), {#ink:36})
+        end repeat
+        
+      "Twisted Thread":
+        
+        steps = ((diag(A, B)/8.0)+0.4999).integer
+        degDir = lookatpoint(A, B)
+        stp = random(100)*0.01
+        repeat with q = 1 to steps then
+          pos = A+(dir*8.0*(q-stp))
+          rct = rect(pos,pos)+rect(-4,-4,4,4)
+          member("layer"&string(restrict(dp, 0, 29))).image.copypixels(member("twistedThreadGraf").image, rotateToQuad(rct, degDir), rect(0, 0, 8, 8), {#ink:36})
+        end repeat
+        
+      "Thick Chain":
+        
+        steps = ((diag(A, B)/12.0)+0.4999).integer
+        ornt = random(2)-1
+        degDir = lookatpoint(A, B)
+        stp = random(100)*0.01
+        repeat with q = 1 to steps then
+          pos = A+(dir*12*(q-stp))
+          if ornt then
+            --   pos = (pnt+lastPnt)*0.5
+            rct = rect(pos,pos)+rect(-6,-10,6,10)
+            gtRect = rect(0,0,12,20)
+            ornt = 0
+          else
+            -- pos = (pnt+lastPnt)*0.5
+            rct = rect(pos,pos)+rect(-2,-10,2,10)
+            gtRect = rect(13,0,16,20)
+            ornt = 1
+          end if
+          -- put rct
+          member("layer"&string(dp)).image.copypixels(member("bigChainSegment").image, rotateToQuad(rct, degDir), gtRect, {#color:color(255, 0, 5), #ink:36})
+          -- member("layer"&string(dp)).image.copypixels(member("bigChainSegment").image, rct, member("bigChainSegment").image.rect, {#color:color(255,0,0), #ink:36})
+        end repeat
+        
+      "Drill Suspender":
+        thirdDist = dist/4.0
+        
+        repeat with q = 1 to 2 then
+          ps = A
+          dr = dir
+          if(q = 2) then
+            ps = B
+            dr = -dir
           end if
           
-          repeat with d = 0 to 5 then
-            sz = 3.0 + 7.0*sin((d/5.0)*PI)
-            QD = [pos+dir*sz-perp, pos+dir*sz+perp, pos-dir*sz+perp, pos-dir*sz-perp]
-            member("layer" & restrict(dp+d, 0, 29)).image.copyPixels(member("pxl").image, QD, rect(0,0,1,1), {#ink:36, #color:color(0, 255, 0)})
+          QD = [ps - perp, ps + perp, ps + dr*thirdDist + perp, ps + dr*thirdDist - perp]
+          member("layer" & restrict(dp+3, 0, 29)).image.copyPixels(member("pxl").image, QD, rect(0,0,1,1), {#ink:36, #color:color(0, 255, 0)})
+          
+          QD = [ps - perp*2, ps + perp*2, ps + dr*10.0 + perp*2, ps + dr*10.0 - perp*2]
+          member("layer" & restrict(dp+3, 0, 29)).image.copyPixels(member("pxl").image, QD, rect(0,0,1,1), {#ink:36, #color:color(0, 255, 0)})
+          
+          rodWidth = 18.0
+          QD =  [ps + dr*thirdDist - perp*rodWidth, ps + dr*thirdDist + perp*rodWidth, ps + dr*(thirdDist - 2.5) + perp*rodWidth, ps + dr*(thirdDist - 2.5) - perp*rodWidth]
+          member("layer" & restrict(dp+3, 0, 29)).image.copyPixels(member("pxl").image, QD, rect(0,0,1,1), {#ink:36, #color:color(0, 255, 0)})
+          
+          QD =  [ps + dr*thirdDist - perp*3, ps + dr*thirdDist + perp*3, ps + dr*thirdDist - perp*3 - dr*28, ps + dr*thirdDist + perp*3 - dr*28]
+          QD = QD + [dr*2, dr*2, dr*2, dr*2]
+          repeat with e = 0 to 2 then
+            member("layer" & restrict(dp+2+e, 0, 29)).image.copyPixels(member("DrillSuspenderClamp").image, QD, rect(0, restrict(e, 0, 1)*28, 6, (restrict(e, 0, 1)+1)*28), {#ink:36})
           end repeat
           
+          member("layer" & restrict(dp+2, 0, 29)).image.copyPixels(member("DrillSuspenderBolt").image, rect(ps,ps)+rect(-3,-3,3,3), rect(0,0,6,6), {#ink:36})
+          repeat with e = 3 to 4 then
+            member("layer" & restrict(dp+e, 0, 29)).image.copyPixels(member("DrillSuspenderBolt").image, rect(ps,ps)+rect(-4,-4,4,4), rect(0,6,8,14), {#ink:36})
+          end repeat
         end repeat
-      end repeat
-      
-      
-    "Drill":
-      
-      steps = ((diag(A, B)/20.0)+0.4999).integer
-      degDir = lookatpoint(A, B)
-      stp = random(100)*0.01
-      repeat with q = 1 to steps then
-        pos = A+(dir*20.0*(q-stp))
-        rct = rect(pos,pos)+rect(-10,-10,10,10)
         
-        repeat with e = 0 to 9 then
-          member("layer"&string(restrict(dp+e, 0, 29))).image.copypixels(member("DrillGraf").image, rotateToQuad(rct, degDir), rect(0, e*20, 20, (e+1)*20), {#ink:36})
+        repeat with q = 1 to 2 then
+          perpOffset = -10.0
+          if(q = 2)then
+            perpOffset = 10.0
+          end if
+          
+          rodWidth = 0.65
+          
+          QD = [A + dir*thirdDist - perp*(-rodWidth + perpOffset), A + dir*thirdDist - perp*(rodWidth + perpOffset), B - dir*thirdDist - perp*(rodWidth + perpOffset), B - dir*thirdDist - perp*(-rodWidth + perpOffset)]
+          member("layer" & restrict(dp+3, 0, 29)).image.copyPixels(member("pxl").image, QD, rect(0,0,1,1), {#ink:36, #color:color(0, 255, 0)})
+          
+          repeat with e = 1 to 2 then
+            pos = A + dir*thirdDist - perp*perpOffset
+            if(e = 2)then
+              pos = B - dir*thirdDist - perp*perpOffset
+            end if
+            
+            repeat with d = 0 to 5 then
+              sz = 3.0 + 7.0*sin((d/5.0)*PI)
+              QD = [pos+dir*sz-perp, pos+dir*sz+perp, pos-dir*sz+perp, pos-dir*sz-perp]
+              member("layer" & restrict(dp+d, 0, 29)).image.copyPixels(member("pxl").image, QD, rect(0,0,1,1), {#ink:36, #color:color(0, 255, 0)})
+            end repeat
+            
+          end repeat
         end repeat
-      end repeat
-      
-    "Piston":
-      dr = dir
-      repeat with d = 0 to 2 then
-        wdth = 3 + d
-        QD = [A - perp * wdth, A + perp * wdth, B + perp * wdth, B - perp * wdth]
-        member("layer" & restrict(dp+d+1, 0, 29)).image.copyPixels(member("pxl").image, QD, rect(0,0,1,1), {#ink:36, #color:color(0, 255, 0)})
         
-        member("layer" & restrict(dp+d+1, 0, 29)).image.copyPixels(member("pistonHead").image, rect(A.locH - 5, A.locV - 5, A.locH + 5, A.locV + 5), member("pistonHead").image.rect, {#ink:36})
-      end repeat
-      wdth = 1
-      QD = [A + dir - perp * wdth, A + dir + perp * wdth, B - dir + perp * wdth, B - dir - perp * wdth] + [point(-1,-1), point(-1,-1), point(-1,-1), point(-1,-1)]
-      member("layer" & restrict(dp+1, 0, 29)).image.copyPixels(member("pxl").image, QD, rect(0,0,1,1), {#ink:36, #color:color(0, 0, 255)})
-      
-      A2 = A
-      if(diag(a,b) > 200) then
-        A2 = B + MoveToPoint(b, a, 200.0)
-      end if
-      repeat with d = 0 to 4 then
-        wdth = 5 + d + (d > 0)
-        QD = [A2 - perp * wdth, A2 + perp * wdth, B + perp * wdth, B - perp * wdth]
-        member("layer" & restrict(dp+d, 0, 29)).image.copyPixels(member("pxl").image, QD, rect(0,0,1,1), {#ink:36, #color:color(0, 255, 0)})
         
-        if(d = 0)then
-          wdth = 3
-          QD = [A2 + dir*2 - perp * wdth, A2 + dir*2 + perp * wdth, B - dir*2 + perp * wdth, B - dir*2 - perp * wdth] + [point(-2,-2), point(-2,-2), point(-2,-2), point(-2,-2)]
-          member("layer" & restrict(dp, 0, 29)).image.copyPixels(member("pxl").image, QD, rect(0,0,1,1), {#ink:36, #color:color(0, 0, 255)})
+      "Drill":
+        
+        steps = ((diag(A, B)/20.0)+0.4999).integer
+        degDir = lookatpoint(A, B)
+        stp = random(100)*0.01
+        repeat with q = 1 to steps then
+          pos = A+(dir*20.0*(q-stp))
+          rct = rect(pos,pos)+rect(-10,-10,10,10)
+          
+          repeat with e = 0 to 9 then
+            member("layer"&string(restrict(dp+e, 0, 29))).image.copypixels(member("DrillGraf").image, rotateToQuad(rct, degDir), rect(0, e*20, 20, (e+1)*20), {#ink:36})
+          end repeat
+        end repeat
+        
+      "Piston":
+        dr = dir
+        repeat with d = 0 to 2 then
+          wdth = 3 + d
+          QD = [A - perp * wdth, A + perp * wdth, B + perp * wdth, B - perp * wdth]
+          member("layer" & restrict(dp+d+1, 0, 29)).image.copyPixels(member("pxl").image, QD, rect(0,0,1,1), {#ink:36, #color:color(0, 255, 0)})
+          
+          member("layer" & restrict(dp+d+1, 0, 29)).image.copyPixels(member("pistonHead").image, rect(A.locH - 5, A.locV - 5, A.locH + 5, A.locV + 5), member("pistonHead").image.rect, {#ink:36})
+        end repeat
+        wdth = 1
+        QD = [A + dir - perp * wdth, A + dir + perp * wdth, B - dir + perp * wdth, B - dir - perp * wdth] + [point(-1,-1), point(-1,-1), point(-1,-1), point(-1,-1)]
+        member("layer" & restrict(dp+1, 0, 29)).image.copyPixels(member("pxl").image, QD, rect(0,0,1,1), {#ink:36, #color:color(0, 0, 255)})
+        
+        A2 = A
+        if(diag(a,b) > 200) then
+          A2 = B + MoveToPoint(b, a, 200.0)
         end if
+        repeat with d = 0 to 4 then
+          wdth = 5 + d + (d > 0)
+          QD = [A2 - perp * wdth, A2 + perp * wdth, B + perp * wdth, B - perp * wdth]
+          member("layer" & restrict(dp+d, 0, 29)).image.copyPixels(member("pxl").image, QD, rect(0,0,1,1), {#ink:36, #color:color(0, 255, 0)})
+          
+          if(d = 0)then
+            wdth = 3
+            QD = [A2 + dir*2 - perp * wdth, A2 + dir*2 + perp * wdth, B - dir*2 + perp * wdth, B - dir*2 - perp * wdth] + [point(-2,-2), point(-2,-2), point(-2,-2), point(-2,-2)]
+            member("layer" & restrict(dp, 0, 29)).image.copyPixels(member("pxl").image, QD, rect(0,0,1,1), {#ink:36, #color:color(0, 0, 255)})
+          end if
+          
+          QD = [A2 - perp * wdth, A2 + perp * wdth, A2 + dir * 2 + perp * wdth, A2 + dir * 2 - perp * wdth]
+          member("layer" & restrict(dp+d, 0, 29)).image.copyPixels(member("pxl").image, QD, rect(0,0,1,1), {#ink:36, #color:color(255, 0, 0)})
+        end repeat
         
-        QD = [A2 - perp * wdth, A2 + perp * wdth, A2 + dir * 2 + perp * wdth, A2 + dir * 2 - perp * wdth]
-        member("layer" & restrict(dp+d, 0, 29)).image.copyPixels(member("pxl").image, QD, rect(0,0,1,1), {#ink:36, #color:color(255, 0, 0)})
-      end repeat
-      
-      
-  end case
-  
+        
+    end case
+  end if
 end
 
 

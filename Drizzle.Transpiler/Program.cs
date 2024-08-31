@@ -89,6 +89,7 @@ internal static class Program
         }
 
         var scripts = Directory.GetFiles(sourcesRoot, "*.lingo")
+            .Concat(Directory.GetFiles(sourcesRoot, "*.ls"))
             .AsParallel()
             .Select(n =>
             {

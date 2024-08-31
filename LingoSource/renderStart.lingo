@@ -1,10 +1,11 @@
 global gTiles, tileSetIndex, gCurrentRenderCamera, gAnyDecals, firstCamRepeat, solidMtrx, gLOprops, gLEprops, gTEprops, gDRMatFixes, gDRInvI, grimeActive, grimeOnGradients, bkgFix, gRRSpreadsMore, slimeFxt
-global DRWhite, DRPxl, DRPxlRect
+global DRWhite, DRPxl, DRPxlRect, DRDarkSlimeFix
 on exitFrame me
   DRPxl = member("pxl").image
-  DRPxlRect = member("pxl").image.rect
+  DRPxlRect = DRPxl.rect
   DRWhite = color(255, 255, 255)
   slimeFxt = getBoolConfig("Slime always affects editor decals")
+  DRDarkSlimeFix = getBoolConfig("Dark Slime fix")
   gRRSpreadsMore = getBoolConfig("Rough Rock spreads more")
   grimeActive = getBoolConfig("Grime")
   grimeOnGradients = getBoolConfig("Grime on gradients")
@@ -206,17 +207,7 @@ on createShortCuts me
         if didItWork then
           gShortcuts.indexL.add(point(q,c))
           gShortcuts.scs.add(tp)
-          -- put "added" && tp
-          -- else
-          --  put point(q,c)
-          --    gMatrix[q][c][1][2].deleteOne(4)
-          --    gMatrix[q][c][1][1] = 1
         end if
-        
-        --   else if (gMatrix[q][c][1][2].getPos(5) > 0)and(gMatrix[q][c][2][1]=1)and(gMatrix[q][c][1][1]<>1) then
-        --    rct = depthPnt(giveMiddleOfTile(point(q,c)), 5)
-        --    rct = rect(rct,rct)+rect(-1,-1,2,2)
-        --    member("shortcutdotsImg").image.copyPixels(member("pxl").image, rct, rect(0,0,1,1))
       end if
     end repeat
   end repeat

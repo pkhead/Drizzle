@@ -229,16 +229,7 @@ on updateEffectsMenu me, mv: point
   end repeat
   
   member("tileMenu").text = txt
-  --  if (gEffects[gEEprops.emPos.locH].efs[gEEprops.emPos.locV] <> void)then
   efn = gEffects[gEEprops.emPos.locH].efs[gEEprops.emPos.locV]
-  
-  --if(efn.nm = "Foliage")or(efn.nm = "Mistletoe")or(efn.nm = "High Fern")or(efn.nm = "High Grass")or(efn.nm = "Little Flowers")or(efn.nm = "Wastewater Mold")or(efn.nm = "Spinets")or(efn.nm = "Small Springs")or(efn.nm = "Mini Growers")or(efn.nm = "Clovers")or(efn.nm = "Impacts")or(efn.nm = "Ring Chains")then
-  --  member("Drought Reserve text").text = "THIS EFFECT IS IN DROUGHT RESERVE, SEE THE IMPORTANT INFO FILE FOR THE CONDITIONS TO USE IT."
-  --else
-  member("Drought Reserve text").text = ""
-  --end if
-  --  end if
-  
 end
 
 
@@ -465,15 +456,15 @@ on newEffect me
       ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "1"])
       ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
       
-    "Root Grass", "Growers", "Cacti", "Rain Moss", "Dense Mold", "Seed Pods", "Grass", "Arm Growers", "Horse Tails", "Circuit Plants", "Feather Plants", "Mini Growers", "Left Facing Kelp", "Right Facing Kelp", "Club Moss", "Moss Wall", "Mixed Facing Kelp", "Bubble Grower":
+    "Root Grass", "Growers", "Cacti", "Rain Moss", "Dense Mold", "Seed Pods", "Dandelions", "Grass", "Arm Growers", "Horse Tails", "Circuit Plants", "Storm Plants", "Feather Plants", "Mini Growers", "Left Facing Kelp", "Right Facing Kelp", "Club Moss", "Moss Wall", "Mixed Facing Kelp", "Bubble Grower", "Seed Grass", "Hyacinths", "Orb Plants":
       ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
       ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
       
-      if(["Arm Growers", "Growers", "Mini Growers", "Left Facing Kelp", "Right Facing Kelp", "Mixed Facing Kelp", "Bubble Grower"].getPos( ef.nm ) > 0 )then
+      if(["Arm Growers", "Growers", "Mini Growers", "Left Facing Kelp", "Right Facing Kelp", "Mixed Facing Kelp", "Bubble Grower", "Coral Growers", "Leaf Growers", "Meat Growers"].getPos( ef.nm ) > 0 )then
         ef.crossScreen = 1
       end if
       
-    "Rollers", "Thorn Growers", "Garbage Spirals", "Spinets", "Small Springs", "Fuzzy Growers":
+    "Rollers", "Thorn Growers", "Horror Growers", "Garbage Spirals", "Spinets", "Small Springs", "Fuzzy Growers", "Coral Growers", "Leaf Growers", "Meat Growers", "Thunder Growers", "Ice Growers", "Grass Growers", "Fancy Growers":
       ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
       ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
       ef.crossScreen = 1

@@ -1,4 +1,4 @@
-global c, pal, pal2, dptsL, fogDptsL, gPalette, gEffectPaletteA, gEffectPaletteB, gFogColor, gBlurOptions, gSkyColor, gLOprops, gViewRender, keepLooping, gCustomColor
+global c, pal, pal2, dptsL, fogDptsL, gPalette, gEffectPaletteA, gEffectPaletteB, gFogColor, gBlurOptions, gSkyColor, gLOprops, gViewRender, keepLooping, gCustomColor, DRFinalImage, DRFogImage, DRDpImage, DRShadowImage, DRRainbowMask, DRFlattenedGradientA, DRFlattenedGradientB, DRFinalDecalImage
 global gAnyDecals, gDecalColors, gPEcolors, grimeActive, grimeOnGradients, bkgFix
 
 on exitFrame me
@@ -28,28 +28,18 @@ on exitFrame me
 end
 
 on newFrame me
-  -- 
-  
-  -- l = [color(255,0,0), color(0,255,0), color(0,0,255), color(255,0,255), color(0,255,255), color(255,255,0)]
-  
   sprite(59).locV = c-8
-  
   repeat with q = 1 to 1400 then
     
     layer: number = 1
     
-    getColor = member("finalImage").image.getPixel(q-1, c-1)
-    if (getColor <> color(255, 255, 255))then
-      
-      --        if getColor = color(0, 0, 0) then
-      --          member("finalImage").image.setPixel(q-1, c-1, color(255, 255, 255))
-      --        end if
-      
+    getColor = DRFinalImage.getPixel(q-1, c-1)
+    if (getColor <> color(255, 255, 255)) then
       if (getColor.green > 7) and (getColor.green < 11) then
         
       else if (getColor = color(0, 11, 0)) then
         -- put "What's this?"
-        member("finalImage").image.setPixel(q-1, c-1, color(10, 0, 0))
+        DRFinalImage.setPixel(q-1, c-1, color(10, 0, 0))
       else
         
         if (getColor = color(255, 255, 255)) then
@@ -65,13 +55,13 @@ on newFrame me
         --        layer = 0
         --      end if
         
-        lowResDepth = dptsL.getPos(member("dpImage").image.getPixel(q-1, c-1))
-        fgDp = fogDptsL.getPos(member("fogImage").image.getPixel(q-1, c-1))
+        lowResDepth = dptsL.getPos(DRDpImage.getPixel(q-1, c-1))
+        fgDp = fogDptsL.getPos(DRFogImage.getPixel(q-1, c-1))
         --  whiteness = 0
         
         
         
-        fogFac = (255-member("fogImage").image.getPixel(q-1, c-1).red)/255.0
+        fogFac = (255-DRFogImage.getPixel(q-1, c-1).red)/255.0
         fogFac = (fogFac - 0.0275)*(1.0/0.9411)
         rainBowFac = 0
         
@@ -79,7 +69,7 @@ on newFrame me
         -- if member("blackOutImg2").image.getPixel(q-1, c-1) = 0 then
         if fogFac <= 0.2 then
           repeat with dsplc in [point(-2,0), point(0,-2), point(2, 0), point(0,2), point(-1,-1), point(1,-1), point(1, 1), point(-1,1)] then
-            otherFogFac = (255-member("fogImage").image.getPixel(restrict(q-1+dsplc.locH, 0, 1339), restrict(c-1+dsplc.locV, 0, 799)).red)/255.0
+            otherFogFac = (255-DRFogImage.getPixel(restrict(q-1+dsplc.locH, 0, 1339), restrict(c-1+dsplc.locV, 0, 799)).red)/255.0
             otherFogFac = (otherFogFac - 0.0275)*(1.0/0.9411)
             rainBowFac = rainBowFac + (abs(fogFac-otherFogFac)>0.0333)*(restrict(fogFac - otherFogFac, 0, 1)+1)
             if rainBowFac > 5 then
@@ -146,7 +136,7 @@ on newFrame me
         --if transp = false then
         col.red = ((palCol-1) * 30) + fgDp
         
-        if (member("shadowImage").image.getPixel(q-1, c-1) <> color( 0, 0, 0 )) then
+        if (DRShadowImage.getPixel(q-1, c-1) <> color( 0, 0, 0 )) then
           col.red = col.red + 90
         end if
         
@@ -162,7 +152,7 @@ on newFrame me
               greenCol = greenCol + 4
               me.rainbowifypixel(point(q,c))
             end if
-          else if (member("rainBowMask").image.getPixel(q-1, c-1) <> color( 0 )) then
+          else if (DRRainBowMask.getPixel(q-1, c-1) <> color( 0 )) then
             if (grimeOnGradients) then
               greenCol = greenCol + 4
             else if (greenCol <> 1) and (greenCol <> 2) and (greenCol <> 3) then
@@ -176,8 +166,13 @@ on newFrame me
         if (effectColor > 0) then
           if (effectColor = 3) then
             col.blue = getColor.red
-          else 
-            col.blue = 255-member("flattenedGradient" & ["A", "B"][(effectColor mod 4)]).image.getPixel(q-1, c-1).red
+          else
+            modABEf = [TRUE, FALSE][(effectColor mod 4)]
+            if (modABEf) then
+              col.blue = 255-DRFlattenedGradientA.getPixel(q-1, c-1).red
+            else
+              col.blue = 255-DRFlattenedGradientB.getPixel(q-1, c-1).red
+            end if
           end if
           if (col.blue >= 255) and (bkgFix) then
             col.blue = 254
@@ -185,7 +180,7 @@ on newFrame me
         else
           decalColor = 0
           if(gAnyDecals)then
-            dcGet = member("finalDecalImage").image.getPixel(q-1, c-1)
+            dcGet = DRFinalDecalImage.getPixel(q-1, c-1)
             if (dcGet <> color(255, 255, 255))then
               if(dcGet = gPEcolors[1][2])then
                 if (grimeActive) then
@@ -209,7 +204,6 @@ on newFrame me
                   decalColor = 2
                 end if
                 col.blue = 256-decalColor
-                --writeInternalMessage(string(decalColor))
                 greenCol = greenCol + 8
               end if
             end if
@@ -220,9 +214,9 @@ on newFrame me
         col.green = greenCol + (dark*16)
         
         if layer = 0 then
-          member("finalImage").image.setPixel(q-1, c-1, color(255, 255, 255))
+          DRFinalImage.setPixel(q-1, c-1, color(255, 255, 255))
         else
-          member("finalImage").image.setPixel(q-1, c-1, col)
+          DRFinalImage.setPixel(q-1, c-1, col)
         end if
         
       end if
@@ -245,31 +239,31 @@ on rainbowifypixel me, pxl: point
   end if
   
   if IsPixelInFinalImageRainbowed(pxl+point(-1, 0)) = 0 then
-    currCol: color = member("finalImage").image.getPixel(pxl.locH-1-1, pxl.locV-1)
-    member("finalImage").image.setPixel(pxl.locH-1-1, pxl.locV-1, color(currCol.red, currCol.green+4, currCol.blue))
+    currCol = DRFinalImage.getPixel(pxl.locH-1-1, pxl.locV-1)
+    DRFinalImage.setPixel(pxl.locH-1-1, pxl.locV-1, color(currCol.red, currCol.green+4, currCol.blue))
   end if
   
   if IsPixelInFinalImageRainbowed(pxl+point(0, -1)) = 0 then
-    currCol = member("finalImage").image.getPixel(pxl.locH-1, pxl.locV-1-1)
-    member("finalImage").image.setPixel(pxl.locH-1, pxl.locV-1-1, color(currCol.red, currCol.green+4, currCol.blue))
+    currCol = DRFinalImage.getPixel(pxl.locH-1, pxl.locV-1-1)
+    DRFinalImage.setPixel(pxl.locH-1, pxl.locV-1-1, color(currCol.red, currCol.green+4, currCol.blue))
   end if
   
   --if (pxl.locH >= 0) and (pxl.locV-1 >= 0) and (pxl.locH <= 1400) and (pxl.locV-1 <= 800) then
-  member("rainBowMask").image.setPixel(pxl.locH-1+1, pxl.locV-1, color(0, 0, 0))
+  DRRainBowMask.setPixel(pxl.locH-1+1, pxl.locV-1, color(0, 0, 0))
   --end if
   --if (pxl.locH-1 >= 0) and (pxl.locV >= 0) and (pxl.locH-1 <= 1400) and (pxl.locV <= 800) then
-  member("rainBowMask").image.setPixel(pxl.locH-1, pxl.locV-1+1, color(0, 0, 0))
+  DRRainBowMask.setPixel(pxl.locH-1, pxl.locV-1+1, color(0, 0, 0))
   --end if
-end if
+end
 
 on IsPixelInFinalImageRainbowed(pxl: point)
 type return: number
 if(pxl.loch < 1)or(pxl.locv < 1)then
 return 0
-else if(member("finalImage").image.getPixel(pxl.locH-1, pxl.locV-1) = color(255, 255, 255))then
+else if(DRFinalImage.getPixel(pxl.locH-1, pxl.locV-1) = color(255, 255, 255))then
 return 0
 else
-grn: number = member("finalImage").image.getPixel(pxl.locH-1, pxl.locV-1).green
+grn: number = DRFinalImage.getPixel(pxl.locH-1, pxl.locV-1).green
 return doesGreenValueMeanRainbow(grn)
 end if
 
@@ -285,79 +279,3 @@ on doesGreenValueMeanRainbow(grn: number)
     return 0
   end if
 end
-
-
---on changeLightRect me, lr, pnt
---  global lightRects
---  --  if (pnt.locH > 734)and(lr=1) then
---  --    put pnt.locH
---  --  end if
---  if pnt.locH<lightRects[lr].left then
---    lightRects[lr].left = pnt.locH
---  end if
---  
---  if pnt.locH>lightRects[lr].right then
---    lightRects[lr].right = pnt.locH
---  end if
---  if pnt.locV<lightRects[lr].top then
---    lightRects[lr].top = pnt.locV
---  end if
---  if pnt.locV>lightRects[lr].bottom then
---    lightRects[lr].bottom = pnt.locV
---  end if
---  sprite(10+lr).rect = lightRects[lr]+rect(-8,-16,-8,-16)
---end
-
-
---on addCustomColor me, colour, q, c, fogFac, lit, tnt, fgDp
---  if ((gCustomColor[2].getPos(fgDp)=0)=(gCustomColor[1]=0))or(gCustomColor[3].getPos(fgDp)>0) then
---    origCl = color(colour.red, colour.green, colour.blue)
---    pxl = depthPnt(point(q,c),15-fogFac*45) + point(tnt*1, tnt*2)
---    
---    if pxl.inside(rect(1,1,1040,800)) then
---      customCol = member("previewImprt").image.getPixel(pxl.locH-1, pxl.locV-1)
---      if customCol = color(255,0,255) then
---        member("rainBowMask").image.setPixel(q-1, c-1, color(255,255,255))
---      else if customCol <> color(0,0,0) then
---        mlt = color(restrict((colour.red/255.0)*(customCol.red/255.0), 0, 1.0)*255, restrict((colour.green/255.0)*(customCol.green/255.0), 0, 1.0)*255, restrict((colour.blue/255.0)*(customCol.blue/255.0), 0, 1.0)*255)
---        
---        
---        if lit then
---          colour = color((colour.red*2+mlt.red*0.5+customCol.red)/3.5, (colour.green*2+mlt.green*0.5+customCol.green)/3.5, (colour.blue*2+mlt.blue*0.5+customCol.blue)/3.5)
---        else
---          colour = color((colour.red*2+mlt.red*2+customCol.red)/5.0, (colour.green*2+mlt.green*2+customCol.green)/5.0, (colour.blue*2+mlt.blue*2+customCol.blue)/5.0)
---        end if
---        
---        if gCustomColor[3].getPos(fgDp) then -- half transparency
---          colour = color((colour.red+origCl.red)*0.5, (colour.green+origCl.green)*0.5,(colour.blue+origCl.blue)*0.5)
---        end if
---        
---      end if
---    end if
---  end if
---  return colour
---end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

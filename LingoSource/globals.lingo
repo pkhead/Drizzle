@@ -108,3 +108,4 @@ type gRRSpreadsMore:              number
 type slimeFxt:                    number
 type showConstrols:               number
 type rndDisF:                     number
+type DRPxl:                       image

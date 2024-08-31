@@ -409,7 +409,7 @@ on exitFrame me
     prop = gProps[gPEprops.pmPos.locH].prps[gPEprops.pmPos.locV]
   end if
   
-  if (prop <> VOID) and (prop.tp = "long")then
+  if (prop <> VOID) and ((prop.tp = "long") or (prop.tp = "customLong")) then
     if(longPropPlacePos = void)then
       gPEprops.propRotation = 0
       gPEprops.propStretchX = 1
@@ -549,7 +549,8 @@ on exitFrame me
   
   sprite(264).quad = qd
   
-  if((gProps[gPEprops.pmPos.locH].prps[gPEprops.pmPos.locV].tp = "rope"))then
+  propTp = gProps[gPEprops.pmPos.locH].prps[gPEprops.pmPos.locV].tp
+  if (propTp = "rope") or (propTp = "customRope") then
     viewRope = false
     
     
@@ -679,13 +680,11 @@ on placeProp(qd)
   -- end if
   
   case (gProps[gPEprops.pmPos.locH].prps[gPEprops.pmPos.locV].tp)of
-    "rope":
+    "rope", "customRope":
       prop[5].addProp(#points, [])
       repeat with q = 1 to ropeModel.segments.count then
         prop[5].points.add(script("ropeModel").SmoothedPos(q))
       end repeat
-    "long":
-      
     "variedDecal", "variedSoft", "variedStandard":
       if(prop[5].settings.variation = 0)then
         prop[5].settings.variation = random(gProps[gPEprops.pmPos.locH].prps[gPEprops.pmPos.locV].vars)
@@ -747,7 +746,7 @@ on renderPropsImage()
       end if
       
       case (propData.tp) of
-        "rope":
+        "rope", "customRope":
           member("propsImage").image.copyPixels(mem.image, prop[4]-camPosQuad, mem.image.rect, {#ink:36, #blend:blnd})
           q = 1
           repeat while q < prop[5].points.count then
@@ -767,7 +766,7 @@ on renderPropsImage()
       
     else
       case (propData.tp) of   
-        "rope":
+        "rope", "customRope":
           member("propsImage2").image.copyPixels(mem.image, prop[4]-camPosQuad, mem.image.rect, {#ink:36, #blend:blnd, #color:clr})
           q = 1
           repeat while q < prop[5].points.count then
@@ -1137,15 +1136,9 @@ on newPropSelected()
       end case
     end repeat
     
-    --if(prop.tags.GetPos("droughtReserve") > 0)then
-    -- member("Drought Reserve text").text = "THIS PROP IS IN DROUGHT RESERVE, SEE THE IMPORTANT INFO FILE FOR THE CONDITIONS TO USE IT."
-    --else
-    member("Drought Reserve text").text = ""
-    --end if
-    
     ApplyTransformationTags()
     
-    if(prop.tp = "rope")then
+    if(prop.tp = "rope") or (prop.tp = "customRope")then
       resetRopeProp()
     end if
     
@@ -1185,7 +1178,7 @@ on ApplyTransformationTags()
   end repeat
   
   case prop.tp of
-    "long":
+    "long", "customLong":
       peSavedStretch = point(gPEprops.propStretchX, gPEprops.propStretchY)
       gPEprops.propRotation = 0
       gPEprops.propFlipX = 1
@@ -1396,7 +1389,7 @@ on propPreviewMember(prop)
         --end repeat
       end repeat
       
-    "rope", "long":
+    "rope", "long", "customRope", "customLong":
       newMem.image = image(member("previewImprt").image.width, member("previewImprt").image.height, 16)
       newMem.image.copyPixels(member("previewImprt").image, newMem.image.rect, member("previewImprt").image.rect)
   end case
