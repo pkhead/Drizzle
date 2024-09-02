@@ -187,20 +187,9 @@ on exitFrame me
   
   
   script("levelOverview").goToEditor()
-  -- if _key.keyPressed("G")=0 then
   tile = gTiles[gTEprops.tmPos.locH].tls[gTEprops.tmPos.locV]
-  --if(tile.nm = "4Mosaic")or(tile.nm = "Rocks")or(tile.nm = "Cliff")or(tile.nm = "Non-Slip Metal")then
-  --  member("Drought Reserve text").text = "THIS MATERIAL IS IN DROUGHT RESERVE, SEE THE IMPORTANT INFO FILE FOR THE CONDITIONS TO USE IT."
-  --else if(tile.tags.GetPos("droughtReserve") > 0) or (tile.tags.getPos("Sawblades") > 0)then
-  --  member("Drought Reserve text").text = "THIS TILE IS IN DROUGHT RESERVE, SEE THE IMPORTANT INFO FILE FOR THE CONDITIONS TO USE IT."
   ttgs = tile[#tags]
-  if (ttgs <> VOID) and ((ttgs.getPos("Station Larger Sign") > 0) or (ttgs.getPos("Station Larger Sign B") > 0) or (ttgs.getPos("Small Asian Sign Station") > 0) or (ttgs.getPos("Small Asian Sign On Wall Station") > 0) or (ttgs.getPos("Small Asian Sign Station B") > 0) or (ttgs.getPos("Small Asian Sign On Wall Station B") > 0)) then
-    member("Drought Reserve text").text = "THIS TILE IS RESERVED FOR THE CUSTOM REGION "&QUOTE&"FORSAKEN STATION"&QUOTE&", SEE WITH THE CREATOR OF THE REGION TO US IT."
-  else
-    member("Drought Reserve text").text = ""
-  end if
   go the frame
-  -- end if
 end
 
 
@@ -330,7 +319,6 @@ on updateTileMenu(mv)
   
   member("tileMenu").text = txt
   --CAT CHANGE
-  --if gTiles[gTEprops.tmPos.locH].nm = "materials" or gTiles[gTEprops.tmPos.locH].nm = "Drought Materials" or gTiles[gTEprops.tmPos.locH].nm = "Community Materials" then
   if (gTEprops.tmPos.locH <= getLastMatCat()) then
     sprite(19).visibility = 1
     gTEprops.toolType = "material"
@@ -779,7 +767,7 @@ on SpecialRectPlacement(rct)
         lookForTileCat = "SU grates"
         stringLength = 8
       else if gTiles[gTEprops.tmPos.locH].tls[gTEprops.tmPos.locV].nm = "Alt Grate Box" then
-        lookForTileCat = "Drought Alt Grates"
+        lookForTileCat = "LB Alt Grates"
         stringLength = 9
       end if 
       

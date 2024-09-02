@@ -37,15 +37,6 @@ on exitFrame me
   
   props = ["image": member("finalImage").image, "filename":_movie.path&"Levels/"&gLoadedName & "_" & gCurrentRenderCamera & ".png"]
   ok = gImgXtra.ix_saveImage(props)
-  
-  -- if gCurrentRenderCamera = 1 then
-  
-  --  gLevel.lightRect = lightRects
-  --  dataImg = txtToImg(string(gLEVEL))
-  
-  
-  -- end if
-  
   if (gCurrentRenderCamera < gCameraProps.cameras.count) then
     put "sendback" && gCurrentRenderCamera
     _movie.go(44)

@@ -2,10 +2,6 @@ global gTEprops, gTiles, gLEprops, gLOprops, gDirectionKeys
 
 on exitFrame me
   _movie.exitLock = TRUE
-  --  repeat with q = 1 to 3 then
-  --    member("TEimg"&string(q)).image = image(16*gLOprops.size.loch, 16*gLOprops.size.locV, 16)
-  --  end repeat
-  
   member("tileMenu").alignment = #left
   
   member("TEimg1").image = image(52*16, 40*16, 16)
@@ -33,18 +29,8 @@ on exitFrame me
   sprite(5).blend = 70
   sprite(6).blend = 100
   
-  --gTEprops.workLayer = 1
-  
   sprite(8).blend = 80
   sprite(8).visibility = 0
-  -- sprite(8).loc = point(432, 336) --+ point(-5, 5)--*(gTEprops.workLayer = 2)
-  --  pos = 2 - gTEprops.workLayer
-  --  sprite(1).loc = point(432, 336) + point(pos+1,-pos-1)*3
-  --  sprite(2).loc = point(432, 336) + point(pos+1,-pos-1)*3
-  --  sprite(3).loc = point(432, 336) + point(pos,-pos)*3
-  --  sprite(4).loc = point(432, 336) + point(pos,-pos)*3
-  --  sprite(5).loc = point(432, 336) + point(pos-1,-pos+1)*3
-  --  sprite(6).loc = point(432, 336) + point(pos-1,-pos+1)*3
   script("tileEditor").changeLayer()
   
   member("default material").text = "Default material:" && gTEprops.defaultMaterial && "(Press 'E' to change)"
@@ -54,13 +40,11 @@ on exitFrame me
   gTEprops.keys = l.duplicate()
   
   script("tileEditor").updateTileMenu(point(0,0))
-  --call(#updateTileMenu, point(0,0))
-  
+
   gTEprops.tmSavPosL = []
   repeat with q = 1 to gTiles.count then
     gTEprops.tmSavPosL.add(1)
   end repeat
-  member("Drought Reserve text").text = ""
 end
 
 
