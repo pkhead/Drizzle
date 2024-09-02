@@ -49,29 +49,15 @@ on exitFrame me
   sprite(216).blend = 80
   sprite(217).blend = 100
   
-  
-  --  sav = gLeProps.camPos
-  --  gLeProps.camPos = point(0,0)
-  --  repeat with l = 1 to 3 then
-  --    lvlEditDraw(rect(1,1,cols,rows), l, 1)
-  --    TEdraw(rect(1,1,cols,rows), l, 1)
-  --  end repeat
-  --  drawShortCutsImg(rect(1,1,cols,rows))
-  --  gLeProps.camPos = sav
-  
   l = [#n:0, #m1:0, m2:0, #w:0, #a:0, #s:0, #d:0, #e:0, #r:0, #f:0]
   gEEprops.lastKeys = l.duplicate()
   gEEprops.keys = l.duplicate()
   
-  -- call(#updateEffectsMenu, point(0,0))
-  --call(#up script("effectsEditor").initMode("createNew")
   script("effectsEditor").updateEffectsMenu(point(0,0))
   script("effectsEditor").updateEffectsL(0)
   script("effectsEditor").initMode("createNew")
-  -- script("effectsEditor").initMode("createNew")
   script("propEditor").renderPropsImage()
   script("effectsEditor").drawEfMtrx(gEEprops.editEffect)
-  member("Drought Reserve text").text = ""
 end
 
 

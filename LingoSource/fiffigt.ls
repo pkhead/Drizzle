@@ -1,4 +1,3 @@
-
 --detta skript räknar ut distansen mellan två punkter
 on diag(point1: point, point2: point)
   type return: number
@@ -528,44 +527,8 @@ on newMakeLevel(lvlName)
   global gLOprops, gCameraProps
   
   sz  = gLOprops.size*20
-  
-  --  member("saveImg").image = image(sz.loch, sz.locv*30, 8)
-  --  
-  --  oneColor = image(member("layer0").image.width, member("layer0").image.height, 1)
-  --  currentSilhouette = image(member("layer0").image.width, member("layer0").image.height, 1)
-  --  repeat with q = 0 to 29 then
-  --    currentSilhouette = makeSilhoutteFromImg(member("layer"&q).image, 1)
-  --    member("layer"&q).image.copyPixels(oneColor, rect(0,0, sz.loch, sz.locv), rect(0,0, sz.loch, sz.locv), {#color:color(0, 255, 0), #ink:36})
-  --    member("layer"&q).image.copyPixels(currentSilhouette, rect(0,0, sz.loch, sz.locv), rect(0,0, sz.loch, sz.locv), {#color:color(255, 255, 255), #ink:36})
-  --    
-  --    oneColor.copyPixels(makeSilhoutteFromImg(member("layer"&q).image, 0), rect(0,0, sz.loch, sz.locv), rect(0,0, sz.loch, sz.locv), {#color:color(0, 0, 0), #ink:36})
-  --    
-  --    othersil = makeSilhoutteFromImg(oneColor, 1)
-  --    repeat with dir in [point(-1,0), point(1,0), point(0,-1), point(0,1), point(-1,1), point(1,1), point(1,-1), point(-1,1)] then
-  --      repeat with c = 1 to 3 then
-  --        oneColor.copyPixels(othersil, rect(0,0, sz.loch, sz.locv)+rect(dir*c, dir*c), rect(0,0, sz.loch, sz.locv), {#color:color(255, 255, 255), #ink:36})
-  --      end repeat
-  --    end repeat
-  --    
-  --  end repeat
-  
-  --  pos = point(0,0)
-  --  repeat with q = 0 to 29 then
-  --    member("saveImg").image.copyPixels(member("layer"&q).image, rect(sz.loch*pos.locH,sz.locv*pos.locV, sz.loch*(pos.loch+1), sz.locv*(pos.locV+1)), rect(0,0, sz.loch, sz.locv))
-  --    pos.locv = pos.locv + 1
-  --    if pos.locV > 5 then
-  --      pos.loch = pos.locH + 1
-  --      pos.locV = 0
-  --    end if
-  --  end repeat
-  
   pos = point(0,0)
-  -- repeat with q = 0 to 29 then
-  --   member("saveImg").image.copyPixels(member("layer"&q).image, rect(0,sz.locv*q, sz.loch, sz.locv*(q+1)), rect(0,0, sz.loch, sz.locv))
-  -- end repeat
-  
-  
-  
+
   global gLOprops, gLightEProps, gLEProps, gEnvEditorProps, gLevel
   
   lightangle = degToVec(gLightEProps.lightAngle) * gLightEProps.flatness
@@ -676,8 +639,6 @@ on newMakeLevel(lvlName)
   end repeat
   
   foundFile = 0
-  
-  --put txt
   
   repeat with i = 1 to 1000 then
     n = getNthFileNameInFolder(the moviePath & "Levels", i)

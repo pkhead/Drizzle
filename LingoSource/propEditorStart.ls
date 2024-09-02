@@ -106,5 +106,4 @@ on exitFrame me
   script("propEditor").renderPropsImage()
   call(#updatePropMenu, point(0,0))
   member("propMenu").text = member("propBaseMenu").text
-  member("Drought Reserve text").text = ""
 end

@@ -1,11 +1,10 @@
 global gSaveProps, gTEprops, gTiles, gLEProps, gFullRender, gEEprops, gEffects, gLightEProps, gBlurOptions, lvlPropOutput
-global gLEVEL, gLOprops, gLoadedName, gSEProps, gViewRender, gMassRenderL, gCameraProps, gImgXtra, gEnvEditorProps, gPEprops, lG, gMegaTrash, showControls
-
+global gLEVEL, gLOprops, gLoadedName, gSEProps, gViewRender, gMassRenderL, gCameraProps, gImgXtra, gEnvEditorProps, gPEprops, altGrafLG, gMegaTrash, showControls
 global gProps, gLOADPATH, gTrashPropOptions, solidMtrx, INT_EXIT, INT_EXRD, DRCustomMatList, DRLastTL
 
 on exitFrame me
   member("editorConfig").importFileInto("editorConfig.txt")
-  if (member("editorConfig").text = VOID) or (member("editorConfig").text = "") or (member("editorConfig").text.line[1] <> "Rain World Community Editor; V.0.4.21; Editor configuration file") then
+  if (member("editorConfig").text = VOID) or (member("editorConfig").text = "") or (member("editorConfig").text.line[1] <> "Rain World Community Editor; V.0.4.3; Editor configuration file") then
     fileCo = new xtra("fileio")
     fileCo.createFile(the moviePath & "editorConfig.txt")
     fileCo.openFile(the moviePath & "editorConfig.txt", 0)
@@ -15,19 +14,9 @@ on exitFrame me
     _movie.go(1)
   end if
   clearLogs()
-  --  on initDRInternalList()
-  --end
-  --script("editorExceptionLog").freeImageNotFoundEx(me)
-  --_movie.window.maximize()
-  --_movie.window.moveToFront()
-  --_movie.allowZooming = TRUE
-  --_movie.
   if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
     _player.appMinimize()
   end if
-  --member("Controls").importFileInto("Controls.ls")
-  --showControls = TRUE
-  
   _global.clearGlobals()
   _movie.exitLock = TRUE
   lvlPropOutput = FALSE
@@ -141,63 +130,63 @@ on exitFrame me
   gTiles = []
   --CAT CHANGE
   gTiles.add([#nm:"Materials", #tls:[]])
-  gTiles[1].tls.add( [#nm:"Standard", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(150,150,150)])--, #tags:[]]    )
-  gTiles[1].tls.add( [#nm:"Concrete", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(150,255,255)])--, #tags:[]]    )
-  gTiles[1].tls.add( [#nm:"RainStone", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(0,0,255)])--, #tags:[]]    )
-  --gTiles[1].tls.add( [#nm:"Rough Rock", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(150,0,150), #tags:[]]    )
-  gTiles[1].tls.add( [#nm:"Bricks", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(200,150,100)])--, #tags:[]]    )
-  gTiles[1].tls.add( [#nm:"BigMetal", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(255,0,0)])--, #tags:[]]    )
-  gTiles[1].tls.add( [#nm:"Tiny Signs", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(255,200,255)])--, #tags:[]]    )
-  gTiles[1].tls.add( [#nm:"Scaffolding", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(60,60,40)])--, #tags:[]]    )
-  gTiles[1].tls.add( [#nm:"Dense Pipes", #sz:point(1,1), #specs:[0], #renderType:"densePipeType", #color:color(0,0,150)])--, #tags:[]]    )
-  gTiles[1].tls.add( [#nm:"SuperStructure", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(160,180,255)])--, #tags:[]]    )
-  gTiles[1].tls.add( [#nm:"SuperStructure2", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(190,160,0)])--, #tags:[]]    )
-  gTiles[1].tls.add( [#nm:"Tiled Stone", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(100,0,255)])--, #tags:[]]    )
-  gTiles[1].tls.add( [#nm:"Chaotic Stone", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(255,0,255)])--, #tags:[]]    )
-  gTiles[1].tls.add( [#nm:"Small Pipes", #sz:point(1,1), #specs:[0], #renderType:"pipeType", #color:color(255,255,0)])--, #tags:[]]    )
-  gTiles[1].tls.add( [#nm:"Trash", #sz:point(1,1), #specs:[0], #renderType:"pipeType", #color:color(90,255,0)])--, #tags:[]]    )
-  gTiles[1].tls.add( [#nm:"Invisible", #sz:point(1,1), #specs:[0], #renderType:"invisibleI", #color:color(200,200,200)])--, #tags:[]]    )
-  gTiles[1].tls.add( [#nm:"LargeTrash", #sz:point(1,1), #specs:[0], #renderType:"largeTrashType", #color:color(175,30,255)])--, #tags:[]] )
-  gTiles[1].tls.add( [#nm:"3DBricks", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(255,150,0)])--, #tags:[]]    )
-  gTiles[1].tls.add( [#nm:"Random Machines", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(72, 116, 80)])--, #tags:[]]    )
-  gTiles[1].tls.add( [#nm:"Dirt", #sz:point(1,1), #specs:[0], #renderType:"dirtType", #color:color(124, 72, 52)])--, #tags:[]]    )
-  gTiles[1].tls.add( [#nm:"Ceramic Tile", #sz:point(1,1), #specs:[0], #renderType:"ceramicType", #color:color(60, 60, 100)])--, #tags:[]]    )
-  gTiles[1].tls.add( [#nm:"Temple Stone", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(0, 120, 180)])--, #tags:[]]    )
-  gTiles[1].tls.add( [#nm:"Circuits", #sz:point(1,1), #specs:[0], #renderType:"densePipeType", #color:color(0,150,0)])--, #tags:[]]    )
-  gTiles[1].tls.add([#nm:"Ridge", #sz:point(1, 1), #specs:[0], #renderType:"ridgeType", #color:color(200, 15, 60)])
+  tilesInCat = gTiles[1].tls
+  tilesInCat.add([#nm:"Standard", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(150,150,150)])
+  tilesInCat.add([#nm:"Concrete", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(150,255,255)])
+  tilesInCat.add([#nm:"RainStone", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(0,0,255)])
+  tilesInCat.add([#nm:"Bricks", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(200,150,100)])
+  tilesInCat.add([#nm:"BigMetal", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(255,0,0)])
+  tilesInCat.add([#nm:"Tiny Signs", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(255,200,255)])
+  tilesInCat.add([#nm:"Scaffolding", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(60,60,40)])
+  tilesInCat.add([#nm:"Dense Pipes", #sz:point(1,1), #specs:[0], #renderType:"densePipeType", #color:color(0,0,150)])
+  tilesInCat.add([#nm:"SuperStructure", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(160,180,255)])
+  tilesInCat.add([#nm:"SuperStructure2", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(190,160,0)])
+  tilesInCat.add([#nm:"Tiled Stone", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(100,0,255)])
+  tilesInCat.add([#nm:"Chaotic Stone", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(255,0,255)])
+  tilesInCat.add([#nm:"Small Pipes", #sz:point(1,1), #specs:[0], #renderType:"pipeType", #color:color(255,255,0)])
+  tilesInCat.add([#nm:"Trash", #sz:point(1,1), #specs:[0], #renderType:"pipeType", #color:color(90,255,0)])
+  tilesInCat.add([#nm:"Invisible", #sz:point(1,1), #specs:[0], #renderType:"invisibleI", #color:color(200,200,200)])
+  tilesInCat.add([#nm:"LargeTrash", #sz:point(1,1), #specs:[0], #renderType:"largeTrashType", #color:color(175,30,255)])
+  tilesInCat.add([#nm:"3DBricks", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(255,150,0)])
+  tilesInCat.add([#nm:"Random Machines", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(72, 116, 80)])
+  tilesInCat.add([#nm:"Dirt", #sz:point(1,1), #specs:[0], #renderType:"dirtType", #color:color(124, 72, 52)])
+  tilesInCat.add([#nm:"Ceramic Tile", #sz:point(1,1), #specs:[0], #renderType:"ceramicType", #color:color(60, 60, 100)])
+  tilesInCat.add([#nm:"Temple Stone", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(0, 120, 180)])
+  tilesInCat.add([#nm:"Circuits", #sz:point(1,1), #specs:[0], #renderType:"densePipeType", #color:color(0,150,0)])
+  tilesInCat.add([#nm:"Ridge", #sz:point(1, 1), #specs:[0], #renderType:"ridgeType", #color:color(200, 15, 60)])
   
-  gTiles.add([#nm:"Drought Materials", #tls:[]])
-  gTiles[2].tls.add( [#nm:"Steel", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(220,170,195)])--, #tags:[]]    )
-  gTiles[2].tls.add( [#nm:"4Mosaic", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(227, 76, 13)])--, #tags:[]]    )
-  gTiles[2].tls.add( [#nm:"Color A Ceramic", #sz:point(1,1), #specs:[0], #renderType:"ceramicAType", #color:color(120, 0, 90)])--, #tags:[]]    )
-  gTiles[2].tls.add( [#nm:"Color B Ceramic", #sz:point(1,1), #specs:[0], #renderType:"ceramicBType", #color:color(0, 175, 175)])--, #tags:[]]    )
-  gTiles[2].tls.add( [#nm:"Random Pipes", #sz:point(1,1), #specs:[0], #renderType:"randomPipesType", #color:color(80,0,140)])--, #tags:[]]    )
-  --gTiles[2].tls.add( [#nm:"Roots", #sz:point(1,1), #specs:[0], #renderType:"Roots", #color:color(210,210,100), #tags:[]]    )
-  gTiles[2].tls.add( [#nm:"Rocks", #sz:point(1,1), #specs:[0], #renderType:"rockType", #color:color(185,200,0)])--, #tags:[]]    )
-  gTiles[2].tls.add( [#nm:"Rough Rock", #sz:point(1,1), #specs:[0], #renderType:"roughRock", #color:color(155,170,0)])--, #tags:[]]    )
-  gTiles[2].tls.add( [#nm:"Random Metal", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(180, 10, 10)])--, #tags:[]]    )
-  gTiles[2].tls.add( [#nm:"Cliff", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(75, 75, 75)])--, #tags:[]]    )
-  gTiles[2].tls.add( [#nm:"Non-Slip Metal", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(180, 80, 80)])--, #tags:[]]    )
-  gTiles[2].tls.add( [#nm:"Stained Glass", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(180, 80, 180)])--, #tags:[]]    )
-  --gTiles[2].tls.add( [#nm:"Sand Block", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(180, 180, 80), #tags:[]]    )
-  gTiles[2].tls.add( [#nm:"Sandy Dirt", #sz:point(1,1), #specs:[0], #renderType:"sandy", #color:color(180, 180, 80)])--, #tags:[]]    )
-  gTiles[2].tls.add( [#nm:"MegaTrash", #sz:point(1,1), #specs:[0], #renderType:"megaTrashType", #color:color(135,10,255)])--, #tags:[]] )
-  gTiles[2].tls.add( [#nm:"Shallow Dense Pipes", #sz:point(1,1), #specs:[0], #renderType:"densePipeType", #color:color(13,23,110)])--, #tags:[]]    )
-  gTiles[2].tls.add([#nm:"Sheet Metal", #sz:point(1, 1), #specs:[0], #renderType:"wv", #color:color(145, 135, 125)])--, #tags:[]])
-  gTiles[2].tls.add([#nm:"Chaotic Stone 2", #sz:point(1, 1), #specs:[0], #renderType:"tiles", #color:color(90, 90, 90)])--, #tags:[]])
-  gTiles[2].tls.add([#nm:"Asphalt", #sz:point(1, 1), #specs:[0], #renderType:"unified", #color:color(115, 115, 115)])
+  gTiles.add([#nm:"LB Materials", #tls:[]])
+  tilesInCat = gTiles[2].tls
+  tilesInCat.add([#nm:"Steel", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(220,170,195)])
+  tilesInCat.add([#nm:"4Mosaic", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(227, 76, 13)])
+  tilesInCat.add([#nm:"Color A Ceramic", #sz:point(1,1), #specs:[0], #renderType:"ceramicAType", #color:color(120, 0, 90)])
+  tilesInCat.add([#nm:"Color B Ceramic", #sz:point(1,1), #specs:[0], #renderType:"ceramicBType", #color:color(0, 175, 175)])
+  tilesInCat.add([#nm:"Random Pipes", #sz:point(1,1), #specs:[0], #renderType:"randomPipesType", #color:color(80,0,140)])
+  tilesInCat.add([#nm:"Rocks", #sz:point(1,1), #specs:[0], #renderType:"rockType", #color:color(185,200,0)])
+  tilesInCat.add([#nm:"Rough Rock", #sz:point(1,1), #specs:[0], #renderType:"roughRock", #color:color(155,170,0)])
+  tilesInCat.add([#nm:"Random Metal", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(180, 10, 10)])
+  tilesInCat.add([#nm:"Cliff", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(75, 75, 75)])
+  tilesInCat.add([#nm:"Non-Slip Metal", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(180, 80, 80)])
+  tilesInCat.add([#nm:"Stained Glass", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(180, 80, 180)])
+  tilesInCat.add([#nm:"Sandy Dirt", #sz:point(1,1), #specs:[0], #renderType:"sandy", #color:color(180, 180, 80)])
+  tilesInCat.add([#nm:"MegaTrash", #sz:point(1,1), #specs:[0], #renderType:"megaTrashType", #color:color(135,10,255)])
+  tilesInCat.add([#nm:"Shallow Dense Pipes", #sz:point(1,1), #specs:[0], #renderType:"densePipeType", #color:color(13,23,110)])
+  tilesInCat.add([#nm:"Sheet Metal", #sz:point(1, 1), #specs:[0], #renderType:"wv", #color:color(145, 135, 125)])
+  tilesInCat.add([#nm:"Chaotic Stone 2", #sz:point(1, 1), #specs:[0], #renderType:"tiles", #color:color(90, 90, 90)])
+  tilesInCat.add([#nm:"Asphalt", #sz:point(1, 1), #specs:[0], #renderType:"unified", #color:color(115, 115, 115)])
   
   gTiles.add([#nm:"Community Materials", #tls:[]])
-  gTiles[3].tls.add( [#nm:"Shallow Circuits", #sz:point(1,1), #specs:[0], #renderType:"densePipeType", #color:color(15,200,155)])--, #tags:[]]    )
-  gTiles[3].tls.add( [#nm:"Random Machines 2", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(116, 116, 80)])--, #tags:[]]    )
-  gTiles[3].tls.add( [#nm:"Small Machines", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(80, 116, 116)])--, #tags:[]]    )
-  gTiles[3].tls.add( [#nm:"Random Metals", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(255, 0, 80)])--, #tags:[]]    )
-  gTiles[3].tls.add( [#nm:"ElectricMetal", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(255,0,100)])--, #tags:[]]    )
-  gTiles[3].tls.add( [#nm:"Grate", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(190,50,190)])--, #tags:[]]    )
-  gTiles[3].tls.add( [#nm:"CageGrate", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(50,190,190)])--, #tags:[]]    )
-  gTiles[3].tls.add( [#nm:"BulkMetal", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(50,19,190)])--, #tags:[]]    )
-  gTiles[3].tls.add( [#nm:"MassiveBulkMetal", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(255,19,19)])--, #tags:[]]    )
-  gTiles[3].tls.add( [#nm:"Dune Sand", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(255, 255, 100)])--, #tags:[]]    )
+  tilesInCat = gTiles[3].tls
+  tilesInCat.add([#nm:"Shallow Circuits", #sz:point(1,1), #specs:[0], #renderType:"densePipeType", #color:color(15,200,155)])
+  tilesInCat.add([#nm:"Random Machines 2", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(116, 116, 80)])
+  tilesInCat.add([#nm:"Small Machines", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(80, 116, 116)])
+  tilesInCat.add([#nm:"Random Metals", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(255, 0, 80)])
+  tilesInCat.add([#nm:"ElectricMetal", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(255,0,100)])
+  tilesInCat.add([#nm:"Grate", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(190,50,190)])
+  tilesInCat.add([#nm:"CageGrate", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(50,190,190)])
+  tilesInCat.add([#nm:"BulkMetal", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(50,19,190)])
+  tilesInCat.add([#nm:"MassiveBulkMetal", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(255,19,19)])
+  tilesInCat.add([#nm:"Dune Sand", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(255, 255, 100)])
   
   savLM = member("matInit")
   member("matInit").importFileInto("Materials" & the dirSeparator & "Init.txt")
@@ -238,13 +227,13 @@ on exitFrame me
   setLastMatCat(gTiles.count)
   
   gTiles.add([#nm:"Special", #tls:[]])
-  spcInd = gTiles.count
-  gTiles[spcInd].tls.add( [#nm:"Rect Clear", #sz:point(1,1), #specs:[0], #placeMethod:"rect", #color:color(255, 0, 0)])--, #tags:[]]    )
-  gTiles[spcInd].tls.add( [#nm:"SH pattern box", #sz:point(1,1), #specs:[0], #placeMethod:"rect", #color:color(210, 0, 255)])--, #tags:[]]    )
-  gTiles[spcInd].tls.add( [#nm:"SH grate box", #sz:point(1,1), #specs:[0], #placeMethod:"rect", #color:color(160, 0, 255)])--, #tags:[]]    )
-  -- DROUGHT
-  gTiles[spcInd].tls.add( [#nm:"Alt Grate Box", #sz:point(1,1), #specs:[0], #placeMethod:"rect", #color:color(75, 75, 240)])--, #tags:[]]    )
-  setFirstTileCat(spcInd + 1)
+  tilesInCat = gTiles[gTiles.count].tls
+  tilesInCat.add([#nm:"Rect Clear", #sz:point(1,1), #specs:[0], #placeMethod:"rect", #color:color(255, 0, 0)])
+  tilesInCat.add([#nm:"SH pattern box", #sz:point(1,1), #specs:[0], #placeMethod:"rect", #color:color(210, 0, 255)])
+  tilesInCat.add([#nm:"SH grate box", #sz:point(1,1), #specs:[0], #placeMethod:"rect", #color:color(160, 0, 255)])
+  -- LB
+  tilesInCat.add([#nm:"Alt Grate Box", #sz:point(1,1), #specs:[0], #placeMethod:"rect", #color:color(75, 75, 240)])
+  setFirstTileCat(gTiles.count + 1)
   
   sav = member("initImport")
   member("initImport").importFileInto("Graphics" & the dirSeparator & "Init.txt")
@@ -261,72 +250,55 @@ on exitFrame me
   end if
   
   repeat with q = 1 to the number of lines in sav.text then
-    if sav.text.line[q] <> "" then
-      if sav.text.line[q].char[1] = "-" then
-        
-        vl: list = value(sav.text.line[q].char[2..sav.text.line[q].length])
-        
-		if vl = void then
-          writeException("Tile Init Error", "Line" && q && "is malformed in the Init.txt file from your Graphics folder.")
+    savTextLine: string = sav.text.line[q]
+    if (savTextLine <> "") then
+      if (savTextLine.char[1] = "-") then
+        vl: list = value(savTextLine.char[2..savTextLine.length])
+        if (vl = VOID) then
+          writeException("Tile Init Error", "Line " && q && " is malformed in the Init.txt file from your Graphics folder.")
         else
-          gTiles.add( [#nm:vl[1], #clr:vl[2], #tls:[]]    )
+          gTiles.add([#nm:vl[1], #clr:vl[2], #tls:[]])
         end if
-        
-        
-      else if value(sav.text.line[q]) = void then
-        writeException("Tile Init Error", "Line" && q && "is malformed in the Init.txt file from your Graphics folder.")
-	  else
-        ad = value(sav.text.line[q])
-        debugline = sav.text.line[q]
-		
+      else if (value(savTextLine) = VOID) then
+        writeException("Tile Init Error", "Line " && q && " is malformed in the Init.txt file from your Graphics folder.")
+      else
+        ad = value(savTextLine)
         sav2: member = member("previewImprt")
-        member("previewImprt").importFileInto("Graphics" & the dirSeparator &ad.nm&".png")
+        member("previewImprt").importFileInto("Graphics" & the dirSeparator & ad.nm & ".png")
         sav2.name = "previewImprt"
         --INTERNAL
         if (checkDRInternal(ad.nm)) then
           sav2.image = member(ad.nm).image
         end if
-        
         calculatedHeight: number = sav2.image.rect.height
-        if ad.tp = "voxelStruct" then
-          calculatedHeight = 1 + (16*ad.sz.locV) + (20*(ad.sz.locV+(ad.bfTiles*2))*ad.repeatL.count)
+        vertSZ: number = 16 * ad.sz.locV
+        horiSZ: number = 16 * ad.sz.locH
+        if (ad.tp = "voxelStruct") then
+          calculatedHeight = 1 + vertSZ + (20 * (ad.sz.locV + (ad.bfTiles * 2)) * ad.repeatL.count)
         end if
-        --        if (ad.tp = "wvStruct") then
-        --          ad[#sz] = point(1, 1)
-        --          ad[#specs] = [1]
-        --          ad[#specs2] = VOID
-        --        end if
-        
-        -- if(sav2.image.rect.height <> calculatedHeight) then put ad.nm && sav2.image.rect.height && calculatedHeight && ad.repeatL.count && ad.bfTiles && ad.sz.locV
-        
-        rct = rect(0, calculatedHeight - (16*ad.sz.locV), (16*ad.sz.locH), calculatedHeight)
-        
-        if ((ptPos + (16*ad.sz.locH) + 1) > member("previewTiles").image.width) and (getBoolConfig("More tile previews")) then
-          member("previewTilesDR").image.copyPixels(sav2.image, rect(drPos, 0, drPos + (16*ad.sz.locH), (16*ad.sz.locV)), rct)
+        rct = rect(0, calculatedHeight - vertSZ, horiSZ, calculatedHeight)
+        if ((ptPos + horiSZ + 1) > member("previewTiles").image.width) and (getBoolConfig("More tile previews")) then
+          member("previewTilesDR").image.copyPixels(sav2.image, rect(drPos, 0, drPos + horiSZ, vertSZ), rct)
           ad.ptPos = drPos + 60000
           ad.addProp(#category, gTiles.count)
-          if ad.tags.getPos("notTile") = 0 then
-            gTiles[gTiles.count].tls.add( ad )
+          if (ad.tags.getPos("notTile") = 0) then
+            gTiles[gTiles.count].tls.add(ad)
           end if
-          drPos = drPos + (16*ad.sz.locH) + 1
+          drPos = drPos + horiSZ + 1
         else
-          member("previewTiles").image.copyPixels(sav2.image, rect(ptPos, 0, ptPos + (16*ad.sz.locH), (16*ad.sz.locV)), rct)
+          member("previewTiles").image.copyPixels(sav2.image, rect(ptPos, 0, ptPos + horiSZ, vertSZ), rct)
           ad.ptPos = ptPos
           ad.addProp(#category, gTiles.count)
-          if ad.tags.getPos("notTile") = 0 then
-            gTiles[gTiles.count].tls.add( ad )
+          if (ad.tags.getPos("notTile") = 0) then
+            gTiles[gTiles.count].tls.add(ad)
           end if
-          ptPos = ptPos + (16*ad.sz.locH) + 1  
+          ptPos = ptPos + horiSZ + 1  
         end if
-        
-        --end if
       end if
     end if
   end repeat
   
-  
-  
-  lG = "1"
+  altGrafLG = "1"
   gProps = []
   
   resetPropEditorProps()
@@ -351,33 +323,28 @@ on exitFrame me
   end repeat
   
   repeat with q = 1 to the number of lines in sav.text then
-    if sav.text.line[q] <> "" then
-      if sav.text.line[q].char[1] = "-" then
-        
-        vl = value(sav.text.line[q].char[2..sav.text.line[q].length])
-        
-        if vl = void then
-          writeException("Prop Init Error", "Line" && q && "is malformed in the Init.txt file from your Props folder.")
+    savTextLineL: string = sav.text.line[q]
+    if (savTextLine <> "") then
+      if (savTextLine.char[1] = "-") then
+        vl = value(savTextLine.char[2..savTextLine.length])
+        if (vl = VOID) then
+          writeException("Prop Init Error", "Line " && q && " is malformed in the Init.txt file from your Props folder.")
         else
-          gProps.add( [#nm:vl[1], #clr:vl[2], #prps:[]]    )
+          gProps.add([#nm:vl[1], #clr:vl[2], #prps:[]])
         end if
-        
-      else if value(sav.text.line[q]) = void then
-        writeException("Prop Init Error", "Line" && q && "is malformed in the Init.txt file from your Props folder.")
+      else if (value(savTextLine) = VOID) then
+        writeException("Prop Init Error", "Line " && q && " is malformed in the Init.txt file from your Props folder.")
       else
-        ad = value(sav.text.line[q])
-        strng: string = sav.text.line[q]
+        ad = value(savTextLine)
         ad.addProp(#category, gProps.count)
-        if(ad.tp = "standard")or(ad.tp = "variedStandard")then
+        if (ad.tp = "standard") or (ad.tp = "variedStandard") then
           dp: number = 0
           repeat with i = 1 to ad.repeatL.count then
             dp = dp + ad.repeatL[i]
           end repeat
           ad.addProp(#depth, dp)
         end if
-        
-        gProps[gProps.count].prps.add( ad )
-        
+        gProps[gProps.count].prps.add(ad)
       end if
     end if
   end repeat
@@ -391,7 +358,7 @@ on exitFrame me
       if gPageTick = 0 then
         gPageTick = 21
         gPageCount = gPageCount + 1
-        gProps.add( [#nm:"Tiles as props "&gPageCount, #clr:color(255, 0,0), #prps:[]]    )
+        gProps.add([#nm:"Tiles as props " & gPageCount, #clr:color(255, 0,0), #prps:[]])
       end if
       tl = gTiles[q].tls[c]
       rndDisF = getBoolConfig("voxelStructRandomDisplace for tiles as props")
@@ -452,9 +419,6 @@ on exitFrame me
         if(tl.tags.getPos("Larger Sign B") > 0) then
           lSBT = "Larger Sign B"
         end if
-        --        if(tl.tags.getPos("droughtReserve") > 0) or (tl.tags.getPos("Sawblades") > 0)then
-        --          dRT = "droughtReserve"
-        --        end if
         if(tl.tags.getPos("notTrashProp") > 0)then
           nTP = "notTrashProp"
         end if
@@ -472,7 +436,7 @@ on exitFrame me
           ad = [#nm:tl.nm, #tp:"standard", #colorTreatment:"standard", #sz:tl.sz + point(tl.bfTiles*2, tl.bfTiles*2), #depth:10 + (tl.specs2 <> [])*10, #repeatL:tl.repeatL, #tags:["Tile", nTP, INTE, NMTP], #layerExceptions:[], #notes:["Tile as prop"]]
         end if
         ad.addProp(#category, gProps.count)
-        gProps[gProps.count].prps.add( ad )
+        gProps[gProps.count].prps.add(ad)
         gPageTick = gPageTick - 1
       end if
     end repeat
@@ -481,49 +445,59 @@ on exitFrame me
   repeat with prq = 1 to gProps.count
     if (gProps[prq].prps.count <= 0) then
       gProps.deleteAt(prq)
-      --gProps[prq].prps.add([#nm:"b44", #tp:"standard", #colorTreatment:"standard", #sz:point(1, 1), #depth:10, #repeatL:[1], #tags:["Tile"], #layerExceptions:[], #notes:["Tile as prop"]])
     end if
   end repeat
   
-  --gProps[gProps.count].prps.sort()
+  gProps.add([#nm:"Rope type props", #clr:color(0, 255, 0), #prps:[]])
+  propsInCat = gProps[gProps.count].prps
+  propsInCat.add([#nm:"Wire", #tp:"rope", #depth:0, #tags:[], #notes:[], #segmentLength:3, #collisionDepth:0, #segRad:1, #grav:0.5, #friction:0.5, #airFric:0.9, #stiff:0, #previewColor:color(255,0, 0), #previewEvery:4, #edgeDirection:0, #rigid:0, #selfPush:0, #sourcePush:0])
+  propsInCat.add([#nm:"Tube", #tp:"rope", #depth:4, #tags:[], #notes:[], #segmentLength:10, #collisionDepth:2, #segRad:4.5, #grav:0.5, #friction:0.5, #airFric:0.9, #stiff:1, #previewColor:color(0,0, 255), #previewEvery:2, #edgeDirection:5, #rigid:1.6, #selfPush:0, #sourcePush:0])
+  propsInCat.add([#nm:"ThickWire", #tp:"rope", #depth:3, #tags:[], #notes:[], #segmentLength:4, #collisionDepth:1, #segRad:2, #grav:0.5, #friction:0.8, #airFric:0.9, #stiff:1, #previewColor:color(255,255, 0), #previewEvery:2, #edgeDirection:0, #rigid:0.2, #selfPush:0, #sourcePush:0])
+  propsInCat.add([#nm:"RidgedTube", #tp:"rope", #depth:4, #tags:[], #notes:[], #segmentLength:5, #collisionDepth:2, #segRad:5, #grav:0.5, #friction:0.3, #airFric:0.7, #stiff:1, #previewColor:color(255,0,255), #previewEvery:2, #edgeDirection:0, #rigid:0.1, #selfPush:0, #sourcePush:0])
+  propsInCat.add([#nm:"Fuel Hose", #tp:"rope", #depth:5, #tags:[], #notes:[], #segmentLength:16, #collisionDepth:1, #segRad:7, #grav:0.5, #friction:0.8, #airFric:0.9, #stiff:1, #previewColor:color(255,150,0), #previewEvery:1, #edgeDirection:1.4, #rigid:0.2, #selfPush:0, #sourcePush:0])
+  propsInCat.add([#nm:"Broken Fuel Hose", #tp:"rope", #depth:6, #tags:[], #notes:[], #segmentLength:16, #collisionDepth:1, #segRad:7, #grav:0.5, #friction:0.8, #airFric:0.9, #stiff:1, #previewColor:color(255,150,0), #previewEvery:1, #edgeDirection:1.4, #rigid:0.2, #selfPush:0, #sourcePush:0])
+  propsInCat.add([#nm:"Large Chain", #tp:"rope", #depth:9, #tags:[], #notes:[], #segmentLength:28, #collisionDepth:3, #segRad:9.5, #grav:0.9, #friction:0.8, #airFric:0.95, #stiff:1, #previewColor:color(0,255,0), #previewEvery:1, #edgeDirection:0.0, #rigid:0.0, #selfPush:6.5, #sourcePush:0])
+  propsInCat.add([#nm:"Large Chain 2", #tp:"rope", #depth:9, #tags:[], #notes:[], #segmentLength:28, #collisionDepth:3, #segRad:9.5, #grav:0.9, #friction:0.8, #airFric:0.95, #stiff:1, #previewColor:color(20,205,0), #previewEvery:1, #edgeDirection:0.0, #rigid:0.0, #selfPush:6.5, #sourcePush:0])
+  propsInCat.add([#nm:"Bike Chain", #tp:"rope", #depth:9, #tags:[], #notes:[], #segmentLength:38, #collisionDepth:3, #segRad:16.5, #grav:0.9, #friction:0.8, #airFric:0.95, #stiff:1, #previewColor:color(100,100,100), #previewEvery:1, #edgeDirection:0.0, #rigid:0.0, #selfPush:16.5, #sourcePush:0])
+  propsInCat.add([#nm:"Zero-G Tube", #tp:"rope", #depth:4, #tags:[], #notes:[], #segmentLength:10, #collisionDepth:2, #segRad:4.5, #grav:0, #friction:0.5, #airFric:0.9, #stiff:1, #previewColor:color(0,255, 0), #previewEvery:2, #edgeDirection:0, #rigid:0.6, #selfPush:2, #sourcePush:0.5])
+  propsInCat.add([#nm:"Zero-G Wire", #tp:"rope", #depth:0, #tags:[], #notes:[], #segmentLength:8, #collisionDepth:0, #segRad:1, #grav:0, #friction:0.5, #airFric:0.9, #stiff:1, #previewColor:color(255,0, 0), #previewEvery:2, #edgeDirection:0.3, #rigid:0.5, #selfPush:1.2, #sourcePush:0.5])
+  propsInCat.add([#nm:"Fat Hose", #tp:"rope", #depth:6, #tags:[], #notes:[], #segmentLength:40, #collisionDepth:3, #segRad:20, #grav:0.9, #friction:0.6, #airFric:0.95, #stiff:1, #previewColor:color(0,100,150), #previewEvery:1, #edgeDirection:0.1, #rigid:0.2, #selfPush:10, #sourcePush:0.1])
+  propsInCat.add([#nm:"Wire Bunch", #tp:"rope", #depth:9, #tags:[], #notes:[], #segmentLength:50, #collisionDepth:3, #segRad:20, #grav:0.9, #friction:0.6, #airFric:0.95, #stiff:1, #previewColor:color(255,100,150), #previewEvery:1, #edgeDirection:0.1, #rigid:0.2, #selfPush:10, #sourcePush:0.1])
+  propsInCat.add([#nm:"Wire Bunch 2", #tp:"rope", #depth:9, #tags:[], #notes:[], #segmentLength:50, #collisionDepth:3, #segRad:20, #grav:0.9, #friction:0.6, #airFric:0.95, #stiff:1, #previewColor:color(255,100,150), #previewEvery:1, #edgeDirection:0.1, #rigid:0.2, #selfPush:10, #sourcePush:0.1])
   
-  gProps.add( [#nm:"Rope type props", #clr:color(0, 255, 0), #prps:[]]    )
-  gProps[gProps.count].prps.add([#nm:"Wire", #tp:"rope", #depth:0, #tags:[], #notes:[], #segmentLength:3, #collisionDepth:0, #segRad:1, #grav:0.5, #friction:0.5, #airFric:0.9, #stiff:0, #previewColor:color(255,0, 0), #previewEvery:4, #edgeDirection:0, #rigid:0, #selfPush:0, #sourcePush:0])
-  gProps[gProps.count].prps.add([#nm:"Tube", #tp:"rope", #depth:4, #tags:[], #notes:[], #segmentLength:10, #collisionDepth:2, #segRad:4.5, #grav:0.5, #friction:0.5, #airFric:0.9, #stiff:1, #previewColor:color(0,0, 255), #previewEvery:2, #edgeDirection:5, #rigid:1.6, #selfPush:0, #sourcePush:0])
-  gProps[gProps.count].prps.add([#nm:"ThickWire", #tp:"rope", #depth:3, #tags:[], #notes:[], #segmentLength:4, #collisionDepth:1, #segRad:2, #grav:0.5, #friction:0.8, #airFric:0.9, #stiff:1, #previewColor:color(255,255, 0), #previewEvery:2, #edgeDirection:0, #rigid:0.2, #selfPush:0, #sourcePush:0])
-  gProps[gProps.count].prps.add([#nm:"RidgedTube", #tp:"rope", #depth:4, #tags:[], #notes:[], #segmentLength:5, #collisionDepth:2, #segRad:5, #grav:0.5, #friction:0.3, #airFric:0.7, #stiff:1, #previewColor:color(255,0,255), #previewEvery:2, #edgeDirection:0, #rigid:0.1, #selfPush:0, #sourcePush:0])
-  gProps[gProps.count].prps.add([#nm:"Fuel Hose", #tp:"rope", #depth:5, #tags:[], #notes:[], #segmentLength:16, #collisionDepth:1, #segRad:7, #grav:0.5, #friction:0.8, #airFric:0.9, #stiff:1, #previewColor:color(255,150,0), #previewEvery:1, #edgeDirection:1.4, #rigid:0.2, #selfPush:0, #sourcePush:0])
-  gProps[gProps.count].prps.add([#nm:"Broken Fuel Hose", #tp:"rope", #depth:6, #tags:[], #notes:[], #segmentLength:16, #collisionDepth:1, #segRad:7, #grav:0.5, #friction:0.8, #airFric:0.9, #stiff:1, #previewColor:color(255,150,0), #previewEvery:1, #edgeDirection:1.4, #rigid:0.2, #selfPush:0, #sourcePush:0])
-  gProps[gProps.count].prps.add([#nm:"Large Chain", #tp:"rope", #depth:9, #tags:[], #notes:[], #segmentLength:28, #collisionDepth:3, #segRad:9.5, #grav:0.9, #friction:0.8, #airFric:0.95, #stiff:1, #previewColor:color(0,255,0), #previewEvery:1, #edgeDirection:0.0, #rigid:0.0, #selfPush:6.5, #sourcePush:0])
-  gProps[gProps.count].prps.add([#nm:"Large Chain 2", #tp:"rope", #depth:9, #tags:[], #notes:[], #segmentLength:28, #collisionDepth:3, #segRad:9.5, #grav:0.9, #friction:0.8, #airFric:0.95, #stiff:1, #previewColor:color(20,205,0), #previewEvery:1, #edgeDirection:0.0, #rigid:0.0, #selfPush:6.5, #sourcePush:0])
-  gProps[gProps.count].prps.add([#nm:"Bike Chain", #tp:"rope", #depth:9, #tags:[], #notes:[], #segmentLength:38, #collisionDepth:3, #segRad:16.5, #grav:0.9, #friction:0.8, #airFric:0.95, #stiff:1, #previewColor:color(100,100,100), #previewEvery:1, #edgeDirection:0.0, #rigid:0.0, #selfPush:16.5, #sourcePush:0])
-  gProps[gProps.count].prps.add([#nm:"Zero-G Tube", #tp:"rope", #depth:4, #tags:[], #notes:[], #segmentLength:10, #collisionDepth:2, #segRad:4.5, #grav:0, #friction:0.5, #airFric:0.9, #stiff:1, #previewColor:color(0,255, 0), #previewEvery:2, #edgeDirection:0, #rigid:0.6, #selfPush:2, #sourcePush:0.5])
-  gProps[gProps.count].prps.add([#nm:"Zero-G Wire", #tp:"rope", #depth:0, #tags:[], #notes:[], #segmentLength:8, #collisionDepth:0, #segRad:1, #grav:0, #friction:0.5, #airFric:0.9, #stiff:1, #previewColor:color(255,0, 0), #previewEvery:2, #edgeDirection:0.3, #rigid:0.5, #selfPush:1.2, #sourcePush:0.5])
-  gProps[gProps.count].prps.add([#nm:"Fat Hose", #tp:"rope", #depth:6, #tags:[], #notes:[], #segmentLength:40, #collisionDepth:3, #segRad:20, #grav:0.9, #friction:0.6, #airFric:0.95, #stiff:1, #previewColor:color(0,100,150), #previewEvery:1, #edgeDirection:0.1, #rigid:0.2, #selfPush:10, #sourcePush:0.1])
-  gProps[gProps.count].prps.add([#nm:"Wire Bunch", #tp:"rope", #depth:9, #tags:[], #notes:[], #segmentLength:50, #collisionDepth:3, #segRad:20, #grav:0.9, #friction:0.6, #airFric:0.95, #stiff:1, #previewColor:color(255,100,150), #previewEvery:1, #edgeDirection:0.1, #rigid:0.2, #selfPush:10, #sourcePush:0.1])
-  gProps[gProps.count].prps.add([#nm:"Wire Bunch 2", #tp:"rope", #depth:9, #tags:[], #notes:[], #segmentLength:50, #collisionDepth:3, #segRad:20, #grav:0.9, #friction:0.6, #airFric:0.95, #stiff:1, #previewColor:color(255,100,150), #previewEvery:1, #edgeDirection:0.1, #rigid:0.2, #selfPush:10, #sourcePush:0.1])
+  gProps.add([#nm:"LB Rope Props", #clr:color(0, 255, 0), #prps:[]])
+  propsInCat = gProps[gProps.count].prps
+  propsInCat.add([#nm:"Big Big Pipe", #tp:"rope", #depth:6, #tags:[], #notes:[], #segmentLength:40, #collisionDepth:3, #segRad:20, #grav:0.9, #friction:0.6, #airFric:0.95, #stiff:1, #previewColor:color(50,150,210), #previewEvery:1, #edgeDirection:0.1, #rigid:0.2, #selfPush:10, #sourcePush:0.1])
+  propsInCat.add([#nm:"Ring Chain", #tp:"rope", #depth:6, #tags:[], #notes:[], #segmentLength:40, #collisionDepth:3, #segRad:20, #grav:0.9, #friction:0.6, #airFric:0.95, #stiff:1, #previewColor:color(100,200,0), #previewEvery:1, #edgeDirection:0.1, #rigid:0.2, #selfPush:10, #sourcePush:0.1])
+  propsInCat.add([#nm:"Christmas Wire", #tp:"rope", #depth:0, #tags:[], #notes:[], #segmentLength:17, #collisionDepth:0, #segRad:8.5, #grav:0.5, #friction:0.5, #airFric:0.9, #stiff:0, #previewColor:color(200,0, 200), #previewEvery:1, #edgeDirection:0, #rigid:0, #selfPush:0, #sourcePush:0])
+  propsInCat.add([#nm:"Ornate Wire", #tp:"rope", #depth:0, #tags:[], #notes:[], #segmentLength:17, #collisionDepth:0, #segRad:8.5, #grav:0.5, #friction:0.5, #airFric:0.9, #stiff:0, #previewColor:color(0,200, 200), #previewEvery:1, #edgeDirection:0, #rigid:0, #selfPush:0, #sourcePush:0])
   
+  gProps.add([#nm:"Alduris Rope Props", #clr:color(0, 255, 0), #prps:[]])
+  propsInCat = gProps[gProps.count].prps
+  propsInCat.add([#nm:"Small Chain", #tp:"rope", #depth:0, #tags:[], #notes:[], #segmentLength:22, #collisionDepth:0, #segRad:3, #grav:0.5, #friction:0.65, #airFric:0.95, #stiff:1, #previewColor:color(255,0,150), #previewEvery:2, #edgeDirection:0, #rigid:0.0, #selfPush:6.5, #sourcePush:0])
+  propsInCat.add([#nm:"Fat Chain", #tp:"rope", #depth:0, #tags:[], #notes:[], #segmentLength:44, #collisionDepth:0, #segRad:8, #grav:0.5, #friction:0.65, #airFric:0.95, #stiff:1, #previewColor:color(255,0,150), #previewEvery:2, #edgeDirection:0, #rigid:0.0, #selfPush:6.5, #sourcePush:0])
   
-  gProps.add( [#nm:"Drought Rope Props", #clr:color(0, 255, 0), #prps:[]]    )
-  gProps[gProps.count].prps.add([#nm:"Big Big Pipe", #tp:"rope", #depth:6, #tags:[], #notes:[], #segmentLength:40, #collisionDepth:3, #segRad:20, #grav:0.9, #friction:0.6, #airFric:0.95, #stiff:1, #previewColor:color(50,150,210), #previewEvery:1, #edgeDirection:0.1, #rigid:0.2, #selfPush:10, #sourcePush:0.1])
-  --  gProps[gProps.count].prps.add([#nm:"Falling Thick Chain", #tp:"rope", #depth:0, #tags:[], #notes:[], #segmentLength:20, #collisionDepth:0, #segRad:9.5, #grav:0.9, #friction:0.8, #airFric:0.95, #stiff:1, #previewColor:color(100,200,0), #previewEvery:1, #edgeDirection:0.0, #rigid:0.0, #selfPush:6.5, #sourcePush:0])
-  gProps[gProps.count].prps.add([#nm:"Ring Chain", #tp:"rope", #depth:6, #tags:[], #notes:[], #segmentLength:40, #collisionDepth:3, #segRad:20, #grav:0.9, #friction:0.6, #airFric:0.95, #stiff:1, #previewColor:color(100,200,0), #previewEvery:1, #edgeDirection:0.1, #rigid:0.2, #selfPush:10, #sourcePush:0.1])
-  gProps[gProps.count].prps.add([#nm:"Christmas Wire", #tp:"rope", #depth:0, #tags:[], #notes:[], #segmentLength:17, #collisionDepth:0, #segRad:8.5, #grav:0.5, #friction:0.5, #airFric:0.9, #stiff:0, #previewColor:color(200,0, 200), #previewEvery:1, #edgeDirection:0, #rigid:0, #selfPush:0, #sourcePush:0])
-  gProps[gProps.count].prps.add([#nm:"Ornate Wire", #tp:"rope", #depth:0, #tags:[], #notes:[], #segmentLength:17, #collisionDepth:0, #segRad:8.5, #grav:0.5, #friction:0.5, #airFric:0.9, #stiff:0, #previewColor:color(0,200, 200), #previewEvery:1, #edgeDirection:0, #rigid:0, #selfPush:0, #sourcePush:0])
+  gProps.add([#nm:"Dakras Rope Props", #clr:color(0, 255, 0), #prps:[]])
+  propsInCat = gProps[gProps.count].prps
+  propsInCat.add([#nm:"Big Chain", #tp:"rope", #depth:9, #tags:[], #notes:[], #segmentLength:56, #collisionDepth:3, #segRad:19, #grav:0.9, #friction:0.8, #airFric:0.95, #stiff:1, #previewColor:color(0,255,40), #previewEvery:1, #edgeDirection:0.0, #rigid:0.0, #selfPush:6.5, #sourcePush:0])
+  propsInCat.add([#nm:"Chunky Chain", #tp:"rope", #depth:9, #tags:[], #notes:[], #segmentLength:28, #collisionDepth:3, #segRad:19, #grav:0.9, #friction:0.8, #airFric:0.95, #stiff:1, #previewColor:color(0,255,40), #previewEvery:1, #edgeDirection:0.0, #rigid:0.0, #selfPush:6.5, #sourcePush:0])
+  propsInCat.add([#nm:"Big Bike Chain", #tp:"rope", #depth:9, #tags:[], #notes:[], #segmentLength:76, #collisionDepth:3, #segRad:33, #grav:0.9, #friction:0.8, #airFric:0.95, #stiff:1, #previewColor:color(100,150,100), #previewEvery:1, #edgeDirection:0.0, #rigid:0.0, #selfPush:33, #sourcePush:0])
+  propsInCat.add([#nm:"Huge Bike Chain", #tp:"rope", #depth:9, #tags:[], #notes:[], #segmentLength:152, #collisionDepth:3, #segRad:66, #grav:0.9, #friction:0.8, #airFric:0.95, #stiff:1, #previewColor:color(100,200,100), #previewEvery:1, #edgeDirection:0.0, #rigid:0.0, #selfPush:66, #sourcePush:0])
   
+  gProps.add([#nm:"Long props", #clr:color(0, 255, 0), #prps:[]])
+  propsInCat = gProps[gProps.count].prps
+  propsInCat.add([#nm:"Cabinet Clamp", #tp:"long", #depth:0, #tags:[], #notes:[]])
+  propsInCat.add([#nm:"Drill Suspender", #tp:"long", #depth:5, #tags:[], #notes:[]])
+  propsInCat.add([#nm:"Thick Chain", #tp:"long", #depth:0, #tags:[], #notes:[]])
+  propsInCat.add([#nm:"Drill", #tp:"long", #depth:10, #tags:[], #notes:[]])
+  propsInCat.add([#nm:"Piston", #tp:"long", #depth:4, #tags:[], #notes:[]])
   
-  gProps.add( [#nm:"Long props", #clr:color(0, 255, 0), #prps:[]]    )
-  gProps[gProps.count].prps.add([#nm:"Cabinet Clamp", #tp:"long", #depth:0, #tags:[], #notes:[]])
-  gProps[gProps.count].prps.add([#nm:"Drill Suspender", #tp:"long", #depth:5, #tags:[], #notes:[]])
-  gProps[gProps.count].prps.add([#nm:"Thick Chain", #tp:"long", #depth:0, #tags:[], #notes:[]])
-  gProps[gProps.count].prps.add([#nm:"Drill", #tp:"long", #depth:10, #tags:[], #notes:[]])
-  gProps[gProps.count].prps.add([#nm:"Piston", #tp:"long", #depth:4, #tags:[], #notes:[]])
-  
-  
-  gProps.add( [#nm:"Drought Long Props", #clr:color(0, 255, 0), #prps:[]]    )
-  gProps[gProps.count].prps.add([#nm:"Stretched Pipe", #tp:"long", #depth:0, #tags:[], #notes:[]])
-  gProps[gProps.count].prps.add([#nm:"Twisted Thread", #tp:"long", #depth:0, #tags:[], #notes:[]])
-  gProps[gProps.count].prps.add([#nm:"Stretched Wire", #tp:"long", #depth:0, #tags:[], #notes:[]]) 
+  gProps.add([#nm:"LB Long Props", #clr:color(0, 255, 0), #prps:[]])
+  propsInCat = gProps[gProps.count].prps
+  propsInCat.add([#nm:"Stretched Pipe", #tp:"long", #depth:0, #tags:[], #notes:[]])
+  propsInCat.add([#nm:"Twisted Thread", #tp:"long", #depth:0, #tags:[], #notes:[]])
+  propsInCat.add([#nm:"Stretched Wire", #tp:"long", #depth:0, #tags:[], #notes:[]])
+  propsInCat.add([#nm:"Barbed Wire", #tp:"long", #depth:0, #tags:[], #notes:[]])
   
   gTrashPropOptions = []
   gMegaTrash = []
@@ -566,6 +540,13 @@ on exitFrame me
           
         "rope":
           gProps[q].prps[c].settings.addProp(#release, 0)
+        "customRope":
+          gProps[q].prps[c].settings.addProp(#release, 0)
+          if (gProps[q].prps[c].colorTreatment = "bevel") then
+            gProps[q].prps[c].notes.add("The highlights and shadows on this prop are generated by code, so it can be rotated to any degree and they will remain correct.")
+          else
+            gProps[q].prps[c].notes.add("Be aware that shadows and highlights will not rotate with the prop, so extreme rotations may cause incorrect shading.")
+          end if
         "variedDecal", "variedSoft":
           gProps[q].prps[c].settings.addProp(#variation, (gProps[q].prps[c].random = 0))
           gProps[q].prps[c].settings.addProp(#customDepth, gProps[q].prps[c].depth)
@@ -623,7 +604,7 @@ on exitFrame me
   savEf = member("effectsInit")
   member("effectsInit").importFileInto("effectsInit.txt")
   savEf.name = "effectsInit"
-  if (savEf.text = VOID) or (savEf.text = "") or (savEf.text.line[1] <> "Rain World Community Editor; V.0.4.21; Editor effects initialisation file") then
+  if (savEf.text = VOID) or (savEf.text = "") or (savEf.text.line[1] <> "Rain World Community Editor; V.0.4.22; Editor effects initialisation file") then
     fileEf = new xtra("fileio")
     fileEf.createFile(the moviePath & "effectsInit.txt")
     fileEf.openFile(the moviePath & "effectsInit.txt", 0)
@@ -716,7 +697,7 @@ on exitFrame me
     gEffects[gEffects.count].efs.add( [#nm:"Restore As Scaffolding"]    )
     gEffects[gEffects.count].efs.add( [#nm:"Ceramic Chaos"]    )
     
-    gEffects.add([#nm:"Drought Plants", #efs:[]])
+    gEffects.add([#nm:"LB Plants", #efs:[]])
     gEffects[gEffects.count].efs.add( [#nm:"Colored Hang Roots"]    )
     gEffects[gEffects.count].efs.add( [#nm:"Colored Thick Roots"]   )
     gEffects[gEffects.count].efs.add( [#nm:"Colored Shadow Plants"]   )
@@ -724,7 +705,7 @@ on exitFrame me
     gEffects[gEffects.count].efs.add( [#nm:"Colored Fungi Flowers"]   )
     gEffects[gEffects.count].efs.add( [#nm:"Root Plants"]   )
     
-    gEffects.add([#nm:"Drought Plants 2", #efs:[]])
+    gEffects.add([#nm:"LB Plants 2", #efs:[]])
     gEffects[gEffects.count].efs.add( [#nm:"Foliage"]   )
     gEffects[gEffects.count].efs.add( [#nm:"Mistletoe"]   )
     gEffects[gEffects.count].efs.add( [#nm:"High Fern"]   )
@@ -732,7 +713,7 @@ on exitFrame me
     gEffects[gEffects.count].efs.add( [#nm:"Little Flowers"]   )
     gEffects[gEffects.count].efs.add( [#nm:"Wastewater Mold"]   )
     
-    gEffects.add([#nm:"Drought Plants 3", #efs:[]])
+    gEffects.add([#nm:"LB Plants 3", #efs:[]])
     gEffects[gEffects.count].efs.add( [#nm:"Spinets"]    )
     gEffects[gEffects.count].efs.add( [#nm:"Small Springs"]    )
     gEffects[gEffects.count].efs.add( [#nm:"Mini Growers"]    )
@@ -741,23 +722,20 @@ on exitFrame me
     gEffects[gEffects.count].efs.add([#nm:"Lavenders"])
     gEffects[gEffects.count].efs.add([#nm:"Dense Mold"])
     
-    gEffects.add([#nm:"Drought Erosion", #efs:[]])
-    --gEffects[gEffects.count].efs.add( [#nm:"Corruption No Eye"]    )
+    gEffects.add([#nm:"LB Erosion", #efs:[]])
     gEffects[gEffects.count].efs.add( [#nm:"Ultra Super Erode"]    )
     gEffects[gEffects.count].efs.add( [#nm:"Impacts"]    )
     
-    gEffects.add([#nm:"Drought Paint Effects", #efs:[]])
+    gEffects.add([#nm:"LB Paint Effects", #efs:[]])
     gEffects[gEffects.count].efs.add( [#nm:"Super BlackGoo"]    )
-    --gEffects[gEffects.count].efs.add( [#nm:"Scales"]    )
     gEffects[gEffects.count].efs.add( [#nm:"Stained Glass Properties"]    )
     
-    gEffects.add([#nm:"Drought Natural", #efs:[]])
+    gEffects.add([#nm:"LB Natural", #efs:[]])
     gEffects[gEffects.count].efs.add( [#nm:"Colored Barnacles"]    )
     gEffects[gEffects.count].efs.add( [#nm:"Colored Rubble"]    )
-    --gEffects[gEffects.count].efs.add( [#nm:"Sand"]    )
     gEffects[gEffects.count].efs.add( [#nm:"Fat Slime"]    )
     
-    gEffects.add([#nm:"Drought Artificial", #efs:[]])
+    gEffects.add([#nm:"LB Artificial", #efs:[]])
     gEffects[gEffects.count].efs.add( [#nm:"Assorted Trash"]    )
     gEffects[gEffects.count].efs.add( [#nm:"Colored Wires"]    )
     gEffects[gEffects.count].efs.add( [#nm:"Colored Chains"]    )
@@ -770,14 +748,32 @@ on exitFrame me
     gEffects[gEffects.count].efs.add([#nm:"Bubble Grower"])
     gEffects[gEffects.count].efs.add([#nm:"Moss Wall"])
     gEffects[gEffects.count].efs.add([#nm:"Club Moss"])
+    gEffects[gEffects.count].efs.add([#nm:"Dandelions"])
     
     gEffects.add([#nm:"Leo Plants", #efs:[]])
     gEffects[gEffects.count].efs.add([#nm:"Ivy"])
     
     gEffects.add([#nm:"Nautillo Plants", #efs:[]])
     gEffects[gEffects.count].efs.add([#nm:"Fuzzy Growers"])
+    gEffects[gEffects.count].efs.add([#nm:"Leaf Growers"])
+    gEffects[gEffects.count].efs.add([#nm:"Meat Growers"])
+    gEffects[gEffects.count].efs.add([#nm:"Hyacinths"])
+    gEffects[gEffects.count].efs.add([#nm:"Seed Grass"])
+    gEffects[gEffects.count].efs.add([#nm:"Orb Plants"])
+    gEffects[gEffects.count].efs.add([#nm:"Storm Plants"])
+    
+    gEffects.add([#nm:"Nautillo Plants 2", #efs:[]])
+    gEffects[gEffects.count].efs.add([#nm:"Coral Growers"])
+    gEffects[gEffects.count].efs.add([#nm:"Horror Growers"])
+    
+    gEffects.add([#nm:"Tronsx Plants", #efs:[]])
+    gEffects[gEffects.count].efs.add([#nm:"Thunder Growers"])
+    
+    gEffects.add([#nm:"Intrepid Plants", #efs:[]])
+    gEffects[gEffects.count].efs.add([#nm:"Ice Growers"])
+    gEffects[gEffects.count].efs.add([#nm:"Grass Growers"])
+    gEffects[gEffects.count].efs.add([#nm:"Fancy Growers"])
   end if
-  
   
   gEEprops = [#lastKeys:[], #keys:[], #lstMsPs:point(0,0), #effects:[], emPos:point(1,1), #editEffect:0, #selectEditEffect:0, #mode:"createNew", #brushSize:5]
   
@@ -792,7 +788,7 @@ on exitFrame me
   
   
   new(script"levelEdit_parentscript", 1)
-  new(script"levelEdit_parentscript", 2)
+  --new(script"levelEdit_parentscript", 2)
   
   gCameraProps = [#cameras:[point(gLOprops.size.locH*10, gLOprops.size.locV*10)-point(35*20, 20*20)], #selectedCamera:0, #quads:[[[0,0], [0,0], [0,0], [0,0]]], #keys:[#n:0, #d:0, #e:0, #p:0], #lastKeys:[#n:0, #d:0, #e:0, #p:0]]
   

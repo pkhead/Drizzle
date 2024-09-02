@@ -37,7 +37,6 @@ on newUpdate me
       p.Input[3] = _key.keyPressed("W") and _movie.window.sizeState <> #minimized
   end case
   
-  
   mv = point(0,0)
   if (p.lastInput[1].locH <> p.Input[1].locH) then
     mv.locH = p.Input[1].locH

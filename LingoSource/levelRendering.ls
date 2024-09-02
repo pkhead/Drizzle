@@ -52,16 +52,10 @@ on setUpLayer(layer)
   tlset = member("tileSet1").image.duplicate()
   if layer = 1 then
     dpt = 0
-    --  ofst = 0
-    -- tlset = recolor(tlset, ofst)
   else if layer = 2 then
     dpt = 10
-    -- ofst = 0
-    -- tlset = recolor(tlset, ofst)
   else
     dpt = 20
-    --  ofst = 0
-    -- tlset = recolor(tlset, ofst)
   end if
   
   --  repeat with q = dpt to dpt+9 then
@@ -1369,22 +1363,6 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
         
         copyPixelsToEffectColor("A", dp, rect(mdPnt+point(-30,-30),mdPnt+point(30,30)), "bigSignGradient", rect(0, 0, 60, 60), 1, 1.0)
         
-        --  
-        --  member("gradientA"&string(giveDpFromLr(dp))).image.copyPixels(member("bigSignGradient1").image, rect(mdPnt+point(-30,-30),mdPnt+point(30,30)), rect(0, 0, 60, 60), {#maskImage:member("bigSignGradient").image.createMask()})
-        
-        --      "Sample":
-        --        if l = 1 then
-        --          dp = 7
-        --        else if l = 2 then
-        --          dp = 17
-        --        else
-        --          dp = 27
-        --        end if
-        --        var = random(2)
-        --        rct = rect(-29,-11,29,11)+rect(giveMiddleOfTile(point(q,c))+point(10,10), giveMiddleOfTile(point(q,c))+point(10,10))
-        --        member("layer"&string(dp)).image.copyPixels(member("sampleGraf").image, rct, rect(58*(var-1),0,58*var,22), {#ink:36, #color:color(255,0,255)})
-        --        member("gradientA"&string(dp)).image.copyPixels(member("sampleGrad").image, rct, rect(58*(var-1),0,58*var,22), {#ink:39})
-        
       "Big Sign B":
         -- put "BIG SIGN"
         img = image(60,60,1)
@@ -1451,15 +1429,7 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
         else
           dp = 20
         end if
-        
-        --  put dp && giveDpFromLr(dp)
-        -- frntImg.copyPixels(img, rect(-30,-30,30,30)+rect(giveMiddleOfTile(point(q,c)), giveMiddleOfTile(point(q,c))), rect(0,0,60,60), {#ink:36, #color:color(255,0,255)})
-        
-        
-        
-        -- mdPnt = depthPnt(mdPoint, -5+dp)
         copyPixelsToEffectColor("A", dp, rect(mdPoint+point(-25,-30),mdPoint+point(25,30)), "bigSignGradient", rect(0, 0, 60, 60), 1, 1)
-        --member("gradientA"&string(giveDpFromLr(dp))).image.copyPixels(member("bigSignGradient1").image, rect(mdPnt+point(-25,-30),mdPnt+point(25,30)), rect(0, 0, 60, 60), {#maskImage:member("bigSignGradient").image.createMask()})
         
       "Big Western Sign B", "Big Western Sign Tilted B":
         img = image(36,48,1)
@@ -1489,13 +1459,6 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
         else
           dp = 20
         end if
-        
-        --  put dp && giveDpFromLr(dp)
-        -- frntImg.copyPixels(img, rect(-30,-30,30,30)+rect(giveMiddleOfTile(point(q,c)), giveMiddleOfTile(point(q,c))), rect(0,0,60,60), {#ink:36, #color:color(255,0,255)})
-        
-        
-        
-        -- mdPnt = depthPnt(mdPoint, -5+dp)
         copyPixelsToEffectColor("B", dp, rect(mdPoint+point(-25,-30),mdPoint+point(25,30)), "bigSignGradient", rect(0, 0, 60, 60), 1, 1)
         
       "Small Asian Sign", "small asian sign on wall":
@@ -1532,9 +1495,6 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
             member("layer"&string(dp+1)).image.copyPixels(img, rect(-10,-10,10,10)+rect(giveMiddleOfTile(point(q,c)), giveMiddleOfTile(point(q,c)))+rect(r[1],r[1]), rect(0,0,20,20), {#ink:36, #color:r[2]})
             -- member("layer"&string(dp+2)).image.copyPixels(img, rect(-10,-10,10,10)+rect(giveMiddleOfTile(point(q,c)), giveMiddleOfTile(point(q,c)))+rect(r[1],r[1]), rect(0,0,20,20), {#ink:36, #color:r[2]})
           end repeat
-          
-          --   mdPnt = depthPnt(giveMiddleOfTile(point(q,c)), -5+dp)
-          -- member("gradientA"&string(giveDpFromLr(dp))).image.copyPixels(member("bigSignGradient1").image, rect(mdPnt+point(-13,-13),mdPnt+point(13,13)), rect(0, 0, 60, 60), {#maskImage:member("bigSignGradient").image.createMask()})
           mdPnt = giveMiddleOfTile(point(q,c))
           copyPixelsToEffectColor("A", dp, rect(mdPnt+point(-13,-13),mdPnt+point(13,13)), "bigSignGradient", rect(0, 0, 60, 60), 1, 1)
           
@@ -1575,9 +1535,6 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
             member("layer"&string(dp+1)).image.copyPixels(img, rect(-10,-10,10,10)+rect(giveMiddleOfTile(point(q,c)), giveMiddleOfTile(point(q,c)))+rect(r[1],r[1]), rect(0,0,20,20), {#ink:36, #color:r[2]})
             -- member("layer"&string(dp+2)).image.copyPixels(img, rect(-10,-10,10,10)+rect(giveMiddleOfTile(point(q,c)), giveMiddleOfTile(point(q,c)))+rect(r[1],r[1]), rect(0,0,20,20), {#ink:36, #color:r[2]})
           end repeat
-          
-          --   mdPnt = depthPnt(giveMiddleOfTile(point(q,c)), -5+dp)
-          -- member("gradientA"&string(giveDpFromLr(dp))).image.copyPixels(member("bigSignGradient1").image, rect(mdPnt+point(-13,-13),mdPnt+point(13,13)), rect(0, 0, 60, 60), {#maskImage:member("bigSignGradient").image.createMask()})
           mdPnt = giveMiddleOfTile(point(q,c))
           copyPixelsToEffectColor("B", dp, rect(mdPnt+point(-13,-13),mdPnt+point(13,13)), "bigSignGradient", rect(0, 0, 60, 60), 1, 1)
           
@@ -1759,12 +1716,7 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
         end repeat
         
         copyPixelsToEffectColor("A", dp + 1, rect(mdPnt+point(-43,-53),mdPnt+point(43,53)), "largeSignGrad2", rect(0, 0, 86, 106), 1, 1.0)
-        
-        
-        
-        --  
-        --  member("gradientA"&string(giveDpFromLr(dp))).image.copyPixels(member("bigSignGradient1").image, rect(mdPnt+point(-30,-30),mdPnt+point(30,30)), rect(0, 0, 60, 60), {#maskImage:member("bigSignGradient").image.createMask()})
-        
+
       "Larger Sign B":
         -- put "BIG SIGN"
         img = image(80+6,100+6,1)
@@ -3963,7 +3915,7 @@ on renderTileMaterial(layer: number, material: string, frntImg: image)
     "Chaotic Stone":
       if (gDRMatFixes) then
         repeat with tileCat = getFirstTileCat() to gTiles.count then
-          if(gTiles[tileCat].nm = "Drought Missing Stone")then
+          if(gTiles[tileCat].nm = "LB Missing Stone")then
             exit repeat
           end if
         end repeat
@@ -4040,7 +3992,7 @@ on renderTileMaterial(layer: number, material: string, frntImg: image)
     "Tiled Stone":
       if (gDRMatFixes) then
         repeat with tileCat = getFirstTileCat() to gTiles.count then
-          if(gTiles[tileCat].nm = "Drought Missing Stone")then
+          if(gTiles[tileCat].nm = "LB Missing Stone")then
             exit repeat
           end if
         end repeat
@@ -4114,7 +4066,7 @@ on renderTileMaterial(layer: number, material: string, frntImg: image)
     "Random Machines":
       if (gDRMatFixes) then
         repeat with tileCat = getFirstTileCat() to gTiles.count then
-          if(gTiles[tileCat].nm = "Drought Missing Machine")then
+          if(gTiles[tileCat].nm = "LB Missing Machine")then
             exit repeat
           end if
         end repeat
@@ -4242,7 +4194,7 @@ on renderTileMaterial(layer: number, material: string, frntImg: image)
       
     "Random Machines 2":
       repeat with tileCat = getFirstTileCat() to gTiles.count then
-        if(gTiles[tileCat].nm = "Drought Missing Machine")then
+        if(gTiles[tileCat].nm = "LB Missing Machine")then
           exit repeat
         end if
       end repeat
@@ -4371,7 +4323,7 @@ on renderTileMaterial(layer: number, material: string, frntImg: image)
       
     "Small Machines":
       repeat with tileCat = getFirstTileCat() to gTiles.count then
-        if(gTiles[tileCat].nm = "Drought Missing Machine")then
+        if(gTiles[tileCat].nm = "LB Missing Machine")then
           exit repeat
         end if
       end repeat
@@ -4499,7 +4451,7 @@ on renderTileMaterial(layer: number, material: string, frntImg: image)
       
     "Random Metal":
       repeat with tileCat = getFirstTileCat() to gTiles.count
-        if (gTiles[tileCat].nm = "Drought Missing Metal") then --> this is the category for slopes, shortcut geometry and glass, added to prevent the material from crashing if applied on these geometries and to add custom ones
+        if (gTiles[tileCat].nm = "LB Missing Metal") then --> this is the category for slopes, shortcut geometry and glass, added to prevent the material from crashing if applied on these geometries and to add custom ones
           exit repeat
         end if
       end repeat
@@ -4628,7 +4580,7 @@ on renderTileMaterial(layer: number, material: string, frntImg: image)
       
     "Chaotic Stone 2":
       repeat with tileCat = getFirstTileCat() to gTiles.count
-        if (gTiles[tileCat].nm = "Drought Missing Stone") then
+        if (gTiles[tileCat].nm = "LB Missing Stone") then
           exit repeat
         end if
       end repeat
@@ -4762,7 +4714,7 @@ on renderTileMaterial(layer: number, material: string, frntImg: image)
       --Dry's random metals
     "Random Metals":
       repeat with tileCat = getFirstTileCat() to gTiles.count then
-        if(gTiles[tileCat].nm = "Drought Missing Metal")then
+        if(gTiles[tileCat].nm = "LB Missing Metal")then
           exit repeat
         end if
       end repeat
@@ -5059,7 +5011,7 @@ on renderTileMaterial(layer: number, material: string, frntImg: image)
       
     "4Mosaic":
       repeat with tileCat = getFirstTileCat() to gTiles.count then
-        if(gTiles[tileCat].nm = "Drought 4Mosaic")then
+        if(gTiles[tileCat].nm = "LB 4Mosaic")then
           exit repeat
         end if
       end repeat
@@ -5093,7 +5045,7 @@ on renderTileMaterial(layer: number, material: string, frntImg: image)
       
     "3DBricks":
       repeat with tileCat = getFirstTileCat() to gTiles.count then
-        if(gTiles[tileCat].nm = "Drought Missing 3DBricks")then
+        if(gTiles[tileCat].nm = "LB Missing 3DBricks")then
           exit repeat
         end if
       end repeat
@@ -5263,74 +5215,8 @@ on renderHarvesterDetails(q, c, l, tl, frntImg, dt)
     
     repeat with dpth = ((l-1)*10)+3 to ((l-1)*10)+6 then
       member("layer" & dpth).image.copyPixels(mem.image, qd, mem.image.rect, {#ink:36, #color:color(0, 255, 0)})
-    end repeat
-    
---    va = mdPnt + point(armPoint.loch*dr, armPoint.locV)
---    
---    if(lowerPart <> point(0,0))then
---      vc = lowerPartPos
---      if big then
---        vc = vc + point(77*dr, 21)
---      else
---        vc = vc + point(48*dr, 5)
---      end if
---    else
---      vc = va + point(dr*20, 200) + degToVec(random(360))*(10+random(40))
---      repeat while ((vc.locv > va.locv + 50) and (solidAfaMv(giveGridPos(vc), l) = 1)) then
---        vc.locV = giveMiddleOfTile(giveGridPos(vc)).locv - 11
---      end repeat
---    end if
---    
---    if big then
---      A = 200
---      B = 100
---    else
---      A = 160
---      B = 80
---    end if
---    vb = InverseKinematic(vc, va, A, B, dr)
---    
---    
---    repeat with seg = 1 to 2 then
---      if(seg = 2) then
---        p1 = vc
---        p2 = vb
---      else
---        p1 = vb
---        p2 = va
---      end if
---      armDir = MoveToPoint(p1, p2, 1.0)
---      perp = giveDirFor90degrToLine(-armDir, armDir)
---      wd = 5
---      qd = [p1+perp*wd, p1-perp*wd, p2-perp*wd, p2+perp*wd]
---      --  member("layer0").image.copyPixels(member("pxl").image, qd, member("pxl").image.rect, {#ink:36, #color:color(0, 0, 0)})
---      renderBeveledImage(member("pxl").image, ((l-1)*10)+8, qd, 2)
---      renderBeveledImage(member("pxl").image, ((l-1)*10)+9, qd, 1)
---    end repeat
---    
---    armDir = MoveToPoint(vb, vc, 1.0)
---    perp = giveDirFor90degrToLine(-armDir, armDir)
---    wd = 6
---    lngth = 4+2*big
---    repeat with seg = 2 to 6 + 2*big then
---      qd = [vb + armDir*lngth*(seg*2) - perp*wd,  vb + armDir*lngth*(seg*2) + perp*wd, vb + armDir*lngth*(seg*2+1) + perp*wd, vb + armDir*lngth*(seg*2+1) - perp*wd]
---      renderBeveledImage(member("pxl").image, ((l-1)*10)+8, qd, 2)
---      renderBeveledImage(member("pxl").image, ((l-1)*10)+9, qd, 1)
---    end repeat
---    
---    jointRect = rect(vb,vb)+rect(-member("clampBoltGraf").image.width/2, -member("clampBoltGraf").image.height/2, member("clampBoltGraf").image.width/2, member("clampBoltGraf").image.height/2)
---    repeat with dpth = ((l-1)*10)+7 to ((l-1)*10)+9 then
---      member("layer"&dpth).image.copyPixels(member("clampBoltGraf").image, jointRect, member("clampBoltGraf").image.rect, {#ink:36})
---    end repeat
---    
---    eyePastePos.locV = eyePastePos.locV + 50
---    perp = giveDirFor90degrToLine(eyePastePos, vb)
---    wd = 1.5
---    qd = [eyePastePos+perp*wd, eyePastePos-perp*wd, vb-perp*wd, vb+perp*wd]
---    member("layer"&(((l-1)*10)+8)).image.copyPixels(member("pxl").image, qd, rect(0,0,1,1), {#color:color(0, 255, 0)})
-    
+    end repeat 
   end repeat
-  
 end
 
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 
@@ -65,7 +65,7 @@ public sealed partial class CastMember
         var type = ext switch
         {
             "png" or "bmp" => CastMemberType.Bitmap,
-            "lingo" => CastMemberType.Script,
+            "lingo" or "ls" => CastMemberType.Script,
             "txt" => CastMemberType.Text,
             _ => CastMemberType.Empty
         };

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,7 +16,7 @@ public sealed class ParseTest
 
     public static IEnumerable<string> GetSources()
     {
-        return Directory.EnumerateFiles(SourcesRoot, "*.lingo").Select(Path.GetFileName);
+        return Directory.EnumerateFiles(SourcesRoot, "*.lingo").Concat(Directory.EnumerateFiles(SourcesRoot, "*.ls")).Select(Path.GetFileName);
     }
 
     [Test]
