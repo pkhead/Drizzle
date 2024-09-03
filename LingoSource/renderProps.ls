@@ -1715,7 +1715,7 @@ on renderLongProp(qd, prop, data, dp)
           member("layer"&string(restrict(dp, 0, 29))).image.copypixels(member("stretchedWireGraf").image, rotateToQuad(rct, degDir), rect(0, 0, 2, 4), {#ink:36})
         end repeat
         
-      "Barbed Wire":
+      "Long Barbed Wire":
         steps = ((diag(A, B) / 20.0) + 0.4999).integer
         degDir = lookatpoint(A, B)
         stp = random(100) * 0.01

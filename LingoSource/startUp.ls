@@ -497,7 +497,7 @@ on exitFrame me
   propsInCat.add([#nm:"Stretched Pipe", #tp:"long", #depth:0, #tags:[], #notes:[]])
   propsInCat.add([#nm:"Twisted Thread", #tp:"long", #depth:0, #tags:[], #notes:[]])
   propsInCat.add([#nm:"Stretched Wire", #tp:"long", #depth:0, #tags:[], #notes:[]])
-  propsInCat.add([#nm:"Barbed Wire", #tp:"long", #depth:0, #tags:[], #notes:[]])
+  propsInCat.add([#nm:"Long Barbed Wire", #tp:"long", #depth:0, #tags:[], #notes:[]])
   
   gTrashPropOptions = []
   gMegaTrash = []
