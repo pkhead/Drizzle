@@ -4,7 +4,7 @@ global gProps, gLOADPATH, gTrashPropOptions, solidMtrx, INT_EXIT, INT_EXRD, DRCu
 
 on exitFrame me
   member("editorConfig").importFileInto("editorConfig.txt")
-  if (member("editorConfig").text = VOID) or (member("editorConfig").text = "") or (member("editorConfig").text.line[1] <> "Rain World Community Editor; V.0.4.3; Editor configuration file") then
+  if (member("editorConfig").text = VOID) or (member("editorConfig").text = "") or (member("editorConfig").text.line[1] <> "Rain World Community Editor; V.0.4.31; Editor configuration file") then
     fileCo = new xtra("fileio")
     fileCo.createFile(the moviePath & "editorConfig.txt")
     fileCo.openFile(the moviePath & "editorConfig.txt", 0)
@@ -323,7 +323,7 @@ on exitFrame me
   end repeat
   
   repeat with q = 1 to the number of lines in sav.text then
-    savTextLineL: string = sav.text.line[q]
+    savTextLine: string = sav.text.line[q]
     if (savTextLine <> "") then
       if (savTextLine.char[1] = "-") then
         vl = value(savTextLine.char[2..savTextLine.length])
@@ -604,7 +604,7 @@ on exitFrame me
   savEf = member("effectsInit")
   member("effectsInit").importFileInto("effectsInit.txt")
   savEf.name = "effectsInit"
-  if (savEf.text = VOID) or (savEf.text = "") or (savEf.text.line[1] <> "Rain World Community Editor; V.0.4.22; Editor effects initialisation file") then
+  if (savEf.text = VOID) or (savEf.text = "") or (savEf.text.line[1] <> "Rain World Community Editor; V.0.4.31; Editor effects initialisation file") then
     fileEf = new xtra("fileio")
     fileEf.createFile(the moviePath & "effectsInit.txt")
     fileEf.openFile(the moviePath & "effectsInit.txt", 0)
