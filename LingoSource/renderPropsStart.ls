@@ -23,7 +23,7 @@ on exitFrame(me)
   repeat with q = 0 to 29
     sprq = sprite(50 - q)
     sprq.loc = point(683 - q, 384 - q)
-    val = (q.float + 1.0) / 30.0 * 255
+    val: number = (q.float + 1.0) / 30.0 * 255
     sprq.color = color(val, val, val)
   end repeat
   propsToRender = []

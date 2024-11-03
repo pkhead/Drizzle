@@ -1,62 +1,33 @@
 --detta skript räknar ut distansen mellan två punkter
 on diag(point1, point2)
-  rectHeight = abs(point1.locV - point2.locV)
-  rectWidth = abs(point1.locH - point2.locH)
+  rectHeight: number = abs(point1.locV - point2.locV)
+  rectWidth: number = abs(point1.locH - point2.locH)
   return sqrt((rectHeight * rectHeight) + (rectWidth * rectWidth))
 end
 
 on diagWI(point1, point2, dig)
-  RectHeight = ABS(point1.locV - point2.locV)
-  RectWidth = ABS(point1.locH - point2.locH)
+  RectHeight: number = ABS(point1.locV - point2.locV)
+  RectWidth: number = ABS(point1.locH - point2.locH)
   return ((RectHeight * RectHeight) + (RectWidth * RectWidth) < dig*dig )
 end 
 
 on diagNoSqrt(point1, point2)
-  RectHeight = ABS(point1.locV - point2.locV)
-  RectWidth = ABS(point1.locH - point2.locH)
+  RectHeight: number = ABS(point1.locV - point2.locV)
+  RectWidth: number = ABS(point1.locH - point2.locH)
   
-  diagonal = (RectHeight * RectHeight) + (RectWidth * RectWidth)
+  diagonal: number = (RectHeight * RectHeight) + (RectWidth * RectWidth)
   
   return diagonal
 end
 
 on vertFlipRect(rct)
+  type return: list
   return [point(rct.right, rct.top),point(rct.left, rct.top),point(rct.left, rct.bottom),point(rct.right, rct.bottom)]
 end
 
 --tar fram en förflyttning mellan två punkter, bergänsad till theMovement
 on moveToPoint(pointA, pointB, theMovement)
-  --  --tar fram en riktning
-  --      pLocH = pointA.locH
-  --      pLocV = pointA.locV
-  --      
-  --      pTargetH = pointB.locH
-  --      pTargetV = pointB.locV
-  --      
-  --      y_diff = pTargetV.float - pLocV.float
-  --      x_diff = pLocH.float - pTargetH.float
-  --      
-  --      if x_diff <> 0 then
-  --        rotationAngleRad = atan(y_diff / x_diff)
-  --      else
-  --        rotationAngleRad = 1.5 * PI
-  --      end if
-  --      
-  --      if pTargetH > pLocH then
-  --        fuckedupanglefix_parameter = 0  -- 2 * PI
-  --      else 
-  --        fuckedupanglefix_parameter = PI
-  --      end if
-  --      rotationAngleRad = fuckedupanglefix_parameter - rotationAngleRad
-  --      
-  --      --ändrar krafter
-  --      pVePower = theMovement * sin(rotationAngleRad)
-  --      pHoPower = theMovement * cos(rotationAngleRad)
-  --      
-  --      theMovePoint = point(pHoPower, pVePower)
-  --      
-  --      return theMovePoint  
-  
+  type return: point
   
   pointB = pointB-pointA
   diagonal = diag(point(0,0), pointB)
@@ -85,6 +56,7 @@ on returnAbsolutePoint p1, p2
 end
 
 on lerp(A, B, val)
+  type return: number
   val = restrict(val, 0, 1)
   if(B < A)then
     sv = A
@@ -177,20 +149,22 @@ end
 
 
 on lookAtPoint(pos, lookAtpoint)
-  --sätter rotation
-  --  lookAtpoint = pPointsL.getAt(sprDataL[#lookPoint])[#pos]
-  --  pos = pPointsL.getAt(sprDataL[#locPoint])[#pos]
+  type return: number
   
   
-  y_diff = lookAtpoint.locV.float - pos.locV.float
-  x_diff = pos.locH.float - lookAtpoint.locH.float
+  y_diff: number = lookAtpoint.locV.float - pos.locV.float
+  x_diff: number = pos.locH.float - lookAtpoint.locH.float
   
+  type rotationAngleRad: number
+
   if x_diff <> 0 then
     rotationAngleRad = atan(y_diff / x_diff)
   else
     rotationAngleRad = 1.5 * PI
   end if
   
+  type fuckedupanglefix_parameter: number
+
   if lookAtpoint.locH > pos.locH then
     fuckedupanglefix_parameter = 0  -- 2 * PI
   else 
@@ -202,6 +176,7 @@ on lookAtPoint(pos, lookAtpoint)
 end
 
 on degToVec(deg)
+  type return: point
   rad = -2 * PI * ((deg + 90) / 360.0).float
   return point(-cos(rad), sin(rad))
 end
@@ -209,7 +184,7 @@ end
 on degToVecFac2(deg, facH, facV)
   deg = deg + 90
   deg = -deg 
-  rad = ((deg/360.0).float)*PI*2
+  rad: number = ((deg/360.0).float)*PI*2
   
   return point(-cos(rad)*facH, sin(rad)*facV)
 end
@@ -226,22 +201,25 @@ end
 on giveDirFor90degrToLine(pnt1, pnt2)
   
   
-  X1 = pnt1.locH
-  Y1 = pnt1.locV
+  X1: number = pnt1.locH
+  Y1: number = pnt1.locV
   
-  X2 = pnt2.locH
-  Y2 = pnt2.locV
+  X2: number = pnt2.locH
+  Y2: number = pnt2.locV
   
   
-  Ydiff = Y1-Y2
-  Xdiff = X1-X2
+  Ydiff: number = Y1-Y2
+  Xdiff: number = X1-X2
   
+  type dir: number
+
   if Xdiff<>0 then
     dir = Ydiff/Xdiff
   else
     dir = 1
   end if
   
+  type newDir: number
   
   if dir<>0 then
     newDir = -1.0/dir
@@ -249,10 +227,10 @@ on giveDirFor90degrToLine(pnt1, pnt2)
     newDir = 1
   end if
   
-  newPnt = point(1, newDir)
+  newPnt: point = point(1, newDir)
   
   
-  fac = 1
+  fac: number = 1
   
   if X2 < X1 then 
     if Y2 < Y1 then

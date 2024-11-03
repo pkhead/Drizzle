@@ -46,12 +46,12 @@ on exitFrame me
     sprite(220).rect = ((rct.intersect(rect(0,0,52,40))+rect(1, 1, 1, 1))*rect(16,16,16,16))+rect(0, -8, 0, 0)
   end if
   
-  msTile = (_mouse.mouseLoc/point(16.0, 16.0))-point(0.4999, 0.4999)
+  msTile: point = (_mouse.mouseLoc/point(16.0, 16.0))-point(0.4999, 0.4999)
   msTile = point(msTile.loch.integer, msTile.locV.integer) 
   msTile = msTile + gLEProps.camPos
   
-  actn = 0
-  actn2 = 0
+  actn: number = 0
+  actn2: number = 0
   
   gEEprops.keys.m1 = _mouse.mouseDown and _movie.window.sizeState <> #minimized
   if (gEEprops.keys.m1)and(gEEprops.lastKeys.m1=0) then
@@ -170,6 +170,7 @@ on exitFrame me
       sprite(244).rect = (rect(msTile-gLEProps.camPos, msTile-gLEProps.camPos) * rect(16,16,16,16)) + rect(0, 0, 16, 16) + sizeAdd
       
   end case
+  type sizeAdd: rect
   
   sprite(243).rect = (rect(msTile-gLEProps.camPos, msTile-gLEProps.camPos) * rect(16,16,16,16)) + rect(0, 0, 16, 16)
   
@@ -187,7 +188,8 @@ end
 
 
 on checkKey me, key
-  rtrn = 0
+  type return: number
+  rtrn: number = 0
   gEEprops.keys[symbol(key)] = _key.keyPressed(key) and _movie.window.sizeState <> #minimized
   if (gEEprops.keys[symbol(key)])and(gEEprops.lastKeys[symbol(key)]=0) then
     rtrn = 1
@@ -198,7 +200,7 @@ end
 
 
 
-on updateEffectsMenu me, mv
+on updateEffectsMenu me, mv: point
   gEEprops.emPos = gEEprops.emPos + mv
   
   if gEEprops.emPos.locH < 1 then
@@ -213,7 +215,7 @@ on updateEffectsMenu me, mv
     gEEprops.emPos.locV = 1
   end if
   
-  txt = ""
+  txt: string = ""
   put "[" && gEffects[gEEprops.emPos.locH].nm && "]" after txt
   put RETURN after txt
   
@@ -231,8 +233,8 @@ on updateEffectsMenu me, mv
 end
 
 
-on updateEffectsL me, mv
-  txt = ""
+on updateEffectsL me, mv: number
+  txt: string = ""
   if gEEprops.effects.count <> 0 then
     gEEprops.selectEditEffect = gEEprops.selectEditEffect + mv
     if gEEprops.selectEditEffect < 1 then

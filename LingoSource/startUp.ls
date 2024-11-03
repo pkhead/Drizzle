@@ -314,7 +314,7 @@ on exitFrame me
         ad = value(savTextLine)
         ad.addProp(#category, gProps.count)
         if (ad.tp = "standard") or (ad.tp = "variedStandard") then
-          dp = 0
+          dp: number = 0
           repeat with i = 1 to ad.repeatL.count
             dp = dp + ad.repeatL[i]
           end repeat
@@ -774,7 +774,7 @@ on exitFrame me
     if (savTextLine <> "") then
       if (savTextLine.char[1] = "-") then
         didNewHeading = 1
-        vl = savTextLine.char[2..savTextLine.length]
+        vl: list = value(savTextLine.char[2..savTextLine.length])
         gEffects.add([#nm:vl, #efs:[]])
       else if (value(savTextLine) = VOID) then
         writeException("Effects Init Error", "Line " && q && " is malformed in the Init.txt file from your Effects folder.")
@@ -814,6 +814,7 @@ on exitFrame me
   gCameraProps = [#cameras:[point(gLOprops.size.locH*10, gLOprops.size.locV*10)-point(35*20, 20*20)], #selectedCamera:0, #quads:[[[0,0], [0,0], [0,0], [0,0]]], #keys:[#n:0, #d:0, #e:0, #p:0], #lastKeys:[#n:0, #d:0, #e:0, #p:0]]
   
   repeat with mem in ["rainBowMask","blackOutImg1","blackOutImg2"] then
+    type mem: string
     member(mem).image = image(1, 1, 1)
   end repeat
   

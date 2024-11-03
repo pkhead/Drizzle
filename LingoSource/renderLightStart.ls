@@ -19,7 +19,7 @@ on exitFrame(me)
         if (gLEProps.matrix[q][c][layer][2].getPos(3) > 0) and (afaMvLvlEdit(point(q, c), layer) = 0) and (afaMvLvlEdit(point(q, c + 1), layer) = 1) then
           repeat with tp = 1 to 2
             repeat with grss = 1 to 6
-              lr = ((layer - 1) * 10) + random(9)
+              lr: number = ((layer - 1) * 10) + random(9)
               pos = giveMiddleOfTile(point(q, c) - gRenderCameraTilePos) + point(-10 + random(20), 0)
               if (tp = 2) and (layer = 1) then
                 member("layer" & string(lr)).image.copyPixels(member("hiveGrassGraf").image, rect(pos, pos) + rect(-2, random(5) - random(10) - random(random(14)), 3, 10), rect(0, 0, 5, 29), {#ink:36})
@@ -32,10 +32,10 @@ on exitFrame(me)
       end repeat
     end repeat
   end repeat
-  cols = 2000
-  rows = 1200
-  marginPixels = 150
-  marginPixels2 = marginPixels * 2
+  cols: number = 2000
+  rows: number = 1200
+  marginPixels: number = 150
+  marginPixels2: number = marginPixels * 2
   if (gAnyDecals) then
     repeat with l = 0 to 29
       me.quadifyMember("layer" & string(l) & "dc", (l - 5) * 1.5)
@@ -53,7 +53,7 @@ on exitFrame(me)
   DRActiveLight = member("activeLightImage").image
   DRActiveLight.setPixel(0, 0, color(0, 0, 0))
   DRActiveLight.setPixel(DRActiveLight.rect.right - 1, DRActiveLight.rect.bottom - 1, color(0, 0, 0))
-  inversedLightImage = makeSilhoutteFromImg(member("lightImage").image, 1)
+  inversedLightImage: image = makeSilhoutteFromImg(member("lightImage").image, 1)
   global gRenderCameraPixelPos
   DRActiveLight.copyPixels(inversedLightImage, rect(0, 0, cols + marginPixels2, rows + marginPixels2), rect(point(0, 0), point(cols + marginPixels2, rows + marginPixels2)) + rect(gRenderCameraTilePos * 20, gRenderCameraTilePos * 20) + rect(150, 150, 150, 150))
   DRActiveLight.copyPixels(blkI2, rect(0, 0, cols, rows) + rect(marginPixels, marginPixels, marginPixels, marginPixels), rect(0, 0, cols, rows), {#ink:36, #color:DRWhite})
@@ -71,8 +71,8 @@ end
 
 on quadifyMember(me, mem, fac)
   global gCameraProps, gCurrentRenderCamera
-  newImg = member(mem).image.duplicate()
-  qd = [point(0, 0), point(newImg.width, 0), point(newImg.width, newImg.height), point(0, newImg.height)]
+  newImg: image = member(mem).image.duplicate()
+  qd: list = [point(0, 0), point(newImg.width, 0), point(newImg.width, newImg.height), point(0, newImg.height)]
   curcam = gCameraProps.quads[gCurrentRenderCamera]
   repeat with q = 1 to 4
     curcamq = curcam[q]

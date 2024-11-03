@@ -30,7 +30,7 @@ on newFrame me
   sprite(59).locV = c-8
   repeat with q = 1 to 1400 then
     
-    layer = 1
+    layer: number = 1
     
     getColor = DRFinalImage.getPixel(q-1, c-1)
     if (getColor <> color(255, 255, 255)) then
@@ -219,7 +219,7 @@ on newFrame me
 end 
 
 on rainbowifypixel me, pxl
-  
+  type return: number
   if(pxl.locH < 2)or(pxl.locV < 2)then
     return
   end if
@@ -255,6 +255,7 @@ on IsPixelInFinalImageRainbowed(pxl)
 end
 
 on doesGreenValueMeanRainbow(grn)
+  type return: number
   if (grn > 3)and(grn < 8)then
     return 1
   else  if (grn > 11)and(grn < 16)then

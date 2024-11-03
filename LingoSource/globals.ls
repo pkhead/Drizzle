@@ -44,6 +44,8 @@ type gdLayer:                     string
 
 type gEffects:                    list
 
+type gCustomEffects:              list
+
 -- Are we rendering a soft prop?
 type gESoftProp:                  number
 

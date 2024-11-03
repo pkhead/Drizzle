@@ -113,6 +113,16 @@ end
 
 
 on createShortCuts me
+  type diditwork: number
+  type tp: string
+  type holedir: point
+  type stps: number
+  type pos: point
+  type stp: number
+  type lastdir: point
+  type rpt: number
+  type dirsl: list
+  type dir: point
   -- put "init"
   --  member("shortcutdotsImg").image = image(1040, 800, 1)
   
