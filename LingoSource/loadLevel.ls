@@ -1,5 +1,4 @@
-global projects, ldPrps, gTEprops, gTiles, gLEProps, gEEprops, gLightEProps
-global gLEVEL, gLOprops, gLoadedName, gCameraProps, gEnvEditorProps, gPEprops, gLOADPATH, showControls
+global projects, ldPrps, gTEprops, gTiles, gLEProps, gEEprops, gLightEProps, gLEVEL, gLOprops, gLoadedName, gCameraProps, gEnvEditorProps, gPEprops, gLOADPATH, showControls, gEffects, gCustomEffects
 
 
 on exitFrame me
@@ -9,7 +8,7 @@ on exitFrame me
     sprite(32).blend = 0
   end if
   
-  if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+  if checkMinimize() then
     _player.appMinimize()
     
   end if
@@ -111,9 +110,9 @@ on loadLevel me, lvlName, fullPath
   if(fullPath)then
     pth = ""
   else
-    pth = the moviePath & "LevelEditorProjects" & the dirSeparator
+    pth = the moviePath & "LevelEditorProjects\"
     repeat with f in gLOADPATH then
-      pth = pth & f & the dirSeparator
+      pth = pth & f & "\" 
     end repeat
   end if
   
@@ -124,7 +123,7 @@ on loadLevel me, lvlName, fullPath
     gLoadedName = ""
     lastBackSlash = 0
     repeat with q = 1 to lvlName.length then
-      if(chars(lvlName, q, q) = the dirSeparator)then
+      if(chars(lvlName, q, q) = "\")then
         lastBackSlash = q
       end if
     end repeat
@@ -187,11 +186,10 @@ on loadLevel me, lvlName, fullPath
     gCameraProps = value(l2.line[7])
   end if
   
-  valEnv = value(l2.line[8])
-  if (valEnv = void)sor(ilk(valEnv) <> #proplist)sor(valEnv.findpos(#waterLevel) = void) then
+  if (value(l2.line[8]) = void)or(value(l2.line[8]).findpos(#waterLevel) = void) then
     resetgEnvEditorProps()
   else
-    gEnvEditorProps = valEnv
+    gEnvEditorProps = value(l2.line[8])
   end if
   
   if (value(l2.line[9]) = void)or(chars(l2.line[9], 1, 6) <> "[#prop")then -- = " color") then
@@ -208,15 +206,6 @@ on loadLevel me, lvlName, fullPath
   if gPEprops.findpos(#props) = void then
     gPEprops.addProp(#props, [])
   end if
-  
-  --sv1 = [gLOprops.pal, gLOprops.eCol1, gLOprops.eCol2, gLOprops.colGlows, gLOprops.size, gLOprops.extraTiles]
-  --gLOprops = sv2
-  --gLOprops.pal = sv1[1]
-  -- gLOprops.eCol1 = sv1[2]
-  --gLOprops.eCol2 = sv1[3]
-  --gLOprops.colGlows = sv1[4]
-  --gLOprops.size = sv1[5]
-  --gLOprops.extraTiles = sv1[6]
   
   gTEprops.tmPos = point(2,1)
   
@@ -240,7 +229,7 @@ on loadLevel me, lvlName, fullPath
   gLASTDRAWWASFULLANDMINI = 0
   
   
-  put pth & the dirSeparator & lvlName & ".png"
+  put pth & "\" & lvlName & ".png"
   
 end
 
@@ -345,12 +334,6 @@ on versionFix me
     end if
   end repeat
   
-  repeat with lz in gLevel.lizards then
-    if lz.count = 3 then
-      lz.add(1)
-    end if
-  end repeat
-  
   if gLEVEL.findpos(#waterDrips) = void then
     gLEVEL.addProp(#waterDrips, 1)
   end if
@@ -384,162 +367,151 @@ on versionFix me
     end repeat
   end if
   
-  
-  
-  
   if gLEVEL.findpos(#music) = void then
     gLEVEL.addProp(#music, "NONE")
   end if
   
-  repeat with ef in gEEprops.effects then
+  repeat with ef in gEEprops.effects
+    ----Effect update
+    cEff = VOID
+    if gCustomEffects.getPos(ef.nm) > 0 then
+      repeat with i = 1 to gEffects.count
+        iefs = gEffects[i].efs
+        repeat with j = 1 to iefs.count
+          ijef = iefs[j]
+          if ijef.nm = ef.nm then
+            cEff = ijef
+            exit repeat
+          end if
+        end repeat
+        if cEff <> VOID then exit repeat
+      end repeat
+    end if
     sd = 0
-    repeat with op in ef.options then
-      if op[1] = "seed" then
+    rotOp = 0
+    clr = 0
+    gaf = 0
+    lay = 0
+    _3dOp = 0
+    sideOp = 0
+    repeat with op3 in ef.options
+      if (op3[1] = "Seed") then
         sd = 1
-        exit repeat
+      else if (op3[1] = "3D") then
+        _3dOp = 1
+      else if (op3[1] = "Rotate") then
+        rotOp = 1
+      else if (op3[1] = "Side") then
+        sideOp = 1
+      else if (op3[1] = "Color") then
+        clr = 1
+        if (op3[2] <> ["Color1", "Color2", "Dead"]) then
+          op3[2] = ["Color1", "Color2", "Dead"]
+        end if
+      else if (op3[1] = "Affect Gradients and Decals") then
+        gaf = 1
+      else if (op3[1] = "Layers") then
+        lay = 1
+        if ef.nm = "Mosaic Plants" then
+          if op3[2] <> ["1", "2", "1:st and 2:nd"] then
+            op3[2] = ["1", "2", "1:st and 2:nd"]
+          end if
+        else if (op3[2] <> ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]) then
+          op3[2] = ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]
+        end if
       end if
     end repeat
-    if sd = 0 then
+    if (cEff <> VOID) then
+      if (sideOp = 0) then
+        if cEff.tp = "clinger" then ef.options.add(["Side", ["Left", "Right", "Random"], "Random"])
+      end if
+      if (_3dOp = 0) then
+        if cEff.tp = "wall" and cEff.findPos("can3D") > 0 then
+          if cEff.can3D = 2 then
+            ef.options.add(["3D", ["On", "Off"], "Off"])
+          end if
+        end if
+      end if
+      if (clr = 0) then
+        if cEff.findPos("pickColor") then
+          if cEff.pickColor = 1 then
+            ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
+          end if
+        end if
+      end if
+    end if
+    if (sd = 0) then
       ef.options.add(["Seed", [], random(500)])
     end if
-    
-    rotOp = 0
-    repeat with op in ef.options
-      if (op[1] = "Rotate") then
-        rotOp = 1
-        exit repeat
-      end if
-    end repeat
     if (rotOp = 0) and (ef.nm = "Little Flowers") then
       ef.options.add(["Rotate", ["On", "Off"], "Off"])
     end if
-    
-    lay = 0
-    repeat with op2 in ef.options then
-      if op2[1] = "Layers" then
-        lay = 1
-        if op2[2] <> ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]then
-          op2[2] = ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]
+    if (lay = 0) and (["BlackGoo", "Super BlackGoo", "Stained Glass Properties"].getPos(ef.nm) = 0) then
+      if (cEff <> VOID) then
+        if cEff.tp = "individual" then
+          ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "1"])
+        else
+          ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
         end if
-        exit repeat
-      end if
-    end repeat
-    if (lay = 0) and (["BlackGoo", "Super BlackGoo", "Stained Glass Properties"].getPos(ef.nm)=0)then
-      if (["Fungi Flowers", "Lighthouse Flowers", "Colored Fungi Flowers", "Colored Lighthouse Flowers", "Fern", "Giant Mushroom", "Sprawlbush", "featherFern", "Fungus Tree"].getPos(ef.nm)>0)then
+      else if (["Fungi Flowers", "Lighthouse Flowers", "Colored Fungi Flowers", "Colored Lighthouse Flowers", "Fern", "Giant Mushroom", "Sprawlbush", "featherFern", "Fungus Tree"].getPos(ef.nm) > 0) then
         ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "1"])
       else
         ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
       end if
     end if
-    
-    clr = 0
-    repeat with op3 in ef.options then
-      if op3[1] = "Color" then
-        clr = 1
-        if op3[2] <> ["Color1", "Color2", "Dead"] then
-          op3[2] = ["Color1", "Color2", "Dead"]
-        end if
-        exit repeat
-      end if
-    end repeat
-    if (clr = 0) and (["DaddyCorruption"].getPos(ef.nm)>0)then
+    if (clr = 0) and (ef.nm = "DaddyCorruption") then
       ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
     end if
-    
-    gaf = 0
-    repeat with grd in ef.options then
-      if grd[1] = "Affect Gradients and Decals" then
-        gaf = 1
-        exit repeat
-      end if
-    end repeat
-    if gaf = 0 and (["Melt", "Super Melt", "Destructive Melt", "Rust", "Barnacles"].getPos(ef.nm)>0) then
+    if (gaf = 0) and (["Melt", "Super Melt", "Destructive Melt", "Rust", "Barnacles"].getPos(ef.nm) > 0) then
       ef.options.add(["Affect Gradients and Decals", ["Yes", "No"], "No"])
     end if
-    if gaf = 0 and (["Slime", "SlimeX3", "Fat Slime"].getPos(ef.nm)>0) then
+    if (gaf = 0) and (["Slime", "SlimeX3", "Fat Slime"].getPos(ef.nm) > 0) then
       ef.options.add(["Affect Gradients and Decals", ["Yes", "No"], "Yes"])
     end if
-    
-    if ef.findPos(#crossScreen) = void then
+    if (ef.findPos(#crossScreen) = VOID) then
       ef.addProp(#crossScreen, 0)
-      if(["Hang Roots","Growers","Wires","Chains"].getPos(ef.nm)>0)then
-        ef.crossScreen = 1
-      end if
     end if
-    ----Effect update
-    if(["Arm Growers", "Growers", "Mini Growers", "Rollers", "Thorn Growers", "Garbage Spirals", "Fuzzy Growers", "Spinets", "Small Springs", "Wires", "Chains", "Colored Wires", "Colored Chains", "Hang Roots", "Thick Roots", "Shadow Plants", "Colored Hang Roots", "Colored Thick Roots", "Colored Shadow Plants", "Root Plants", "Coral Growers", "Leaf Growers", "Meat Growers", "Horror Growers", "Thunder Growers", "Ice Growers", "Grass Growers", "Fancy Growers"].getPos(ef.nm)>0)then
+    if (["Arm Growers", "Growers", "Mini Growers", "Rollers", "Thorn Growers", "Garbage Spirals", "Fuzzy Growers", "Spinets", "Small Springs", "Wires", "Chains", "Colored Wires", "Colored Chains", "Hang Roots", "Thick Roots", "Shadow Plants", "Colored Hang Roots", "Colored Thick Roots", "Colored Shadow Plants", "Root Plants", "Coral Growers", "Leaf Growers", "Meat Growers", "Horror Growers", "Thunder Growers", "Ice Growers", "Grass Growers", "Fancy Growers", "Mosaic Plants"].getPos(ef.nm) > 0) then
       ef.crossScreen = 1
-    else
-      ef.crossScreen = 0
     end if
-    if(["Slime", "Fat Slime", "Scales", "SlimeX3", "DecalsOnlySlime", "Melt", "Rust", "Barnacles", "Colored Barnacles", "Clovers", "Erode", "Sand", "Super Erode", "Ultra Super Erode", "Roughen", "Impacts", "Super Melt", "Destructive Melt"].getPos(ef.nm)>0)then
+    if (["Slime", "Fat Slime", "Scales", "SlimeX3", "DecalsOnlySlime", "Melt", "Rust", "Barnacles", "Colored Barnacles", "Clovers", "Erode", "Sand", "Super Erode", "Ultra Super Erode", "Roughen", "Impacts", "Super Melt", "Destructive Melt"].getPos(ef.nm) > 0) then
       ef.tp = "standardErosion"
     else
       ef.tp = "nn"
     end if
-    if(["Slime", "DecalsOnlySlime"].getPos(ef.nm)>0)then
-      ef.repeats = 130
-      ef.affectOpenAreas = 0.5
-    end if
-    if(["Fat Slime"].getPos(ef.nm)>0)then
-      ef.repeats = 200
-      ef.affectOpenAreas = 0.5
-    end if
-    if(["Scales"].getPos(ef.nm)>0)then
-      ef.repeats = 200
-      ef.affectOpenAreas = 0.05
-    end if
-    if(["SlimeX3"].getPos(ef.nm)>0)then
-      ef.repeats = 130*3
-      ef.affectOpenAreas = 0.5
-    end if
-    if(["Melt", "Super Erode", "Ultra Super Erode"].getPos(ef.nm)>0)then
-      ef.repeats = 60
-      ef.affectOpenAreas = 0.5
-    end if
-    if(["Rust"].getPos(ef.nm)>0)then
-      ef.repeats = 60
-      ef.affectOpenAreas = 0.2
-    end if
-    if(["Barnacles", "Colored Barnacles"].getPos(ef.nm)>0)then
-      ef.repeats = 60
-      ef.affectOpenAreas = 0.3
-    end if
-    if(["Clovers"].getPos(ef.nm)>0)then
-      ef.repeats = 20
-      ef.affectOpenAreas = 0.2
-    end if
-    if(["Erode", "Sand"].getPos(ef.nm)>0)then
-      ef.repeats = 80
-      ef.affectOpenAreas = 0.5
-    end if
-    if(["Roughen"].getPos(ef.nm)>0)then
+    if (ef.nm = "Roughen") then
       ef.repeats = 30
       ef.affectOpenAreas = 0.05
-    end if
-    if(["Impacts"].getPos(ef.nm)>0)then
+    else if (ef.nm = "Impacts") then
       ef.repeats = 75
       ef.affectOpenAreas = 0.05
-    end if
-    if(["Super Melt", "Destructive Melt"].getPos(ef.nm)>0)then
+    else if (ef.nm = "Rust") then
+      ef.repeats = 60
+      ef.affectOpenAreas = 0.2
+    else if (ef.nm = "Clovers") then
+      ef.repeats = 20
+      ef.affectOpenAreas = 0.2
+    else if (ef.nm = "SlimeX3") then
+      ef.repeats = 390
+      ef.affectOpenAreas = 0.5
+    else if (ef.nm = "Fat Slime") then
+      ef.repeats = 200
+      ef.affectOpenAreas = 0.5
+    else if (["Slime", "DecalsOnlySlime"].getPos(ef.nm) > 0) then
+      ef.repeats = 130
+      ef.affectOpenAreas = 0.5
+    else if (["Erode", "Sand"].getPos(ef.nm) > 0) then
+      ef.repeats = 80
+      ef.affectOpenAreas = 0.5
+    else if (["Super Melt", "Destructive Melt"].getPos(ef.nm) > 0) then
       ef.repeats = 50
+      ef.affectOpenAreas = 0.5
+    else if (["Barnacles", "Colored Barnacles"].getPos(ef.nm) > 0) then
+      ef.repeats = 60
+      ef.affectOpenAreas = 0.3
+    else if (["Melt", "Super Erode", "Ultra Super Erode"].getPos(ef.nm) > 0) then
+      ef.repeats = 60
       ef.affectOpenAreas = 0.5
     end if
   end repeat
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,12 +1,10 @@
 global projects, ldPrps, gLOADPATH, showControls, INT_EXIT, INT_EXRD
 
 on exitFrame me
-  _movie.exitLock = TRUE
   INT_EXIT = getStringConfig("Exit button")
   INT_EXRD = getStringConfig("Exit render button")
   showControls = getBoolConfig("Show controls")
-  -- member("Controls").importFileInto("Controls.ls")
-  if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+  if checkMinimize() then
     _player.appMinimize()
     
   end if
@@ -16,9 +14,9 @@ on exitFrame me
   
   projects = []
   
-  pth = the moviePath & "LevelEditorProjects" & the dirSeparator
+  pth = the moviePath & "LevelEditorProjects\"
   repeat with f in gLOADPATH then
-    pth = pth & the dirSeparator & f
+    pth = pth & "\" & f
   end repeat
   
   fileList = [ ]

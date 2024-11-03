@@ -4,8 +4,7 @@ global gLEVEL, gLOprops, gLoadedName, gCameraProps, gEnvEditorProps, gPEprops, g
 
 
 on exitFrame me
-  _movie.exitLock = TRUE
-  if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+  if checkMinimize() then
     _player.appMinimize()
     
   end if
@@ -37,9 +36,9 @@ on exitFrame me
     put RETURN after str
     
     objFileio = new xtra("fileio")
-    pth = the moviePath & "LevelEditorProjects" & the dirSeparator
+    pth = the moviePath & "LevelEditorProjects\"
     repeat with f in gLOADPATH then
-      pth = pth & f & the dirSeparator
+      pth = pth & f & "\"
     end repeat
     createFile (objFileio, pth&levelName&".txt")
     objFileio.openFile(pth&levelName&".txt", 0)

@@ -1,7 +1,6 @@
 global gTEprops, gTiles, gLEprops, gLOprops, gDirectionKeys
 
 on exitFrame me
-  _movie.exitLock = TRUE
   member("tileMenu").alignment = #left
   
   member("TEimg1").image = image(52*16, 40*16, 16)

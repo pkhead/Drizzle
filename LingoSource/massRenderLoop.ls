@@ -1,8 +1,7 @@
 global gMassRenderL, gViewRender
 
 on exitFrame me
-  _movie.exitLock = TRUE
-  if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+  if checkMinimize() then
     _player.appMinimize()
     
   end if

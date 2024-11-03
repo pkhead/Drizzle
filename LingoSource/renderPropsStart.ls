@@ -1,44 +1,41 @@
 global c, keepLooping, afterEffects, gLastImported, gRenderTrashProps, gCurrentlyRenderingTrash, softProp, propsToRender, gPEprops
 
-
-on exitFrame me
-  type val: number
-  if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+on exitFrame(me)
+  if (checkMinimize()) then
     _player.appMinimize()
-    
   end if
-  if checkExit() then
+  if (checkExit()) then
     _player.quit()
   end if
-  if checkExitRender() then
+  if (checkExitRender()) then
     _movie.go(9)
   end if
-  
   c = 1
   keepLooping = 1
-  --Set by LevelRenderer.cs now.
-  --afterEffects = (_movie.frame > 51)
+  afterEffects = (_movie.frame > 51)
   gLastImported = ""
-  gCurrentlyRenderingTrash = false
-  if(gRenderTrashProps.count > 0)and(afterEffects=0)then
-    gCurrentlyRenderingTrash = true
+  gCurrentlyRenderingTrash = FALSE
+  if (gRenderTrashProps.count > 0) then
+    if (afterEffects = 0) then
+      gCurrentlyRenderingTrash = TRUE
+    end if
   end if
-  
-  repeat with q = 0 to 29 then
-    sprite(50-q).loc = point((1366/2)-q, (768/2)-q)
-    val = (q.float+1.0)/30.0
-    sprite(50-q).color = color(val*255, val*255, val*255)
+  repeat with q = 0 to 29
+    sprq = sprite(50 - q)
+    sprq.loc = point(683 - q, 384 - q)
+    val = (q.float + 1.0) / 30.0 * 255
+    sprq.color = color(val, val, val)
   end repeat
-  
   propsToRender = []
-  repeat with a = 1 to gPEprops.props.count then
-    propsToRender.add(gPEprops.props[a])
-    propsToRender[propsToRender.count].addAt(1, propsToRender[propsToRender.count][5].settings.renderOrder)
+  peprps = gPEprops.props
+  repeat with a = 1 to peprps.count
+    propsToRender.add(peprps[a])
+    plst = propsToRender[propsToRender.count]
+    plst.addAt(1, plst[5].settings.renderOrder)
   end repeat
   propsToRender.sort()
-  repeat with a = 1 to propsToRender.count then
+  repeat with a = 1 to propsToRender.count
     propsToRender[a].deleteAt(1)
   end repeat
-  
-  softProp = void
+  softProp = VOID
 end

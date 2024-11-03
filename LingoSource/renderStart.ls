@@ -15,8 +15,7 @@ on exitFrame me
   member("blackOutImg1").image = image(1, 1, 1)
   member("blackOutImg2").image = image(1, 1, 1)
   member("GradientOutput").image = image(1,1,1)
-  _movie.exitLock = TRUE
-  if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+  if checkMinimize() then
     _player.appMinimize()
     
   end if
@@ -114,16 +113,6 @@ end
 
 
 on createShortCuts me
-  type diditwork: number
-  type tp: string
-  type holedir: point
-  type stps: number
-  type pos: point
-  type stp: number
-  type lastdir: point
-  type rpt: number
-  type dirsl: list
-  type dir: point
   -- put "init"
   --  member("shortcutdotsImg").image = image(1040, 800, 1)
   

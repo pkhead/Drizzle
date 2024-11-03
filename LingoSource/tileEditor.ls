@@ -748,17 +748,24 @@ on SpecialRectPlacement(rct)
       
       --CAT CHANGE
     "SH pattern box", "SH grate box", "Alt Grate Box":
-      placeTile(point(rct.left, rct.top), point(6, 5))
-      placeTile(point(rct.right, rct.top), point(6, 6) )
-      placeTile(point(rct.right, rct.bottom), point(6, 7)  )
-      placeTile(point(rct.left, rct.bottom), point(6, 8)   )
+      inum = getFirstTileCat()
+      repeat with q = getFirstTileCat() to gTiles.count
+        if(gTiles[q].nm = "SU patterns")then
+          inum = q
+          exit repeat
+        end if
+      end repeat
+      placeTile(point(rct.left, rct.top), point(inum, 5))
+      placeTile(point(rct.right, rct.top), point(inum, 6) )
+      placeTile(point(rct.right, rct.bottom), point(inum, 7)  )
+      placeTile(point(rct.left, rct.bottom), point(inum, 8)   )
       repeat with px = rct.left + 1 to rct.right -1 then
-        placeTile(point(px, rct.top), point(6, 1)) 
-        placeTile(point(px, rct.bottom), point(6, 3))  
+        placeTile(point(px, rct.top), point(inum, 1)) 
+        placeTile(point(px, rct.bottom), point(inum, 3))  
       end repeat
       repeat with py = rct.top + 1 to rct.bottom -1 then
-        placeTile(point(rct.left, py), point(6, 4)) 
-        placeTile(point(rct.right, py), point(6, 2))  
+        placeTile(point(rct.left, py), point(inum, 4)) 
+        placeTile(point(rct.right, py), point(inum, 2))  
       end repeat
       
       lookForTileCat = "SU patterns"
@@ -770,10 +777,10 @@ on SpecialRectPlacement(rct)
         lookForTileCat = "LB Alt Grates"
         stringLength = 9
       end if 
-      
+      inum = getFirstTileCat()
       repeat with q = getFirstTileCat() to gTiles.count then
         if(gTiles[q].nm = lookForTileCat)then
-          lookForTileCat = q
+          inum = q
           exit repeat
         end if
       end repeat
@@ -805,8 +812,8 @@ on SpecialRectPlacement(rct)
       
       repeat with q = 1 to patterns.count then
         repeat with a = 1 to patterns[q].tiles.count then
-          repeat with b = 1 to gTiles[lookForTileCat].tls.count then
-            if(patterns[q].tiles[a] = chars(gTiles[lookForTileCat].tls[b].nm, stringLength, gTiles[lookForTileCat].tls[b].nm.length))then
+          repeat with b = 1 to gTiles[inum].tls.count then
+            if(patterns[q].tiles[a] = chars(gTiles[inum].tls[b].nm, stringLength, gTiles[inum].tls[b].nm.length))then
               patterns[q].tiles[a] = b
             end if
           end repeat
@@ -834,7 +841,7 @@ on SpecialRectPlacement(rct)
           if(tl > currentPattern.tiles.count)then
             tl = 1
           end if
-          placeTile(point(px, py), point(lookForTileCat, currentPattern.tiles[tl])) 
+          placeTile(point(px, py), point(inum, currentPattern.tiles[tl])) 
         end repeat
         
         py = py + currentPattern.tall

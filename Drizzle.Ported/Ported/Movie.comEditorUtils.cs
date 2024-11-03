@@ -82,6 +82,10 @@ public sealed partial class MovieScript
         return LingoGlobal.FALSE;
     }
 
+    public LingoNumber checkminimize() {
+        return LingoGlobal.FALSE;
+    }
+
     public LingoNumber checkdrinternal(dynamic nm = default)
     {
         return LingoGlobal.op_gt(DRInternalList.getpos(nm), new LingoNumber(0));
