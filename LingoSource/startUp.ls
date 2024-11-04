@@ -780,20 +780,18 @@ on exitFrame me
         writeException("Effects Init Error", "Line " && q && " is malformed in the Init.txt file from your Effects folder.")
       else
         ad = value(savTextLine)
-        if ad.findPos("nm") > 0 and ad.findPos("tp") > 0 then
-          -- New heading if needed
-          if didNewHeading = 0 then
-            gEffects.add([#nm:"Custom Effects", #efs:[]])
-            writeException("Effects Init Error", "Effects/Init.txt does not begin with a category. Creating temporary category, but please create one yourself.")
-            didNewHeading = 1
-          end if
-          
-          -- Ok add the effect
-          gEffects[gEffects.count].efs.add(ad)
-          gCustomEffects.append(ad.nm)
-        else
-          writeException("Effects Init Error", "Line " && q && " is missing #nm or #tp in the Init.txt file from your Effects folder.")
+
+        -- New heading if needed
+        if didNewHeading = 0 then
+          gEffects.add([#nm:"Custom Effects", #efs:[]])
+          writeException("Effects Init Error", "Effects/Init.txt does not begin with a category. Creating temporary category, but please create one yourself.")
+          didNewHeading = 1
         end if
+        
+        -- Ok add the effect
+        gEffects[gEffects.count].efs.add(ad)
+        gCustomEffects.append(ad.nm)
+
       end if
     end if
   end repeat
