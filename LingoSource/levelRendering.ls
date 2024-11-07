@@ -477,8 +477,9 @@ on checkIfATileIsSolidAndSameMaterial(tl, lr, mat)
   return rtrn
 end
 
-on drawATileMaterial(q, c, l, mat, frntImg)
-  
+on drawATileMaterial(q: number, c: number, l: number, mat: string, frntImg: image)
+  type dp: number
+
   global gLOprops, gEEprops, gAnyDecals
   
   if l = 1 then
@@ -499,6 +500,11 @@ on drawATileMaterial(q, c, l, mat, frntImg)
   case gLEProps.matrix[q][c][l][1] of
     1:
       repeat with f = 1 to 4 then
+        type f: number
+        type profL: list
+        type gtAtV: number
+        type gtAtH: number
+        type pstRect: rect
         case f of
           1:
             profL = [point(-1, 0), point(0, -1)]
@@ -517,8 +523,9 @@ on drawATileMaterial(q, c, l, mat, frntImg)
             gtAtV = 8
             pstRect = rct + rect(0,10,-10,0)
         end case
-        ID = ""
+        ID: string = ""
         repeat with dr in profL then
+          type dr: point
           ID = ID & string( isMyTileSetOpenToThisTile(mat, point(q,c)+dr, l))
         end repeat
         if ID = "11" then
@@ -542,7 +549,7 @@ on drawATileMaterial(q, c, l, mat, frntImg)
             gtAtV = gtAtV - 2
           end if
         end if
-        gtRect = rect((gtAtH-1)*10, (gtAtV-1)*10, gtAtH*10, gtAtV*10)+rect(-5,-5, 5, 5)
+        gtRect: rect = rect((gtAtH-1)*10, (gtAtV-1)*10, gtAtH*10, gtAtV*10)+rect(-5,-5, 5, 5)
         pstRect = pstRect - rect(gRenderCameraTilePos, gRenderCameraTilePos)*20
         
         
@@ -562,9 +569,13 @@ on drawATileMaterial(q, c, l, mat, frntImg)
         askDirs = [0, [point(-1, 0), point(0, 1)], [point(1, 0), point(0, 1)], [point(-1, 0), point(0, -1)], [point(1, 0), point(0, -1)]]
       end if
       myAskDirs = askDirs[slp]
+      type slp:       number
+      type askDirs:   list
+      type myAskDirs: list
       pstRect = rect((q-1)*20, (c-1)*20, q*20, c*20) - rect(gRenderCameraTilePos, gRenderCameraTilePos)*20
       
       repeat with ad = 1 to myAskDirs.count then
+        type ad: number
         gtRect = rect(10, 90, 30, 110) + rect(60*(ad=2), 30*(slp-2), 60*(ad=2), 30*(slp-2))
         if isMyTileSetOpenToThisTile(mat, point(q,c)+myAskDirs[ad], l) then
           gtRect = gtRect + rect(30, 0, 30, 0)
@@ -803,7 +814,8 @@ on drawATileMaterial(q, c, l, mat, frntImg)
 end
 
 
-on isMyTileSetOpenToThisTile(mat, tl, l)
+on isMyTileSetOpenToThisTile(mat: string, tl: point, l: number)
+  type return: number
   global gLOprops
   rtrn = 0
   if tl.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1))then
@@ -875,16 +887,11 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
   
   global gAnyDecals
   
-  sav2 = member("previewImprt")
-  if gLastImported <> tl.nm then
-    member("previewImprt").importFileInto("Graphics\" &tl.nm&".png")
-    sav2.name = "previewImprt"
-    gLastImported = tl.nm
-  end if
-  
   --INTERNAL
   if (checkDRInternal(tl.nm)) then
-    sav2.image = member(tl.nm).image
+    tileImage = member(tl.nm).image
+  else
+    tileImage = cacheLoadImage("Graphics" & the dirSeparator & tl.nm & ".png")
   end if
   
   q = q - gRenderCameraTilePos.locH
@@ -896,6 +903,14 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
   
   mdPnt = point(((tl.sz.locH*0.5)+0.4999).integer,((tl.sz.locV*0.5)+0.4999).integer)
   strt = point(q,c)-mdPnt+point(1,1)
+  
+  type rct:     rect
+  type gtRect:  rect
+  type dp:      number
+  type getrect: rect
+  type getrct:  rect
+  type rnd:     number
+  type d:       number
   
   colored = (tl.tags.GetPos("colored") > 0)
   if(colored)then
@@ -916,37 +931,30 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
     "box":
       
       nmOfTiles = tl.sz.locH*tl.sz.locV
+      type nmOfTiles: number
       
       
       n = 1
+      type n: number
       repeat with g = strt.locH to strt.locH + tl.sz.locH-1 then
+        type g: number
         repeat with h = strt.locV to strt.locV + tl.sz.locV-1 then
+          type h: number
           rct = rect((g-1)*20, (h-1)*20, (g*20), (h*20)) 
           getrct = rect(20, (n-1)*20, 40, n*20)
-          member("vertImg").image.copyPixels(sav2.image, rct, getrct, {#ink:36})
-          --          if(colored)then
-          --            if (tl.tags.GetPos("effectColorA") = 0) and (tl.tags.GetPos("effectColorB") = 0) then
-          --              member("vertDc").image.copyPixels(sav2.image, rct, getrct+rect(tl.sz.locH*20+(40*tl.bfTiles),0,tl.sz.locH*20+(40*tl.bfTiles), 0), {#ink:36})
-          --            end if
-          --          end if
-          --          if(effectColorA)then
-          --            member("vertGradA").image.copyPixels(sav2.image, rct, getrct+rect(tl.sz.locH*20+(40*tl.bfTiles),0,tl.sz.locH*20+(40*tl.bfTiles), 0), {#ink:36})
-          --          end if
-          --          if(effectColorB)then
-          --            member("vertGradB").image.copyPixels(sav2.image, rct, getrct+rect(tl.sz.locH*20+(40*tl.bfTiles),0,tl.sz.locH*20+(40*tl.bfTiles), 0), {#ink:36})
-          --          end if
+          member("vertImg").image.copyPixels(tileImage, rct, getrct, {#ink:36})
           getrct = rect(0, (n-1)*20, 20, n*20)
-          member("horiImg").image.copyPixels(sav2.image, rct, getrct, {#ink:36})
+          member("horiImg").image.copyPixels(tileImage, rct, getrct, {#ink:36})
           --          if(colored)then
           --            if (tl.tags.GetPos("effectColorA") = 0) and (tl.tags.GetPos("effectColorB") = 0) then
-          --              member("horiDc").image.copyPixels(sav2.image, rct, getrct+rect(tl.sz.locH*20+(40*tl.bfTiles),0,tl.sz.locH*20+(40*tl.bfTiles), 0), {#ink:36})
+          --              member("horiDc").image.copyPixels(tileImage, rct, getrct+rect(tl.sz.locH*20+(40*tl.bfTiles),0,tl.sz.locH*20+(40*tl.bfTiles), 0), {#ink:36})
           --            end if
           --          end if
           --          if(effectColorA)then
-          --            member("horiGradA").image.copyPixels(sav2.image, rct, getrct+rect(tl.sz.locH*20+(40*tl.bfTiles),0,tl.sz.locH*20+(40*tl.bfTiles), 0), {#ink:36})
+          --            member("horiGradA").image.copyPixels(tileImage, rct, getrct+rect(tl.sz.locH*20+(40*tl.bfTiles),0,tl.sz.locH*20+(40*tl.bfTiles), 0), {#ink:36})
           --          end if
           --          if(effectColorB)then
-          --            member("horiGradB").image.copyPixels(sav2.image, rct, getrct+rect(tl.sz.locH*20+(40*tl.bfTiles),0,tl.sz.locH*20+(40*tl.bfTiles), 0), {#ink:36})
+          --            member("horiGradB").image.copyPixels(tileImage, rct, getrct+rect(tl.sz.locH*20+(40*tl.bfTiles),0,tl.sz.locH*20+(40*tl.bfTiles), 0), {#ink:36})
           --          end if
           n = n + 1
         end repeat
@@ -955,10 +963,10 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
       getRect = rect(0,0,tl.sz.locH*20, tl.sz.locV*20)+rect(0,0,40*tl.bfTiles, 40*tl.bfTiles)+rect(0,nmOfTiles*20,0,nmOfTiles*20)
       rnd = random(tl.rnd)
       getRect = getRect + rect(getRect.width*(rnd-1), 0, getRect.width*(rnd-1), 0)
-      frntImg.copyPixels(sav2.image, rct, getRect, {#ink:36})
+      frntImg.copyPixels(tileImage, rct, getRect, {#ink:36})
       
       --    "wvStruct":
-      --      drawWVTagTile(q, c, l, tl, frntImg, effectColorA, effectColorB, colored, sav2)
+      --      drawWVTagTile(q, c, l, tl, frntImg, effectColorA, effectColorB, colored, tileImage)
       
     "voxelStruct":
       
@@ -977,6 +985,7 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
         rnd = 1
         
         repeat with dir in [point(-1, 0), point(0, -1), point(1, 0), point(0, 1)] then
+          type dir: point
           if [0,6].getPos(afaMvLvlEdit(point(q,c)+dir+gRenderCameraTilePos, 1))<>0 then
             exit repeat
           else
@@ -996,30 +1005,32 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
       end if
       
       
-      frntImg.copyPixels(sav2.image, rct, gtRect + rect(gtRect.width*(rnd-1), 0, gtRect.width*(rnd-1), 0)+rect(0,1,0,1), {#ink:36})
+      frntImg.copyPixels(tileImage, rct, gtRect + rect(gtRect.width*(rnd-1), 0, gtRect.width*(rnd-1), 0)+rect(0,1,0,1), {#ink:36})
       
       
       d = -1
       repeat with ps = 1 to tl.repeatL.count then
-        repeat with ps2 = 1 to tl.repeatL[ps] then
+        type ps: number
+        repeat with ps2n = 1 to tl.repeatL[ps] then
+          type ps2n: number
           d = d + 1  
           if d+dp > 29 then
             exit repeat
           else
-            member("layer"&string(d+dp)).image.copyPixels(sav2.image, rct, gtRect + rect(gtRect.width*(rnd-1),gtRect.height*(ps-1), gtRect.width*(rnd-1), gtRect.height*(ps-1))+rect(0,1,0,1), {#ink:36})
+            member("layer"&string(d+dp)).image.copyPixels(tileImage, rct, gtRect + rect(gtRect.width*(rnd-1),gtRect.height*(ps-1), gtRect.width*(rnd-1), gtRect.height*(ps-1))+rect(0,1,0,1), {#ink:36})
             
             if(colored)then
               if (effectColorA = FALSE) and (effectColorB = FALSE) then
-                member("layer"&string(d+dp)&"dc").image.copyPixels(sav2.image, rct, gtRect + rect(gtRect.width*(rnd-1),gtRect.height*(ps-1), gtRect.width*(rnd-1), gtRect.height*(ps-1))+rect(0,1,0,1)+rect((tl.sz.locH*20+(40*tl.bfTiles))*tl.rnd,0,(tl.sz.locH*20+(40*tl.bfTiles))*tl.rnd, 0), {#ink:36})
+                member("layer"&string(d+dp)&"dc").image.copyPixels(tileImage, rct, gtRect + rect(gtRect.width*(rnd-1),gtRect.height*(ps-1), gtRect.width*(rnd-1), gtRect.height*(ps-1))+rect(0,1,0,1)+rect((tl.sz.locH*20+(40*tl.bfTiles))*tl.rnd,0,(tl.sz.locH*20+(40*tl.bfTiles))*tl.rnd, 0), {#ink:36})
               end if
             end if
             
             if(effectColorA)then
-              member("gradientA"&string(d+dp)).image.copyPixels(sav2.image, rct, gtRect + rect(gtRect.width*(rnd-1),gtRect.height*(ps-1), gtRect.width*(rnd-1), gtRect.height*(ps-1))+rect(0,1,0,1)+rect((tl.sz.locH*20+(40*tl.bfTiles))*tl.rnd,0,(tl.sz.locH*20+(40*tl.bfTiles))*tl.rnd, 0), {#ink:39})
+              member("gradientA"&string(d+dp)).image.copyPixels(tileImage, rct, gtRect + rect(gtRect.width*(rnd-1),gtRect.height*(ps-1), gtRect.width*(rnd-1), gtRect.height*(ps-1))+rect(0,1,0,1)+rect((tl.sz.locH*20+(40*tl.bfTiles))*tl.rnd,0,(tl.sz.locH*20+(40*tl.bfTiles))*tl.rnd, 0), {#ink:39})
             end if
             
             if(effectColorB)then
-              member("gradientB"&string(d+dp)).image.copyPixels(sav2.image, rct, gtRect + rect(gtRect.width*(rnd-1),gtRect.height*(ps-1), gtRect.width*(rnd-1), gtRect.height*(ps-1))+rect(0,1,0,1)+rect((tl.sz.locH*20+(40*tl.bfTiles))*tl.rnd,0,(tl.sz.locH*20+(40*tl.bfTiles))*tl.rnd, 0), {#ink:39})
+              member("gradientB"&string(d+dp)).image.copyPixels(tileImage, rct, gtRect + rect(gtRect.width*(rnd-1),gtRect.height*(ps-1), gtRect.width*(rnd-1), gtRect.height*(ps-1))+rect(0,1,0,1)+rect((tl.sz.locH*20+(40*tl.bfTiles))*tl.rnd,0,(tl.sz.locH*20+(40*tl.bfTiles))*tl.rnd, 0), {#ink:39})
             end if
           end if
         end repeat
@@ -1041,11 +1052,17 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
       -- rnd = 1
       
       seed = the randomSeed
+      type seed: number
       global gLOprops
+      
+      type gtRect1: rect
+      type gtRect2: rect
+      type rct1: rect
+      type rct2: rect
       
       if tl.tp = "voxelStructRandomDisplaceVertical" then
         the randomSeed = gLOprops.tileSeed + q
-        dsplcPoint = random(gtRect.height)
+        dsplcPoint: number = random(gtRect.height)
         gtRect1 = rect(gtRect.left, gtRect.top, gtRect.right, gtRect.top+dsplcPoint)
         gtRect2 = rect(gtRect.left, gtRect.top+dsplcPoint, gtRect.right, gtRect.bottom)
         rct1 = rect(rct.left, rct.bottom-dsplcPoint, rct.right, rct.bottom)
@@ -1060,45 +1077,45 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
       end if
       the randomSeed = seed
       
-      frntImg.copyPixels(sav2.image, rct1, gtRect1 +rect(0,1,0,1), {#ink:36})
-      frntImg.copyPixels(sav2.image, rct2, gtRect2 +rect(0,1,0,1), {#ink:36})
+      frntImg.copyPixels(tileImage, rct1, gtRect1 +rect(0,1,0,1), {#ink:36})
+      frntImg.copyPixels(tileImage, rct2, gtRect2 +rect(0,1,0,1), {#ink:36})
       
       
       d = -1
       repeat with ps = 1 to tl.repeatL.count then
-        repeat with ps2 = 1 to tl.repeatL[ps] then
+        repeat with ps2n = 1 to tl.repeatL[ps] then
           d = d + 1  
           if d+dp > 29 then
             exit repeat
           else
-            member("layer"&string(d+dp)).image.copyPixels(sav2.image, rct1, gtRect1 + rect(0,gtRect.height*(ps-1), 0, gtRect.height*(ps-1))+rect(0,1,0,1), {#ink:36})
+            member("layer"&string(d+dp)).image.copyPixels(tileImage, rct1, gtRect1 + rect(0,gtRect.height*(ps-1), 0, gtRect.height*(ps-1))+rect(0,1,0,1), {#ink:36})
             if(colored)then
               if (effectColorA = FALSE) and (effectColorB = FALSE) then
-                member("layer"&string(d+dp)&"dc").image.copyPixels(sav2.image, rct1, gtRect1 + rect(0,gtRect.height*(ps-1), 0, gtRect.height*(ps-1))+rect(0,1,0,1)+rect(tl.sz.locH*20+(40*tl.bfTiles),0,tl.sz.locH*20+(40*tl.bfTiles), 0), {#ink:36})
+                member("layer"&string(d+dp)&"dc").image.copyPixels(tileImage, rct1, gtRect1 + rect(0,gtRect.height*(ps-1), 0, gtRect.height*(ps-1))+rect(0,1,0,1)+rect(tl.sz.locH*20+(40*tl.bfTiles),0,tl.sz.locH*20+(40*tl.bfTiles), 0), {#ink:36})
               end if
             end if
             
             if(effectColorA)then
-              member("gradientA"&string(d+dp)).image.copyPixels(sav2.image, rct1, gtRect1 + rect(0,gtRect.height*(ps-1), 0, gtRect.height*(ps-1))+rect(0,1,0,1)+rect(tl.sz.locH*20+(40*tl.bfTiles),0,tl.sz.locH*20+(40*tl.bfTiles), 0), {#ink:39})
+              member("gradientA"&string(d+dp)).image.copyPixels(tileImage, rct1, gtRect1 + rect(0,gtRect.height*(ps-1), 0, gtRect.height*(ps-1))+rect(0,1,0,1)+rect(tl.sz.locH*20+(40*tl.bfTiles),0,tl.sz.locH*20+(40*tl.bfTiles), 0), {#ink:39})
             end if
             
             if(effectColorB)then
-              member("gradientB"&string(d+dp)).image.copyPixels(sav2.image, rct1, gtRect1 + rect(0,gtRect.height*(ps-1), 0, gtRect.height*(ps-1))+rect(0,1,0,1)+rect(tl.sz.locH*20+(40*tl.bfTiles),0,tl.sz.locH*20+(40*tl.bfTiles), 0), {#ink:39})
+              member("gradientB"&string(d+dp)).image.copyPixels(tileImage, rct1, gtRect1 + rect(0,gtRect.height*(ps-1), 0, gtRect.height*(ps-1))+rect(0,1,0,1)+rect(tl.sz.locH*20+(40*tl.bfTiles),0,tl.sz.locH*20+(40*tl.bfTiles), 0), {#ink:39})
             end if
             
-            member("layer"&string(d+dp)).image.copyPixels(sav2.image, rct2, gtRect2 + rect(0,gtRect.height*(ps-1), 0, gtRect.height*(ps-1))+rect(0,1,0,1), {#ink:36})
+            member("layer"&string(d+dp)).image.copyPixels(tileImage, rct2, gtRect2 + rect(0,gtRect.height*(ps-1), 0, gtRect.height*(ps-1))+rect(0,1,0,1), {#ink:36})
             if(colored)then
               if (effectColorA = FALSE) and (effectColorB = FALSE) then
-                member("layer"&string(d+dp)&"dc").image.copyPixels(sav2.image, rct2, gtRect2 + rect(0,gtRect.height*(ps-1), 0, gtRect.height*(ps-1))+rect(0,1,0,1)+rect(tl.sz.locH*20+(40*tl.bfTiles),0,tl.sz.locH*20+(40*tl.bfTiles), 0), {#ink:36})
+                member("layer"&string(d+dp)&"dc").image.copyPixels(tileImage, rct2, gtRect2 + rect(0,gtRect.height*(ps-1), 0, gtRect.height*(ps-1))+rect(0,1,0,1)+rect(tl.sz.locH*20+(40*tl.bfTiles),0,tl.sz.locH*20+(40*tl.bfTiles), 0), {#ink:36})
               end if
             end if
             
             if(effectColorA)then
-              member("gradientA"&string(d+dp)).image.copyPixels(sav2.image, rct2, gtRect2 + rect(0,gtRect.height*(ps-1), 0, gtRect.height*(ps-1))+rect(0,1,0,1)+rect(tl.sz.locH*20+(40*tl.bfTiles),0,tl.sz.locH*20+(40*tl.bfTiles), 0), {#ink:39})
+              member("gradientA"&string(d+dp)).image.copyPixels(tileImage, rct2, gtRect2 + rect(0,gtRect.height*(ps-1), 0, gtRect.height*(ps-1))+rect(0,1,0,1)+rect(tl.sz.locH*20+(40*tl.bfTiles),0,tl.sz.locH*20+(40*tl.bfTiles), 0), {#ink:39})
             end if
             
             if(effectColorB)then
-              member("gradientB"&string(d+dp)).image.copyPixels(sav2.image, rct2, gtRect2 + rect(0,gtRect.height*(ps-1), 0, gtRect.height*(ps-1))+rect(0,1,0,1)+rect(tl.sz.locH*20+(40*tl.bfTiles),0,tl.sz.locH*20+(40*tl.bfTiles), 0), {#ink:39})
+              member("gradientB"&string(d+dp)).image.copyPixels(tileImage, rct2, gtRect2 + rect(0,gtRect.height*(ps-1), 0, gtRect.height*(ps-1))+rect(0,1,0,1)+rect(tl.sz.locH*20+(40*tl.bfTiles),0,tl.sz.locH*20+(40*tl.bfTiles), 0), {#ink:39})
             end if
             
           end if
@@ -1123,20 +1140,20 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
         if [12, 8, 4].getPos(d) then
           rnd = random(tl.rnd)
         end if
-        member("layer"&string(d)).image.copyPixels(sav2.image, rct, gtRect + rect(gtRect.width*(rnd-1), 0, gtRect.width*(rnd-1), 0)+rect(0,1,0,1), {#ink:36})
+        member("layer"&string(d)).image.copyPixels(tileImage, rct, gtRect + rect(gtRect.width*(rnd-1), 0, gtRect.width*(rnd-1), 0)+rect(0,1,0,1), {#ink:36})
         
         if(colored)then
           if (effectColorA = FALSE) and (effectColorB = FALSE) then
-            member("layer"&string(d)&"dc").image.copyPixels(sav2.image, rct, gtRect + rect(gtRect.width*(rnd-1), 0, gtRect.width*(rnd-1), 0)+rect(0,1,0,1)+rect((tl.sz.locH*20+(40*tl.bfTiles))*tl.rnd,0,(tl.sz.locH*20+(40*tl.bfTiles))*tl.rnd, 0), {#ink:36})
+            member("layer"&string(d)&"dc").image.copyPixels(tileImage, rct, gtRect + rect(gtRect.width*(rnd-1), 0, gtRect.width*(rnd-1), 0)+rect(0,1,0,1)+rect((tl.sz.locH*20+(40*tl.bfTiles))*tl.rnd,0,(tl.sz.locH*20+(40*tl.bfTiles))*tl.rnd, 0), {#ink:36})
           end if
         end if
         
         if(effectColorA)then
-          member("gradientA"&string(d)).image.copyPixels(sav2.image, rct, gtRect + rect(gtRect.width*(rnd-1), 0, gtRect.width*(rnd-1), 0)+rect(0,1,0,1)+rect((tl.sz.locH*20+(40*tl.bfTiles))*tl.rnd,0,(tl.sz.locH*20+(40*tl.bfTiles))*tl.rnd, 0), {#ink:39})
+          member("gradientA"&string(d)).image.copyPixels(tileImage, rct, gtRect + rect(gtRect.width*(rnd-1), 0, gtRect.width*(rnd-1), 0)+rect(0,1,0,1)+rect((tl.sz.locH*20+(40*tl.bfTiles))*tl.rnd,0,(tl.sz.locH*20+(40*tl.bfTiles))*tl.rnd, 0), {#ink:39})
         end if
         
         if(effectColorB)then
-          member("gradientB"&string(d)).image.copyPixels(sav2.image, rct, gtRect + rect(gtRect.width*(rnd-1), 0, gtRect.width*(rnd-1), 0)+rect(0,1,0,1)+rect((tl.sz.locH*20+(40*tl.bfTiles))*tl.rnd,0,(tl.sz.locH*20+(40*tl.bfTiles))*tl.rnd, 0), {#ink:39})
+          member("gradientB"&string(d)).image.copyPixels(tileImage, rct, gtRect + rect(gtRect.width*(rnd-1), 0, gtRect.width*(rnd-1), 0)+rect(0,1,0,1)+rect((tl.sz.locH*20+(40*tl.bfTiles))*tl.rnd,0,(tl.sz.locH*20+(40*tl.bfTiles))*tl.rnd, 0), {#ink:39})
         end if
         
       end repeat
@@ -1153,28 +1170,32 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
       gtRect = rect(0, 0, (tl.sz.locH * 20) + (40 * tl.bfTiles), (tl.sz.locV * 20) + (40 * tl.bfTiles))
       repeat with d = dp to restrict(dp + 9 + (10 * (tl.specs2 <> VOID)), 1, 29)
         rnd = random(tl.rnd)
-        member("layer" & string(d)).image.copyPixels(sav2.image, rct, gtRect + rect(gtRect.width * (rnd - 1), 0, gtRect.width * (rnd - 1), 0) + rect(0, 1, 0, 1), {#ink:36})
+        member("layer" & string(d)).image.copyPixels(tileImage, rct, gtRect + rect(gtRect.width * (rnd - 1), 0, gtRect.width * (rnd - 1), 0) + rect(0, 1, 0, 1), {#ink:36})
         if (colored) then
           if (effectColorA = FALSE) and (effectColorB = FALSE) then
-            member("layer" & string(d) & "dc").image.copyPixels(sav2.image, rct, gtRect + rect(gtRect.width * (rnd - 1), 0, gtRect.width * (rnd - 1), 0) + rect(0, 1, 0, 1) + rect((tl.sz.locH * 20 + (40 * tl.bfTiles)) * tl.rnd, 0, (tl.sz.locH * 20 + (40 * tl.bfTiles)) * tl.rnd, 0), {#ink:36})
+            member("layer" & string(d) & "dc").image.copyPixels(tileImage, rct, gtRect + rect(gtRect.width * (rnd - 1), 0, gtRect.width * (rnd - 1), 0) + rect(0, 1, 0, 1) + rect((tl.sz.locH * 20 + (40 * tl.bfTiles)) * tl.rnd, 0, (tl.sz.locH * 20 + (40 * tl.bfTiles)) * tl.rnd, 0), {#ink:36})
           end if
         end if
         if (effectColorA) then
-          member("gradientA" & string(d)).image.copyPixels(sav2.image, rct, gtRect + rect(gtRect.width * (rnd - 1), 0, gtRect.width * (rnd - 1), 0) + rect(0, 1, 0, 1) + rect((tl.sz.locH * 20 + (40 * tl.bfTiles)) * tl.rnd, 0, (tl.sz.locH * 20 + (40 * tl.bfTiles)) * tl.rnd, 0), {#ink:39})
+          member("gradientA" & string(d)).image.copyPixels(tileImage, rct, gtRect + rect(gtRect.width * (rnd - 1), 0, gtRect.width * (rnd - 1), 0) + rect(0, 1, 0, 1) + rect((tl.sz.locH * 20 + (40 * tl.bfTiles)) * tl.rnd, 0, (tl.sz.locH * 20 + (40 * tl.bfTiles)) * tl.rnd, 0), {#ink:39})
         end if
         if (effectColorB) then
-          member("gradientB" & string(d)).image.copyPixels(sav2.image, rct, gtRect + rect(gtRect.width * (rnd - 1), 0, gtRect.width * (rnd - 1), 0) + rect(0, 1, 0, 1) + rect((tl.sz.locH * 20 + (40 * tl.bfTiles)) * tl.rnd, 0, (tl.sz.locH * 20 + (40 * tl.bfTiles)) * tl.rnd, 0), {#ink:39})
+          member("gradientB" & string(d)).image.copyPixels(tileImage, rct, gtRect + rect(gtRect.width * (rnd - 1), 0, gtRect.width * (rnd - 1), 0) + rect(0, 1, 0, 1) + rect((tl.sz.locH * 20 + (40 * tl.bfTiles)) * tl.rnd, 0, (tl.sz.locH * 20 + (40 * tl.bfTiles)) * tl.rnd, 0), {#ink:39})
         end if
       end repeat
   end case
   
   repeat with tag in tl.tags then
+    type tag: string
+
+    type img: image
+    type r: list
     case tag of
       "Chain Holder":
         if (dt.count > 2)then
           if (dt[3] <> "NONE") then
-            ps1 = giveMiddleOfTile(point(q,c))+point(10.1,10.1)
-            ps2 = giveMiddleOfTile(dt[3]-gRenderCameraTilePos)+point(10.1,10.1)
+            ps1: point = giveMiddleOfTile(point(q,c))+point(10.1,10.1)
+            ps2: point = giveMiddleOfTile(dt[3]-gRenderCameraTilePos)+point(10.1,10.1)
             
             if l = 1 then
               dp = 2
@@ -1186,13 +1207,13 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
             
             global gLOProps
             
-            steps = ((diag(ps1, ps2)/12.0)+0.4999).integer
-            dr = moveToPoint(ps1, ps2, 1.0)
-            ornt = random(2)-1
-            degDir = lookatpoint(ps1, ps2)
-            stp = random(100)*0.01
+            steps: number = ((diag(ps1, ps2)/12.0)+0.4999).integer
+            dr: point = moveToPoint(ps1, ps2, 1.0)
+            ornt: number = random(2)-1
+            degDir: number = lookatpoint(ps1, ps2)
+            stp: number = random(100)*0.01
             repeat with q = 1 to steps then
-              pos = ps1+(dr*12*(q-stp))
+              pos: point = ps1+(dr*12*(q-stp))
               if ornt then
                 --   pos = (pnt+lastPnt)*0.5
                 rct = rect(pos,pos)+rect(-6,-10,6,10)
@@ -1227,6 +1248,7 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
         member("layer"&string(dp)).image.copyPixels(member("fanBlade").image, rotateToQuad(rct, random(360)), member("fanBlade").image.rect, {#ink:36, #color:color(0,255,0)})
         
       "Big Wheel":
+        type dpsl: list
         if l = 1 then
           dpsL = [0, 7]
         else if l = 2 then
@@ -1237,6 +1259,7 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
         rct = rect(-90,-90,90,90)+rect(giveMiddleOfTile(point(q,c))+point(10,10), giveMiddleOfTile(point(q,c))+point(10,10))
         -- dp = 1
         repeat with dp1 in dpsL then
+          type dp1: number
           rnd = random(360)
           repeat with dp in [dp1, dp1+1, dp1+2] then
             member("layer"&string(dp)).image.copyPixels(member("Big Wheel Graf").image, rotateToQuad(rct, rnd+0.001), member("Big Wheel Graf").image.rect, {#ink:36, #color:color(0,255,0)})
@@ -1271,6 +1294,7 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
         end if
         -- put tl
         pnt = giveMiddleOfTile(point(q,c+(tl.sz.locV/2)))-- + point(-0.5*tl.sz.locH+random(tl.sz.locH), 0)
+        type pnt: point
         rct = rect(-50,-50,50,50)+rect(pnt, pnt)
         -- dp = 1
         --  member("layer"&string(dp-2)).image.copyPixels(member("fanBlade").image, rotateToQuad(rct, random(360)), member("fanBlade").image.rect, {#ink:36, #color:color(0,255,0)})
@@ -1357,9 +1381,11 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
         
         mdPoint = giveMiddleOfTile(point(q,c))+point(10,0)
         lst = [[point(-4,-4), color(0,0,255)],[point(-3,-3), color(0,0,255)],[point(3,3), color(255,0,0)],[point(4,4), color(255,0,0)],[point(-2,-2), color(0,255,0)], [point(-1,-1), color(0,255,0)], [point(0,0), color(0,255,0)], [point(1,1), color(0,255,0)], [point(2,2), color(0,255,0)], [point(0,0), color(255,0,255)]]
+        type mdPoint: point
+        type lst: list
         
         if tag = "Big Western Sign Tilted" then
-          tlt = -45.1+random(90)
+          tlt: number = -45.1+random(90)
           repeat with r in lst then
             frntImg.copyPixels(img, rotateToQuad(rect(mdPoint, mdPoint) + rect(-18,-24,18,24) +rect(r[1],r[1]), tlt), rect(0,0,36,48), {#ink:36, #color:r[2]})
           end repeat
@@ -1569,7 +1595,9 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
         
       "Temple Floor":
         tileCat = 0
+        type tileCat: number
         repeat with a = 1 to gTiles.count then
+          type a: number
           if(gTiles[a].nm = "Temple Stone")then
             tileCat = a
             exit repeat
@@ -1577,10 +1605,12 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
         end repeat
         
         actualTlPs = point(q,c) + gRenderCameraTilePos
+        type actualrlps: point
         
         
         
         nextIsFloor = 0
+        type nextisfloor: number
         if(actualTlPs.locH+8 <= gTEProps.tlMatrix.count)then
           if(gTEProps.tlMatrix[actualTlPs.locH+8][actualTlPs.locV][l].tp = "tileHead")then
             if(gTEProps.tlMatrix[actualTlPs.locH+8][actualTlPs.locV][l].data[2] = "Temple Floor")then
@@ -1589,6 +1619,7 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
           end if
         end if
         prevIsFloor = 0
+        type prevIsFloor: number
         if(actualTlPs.locH-8 > 0)then
           if(gTEProps.tlMatrix[actualTlPs.locH-8][actualTlPs.locV][l].tp = "tileHead")then
             if(gTEProps.tlMatrix[actualTlPs.locH-8][actualTlPs.locV][l].data[2] = "Temple Floor")then
@@ -1641,9 +1672,10 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
         
         repeat with a = 0 to 6 then
           repeat with b = 0 to 13 then
+            type b: number
             rct = rect((a*16)-6, (b*8)-1, ((a+1)*16)-6, ((b+1)*8)-1) --+ rect(0,0,-1,-1)
             if(random(7)=1)then
-              blnd = random(random(100))
+              blnd: number = random(random(100))
               member("largeSignGrad2").image.copyPixels(member("pxl").image, rct+rect(0,0,1,1), rect(0,0,1,1), {#color:color(255, 255, 255), #blend:blnd/2})
               member("largeSignGrad2").image.copyPixels(member("pxl").image, rct+rect(1,1,0,0), rect(0,0,1,1), {#color:color(255, 255, 255), #blend:blnd/2})
             else if(random(7)=1)then
@@ -1865,7 +1897,7 @@ end
 --  repeat with ps = 1 to tl.repeatL.count then
 --    repeat with ps2 = 1 to tl.repeatL[ps] then
 --      -- gtRect =  + rect(0, (((tl.sz.locV*20)+(40*tl.bfTiles))-1)*d, 0, ((tl.sz.locV*20)+(40*tl.bfTiles))*d) 
---      member("layer"&string(d+dp)).image.copyPixels(sav2.image, rct, gtRect + rect(0,gtRect.height*(ps-1), 0, gtRect.height*(ps-1))+rect(0,1,0,1), {#ink:36})
+--      member("layer"&string(d+dp)).image.copyPixels(tileImage, rct, gtRect + rect(0,gtRect.height*(ps-1), 0, gtRect.height*(ps-1))+rect(0,1,0,1), {#ink:36})
 --      d = d + 1  
 --    end repeat
 --  end repeat
@@ -2116,9 +2148,9 @@ end
 --  rct = rect(strt * 20, (strt + tsz) * 20) + rect(-20 * tl.bfTiles, -20 * tl.bfTiles, 20 * tl.bfTiles, 20 * tl.bfTiles) + rect(-20, -20, -20, -20)
 --  gtRect = rect(0, 0, 20 + (40 * tl.bfTiles), 20 + (40 * tl.bfTiles))
 --  rnd = tlt + 7 * (random(tl.rnd) - 1)
---  --frntImg.copyPixels(sav2.image, rct, gtRect + rect(gtRect.width * (rnd - 1), 0, gtRect.width * (rnd - 1), 0) + rect(0, 1, 0, 1), {#ink:36})
+--  --frntImg.copyPixels(tileImage, rct, gtRect + rect(gtRect.width * (rnd - 1), 0, gtRect.width * (rnd - 1), 0) + rect(0, 1, 0, 1), {#ink:36})
 --  d = -1
---  timg = sav2.image
+--  timg = tileImage
 --  repeat with ps = 1 to tl.repeatL.count
 --    trct = gtRect + rect(gtRect.width * (rnd - 1), gtRect.height * (ps - 1), gtRect.width * (rnd - 1), gtRect.height * (ps - 1)) + rect(1, 1, 1, 1)
 --    repeat with ps2 = 1 to tl.repeatL[ps]
@@ -2268,6 +2300,7 @@ on drawLargeTrashTypeTile(mat, tl, layer, frntImg)
   
   
   --  pos = 
+  type pos: point
   
   if(distanceToAir < 3)then
     global gTrashPropOptions, gProps
@@ -3696,7 +3729,7 @@ end
 
 
 on renderTileMaterial(layer, material, frntImg)
-  tlsOrdered = []
+  tlsOrdered: list = []
   repeat with q = 1 to gLOprops.size.loch
     repeat with c = 1 to gLOprops.size.locv
       LEPropqc = gLEProps.matrix[q][c][layer][1]
@@ -3727,15 +3760,15 @@ on renderTileMaterial(layer, material, frntImg)
   end repeat
   
   tlsOrdered.sort()
-  tls = []
-  repeat with q = 1 to tlsOrdered.count
+  tls: list = []
+  repeat with q = 1 to tlsOrdered.count then
     tls.add(tlsOrdered[q][2])
   end repeat
   
   case material of
     "Chaotic Stone":
       if (gDRMatFixes) then
-        repeat with tileCat = getFirstTileCat() to gTiles.count
+        repeat with tileCat = getFirstTileCat() to gTiles.count then
           if(gTiles[tileCat].nm = "LB Missing Stone")then
             exit repeat
           end if
@@ -3774,9 +3807,11 @@ on renderTileMaterial(layer, material, frntImg)
       
       delL = []
       repeat with tl in tls then
+        type tl: point
         if delL.getPos(tl)=0 then
-          hts = 0
+          hts: number = 0
           repeat with dir in [point(1,0), point(0,1), point(1,1)] then
+            type dir: point
             hts = hts + (tls.getPos(tl+dir)>0)*(delL.getPos(tl+dir)=0)
           end repeat
           if hts = 3 then
@@ -3792,10 +3827,12 @@ on renderTileMaterial(layer, material, frntImg)
       end repeat
       
       repeat with del in delL then
+        type del: point
         tls.deleteOne(del)
       end repeat
       
       savSeed = the randomSeed 
+      type savSeed: number
       repeat while tls.count > 0 then
         the randomSeed  = gLOprops.tileSeed + tls.count
         tl = tls[random(tls.count)]
@@ -3917,7 +3954,7 @@ on renderTileMaterial(layer, material, frntImg)
       
       randomMachines = []
       repeat with w = 1 to 8 then
-        lst = []
+        lst: list = []
         repeat with h = 1 to 8 then
           lst.add([])
         end repeat
@@ -3925,6 +3962,7 @@ on renderTileMaterial(layer, material, frntImg)
       end repeat
       
       repeat with a = 1 to RandomMachines_grabTiles.count then
+        type a: number
         repeat with q = 1 to gTiles.count then
           if(gTiles[q].nm = RandomMachines_grabTiles[a])then
             repeat with t = 1 to gTiles[q].tls.count then
@@ -3946,7 +3984,7 @@ on renderTileMaterial(layer, material, frntImg)
         the randomSeed = seedForTile(tl, gLOprops.tileSeed + layer)
         if delL.findPos(tl)=void then
           
-          randomOrderList = []
+          randomOrderList: list = []
           repeat with w = 1 to randomMachines.count then
             repeat with h = 1 to randomMachines[w].count then
               repeat with t = 1 to randomMachines[w][h].count then
@@ -3960,11 +3998,11 @@ on renderTileMaterial(layer, material, frntImg)
           repeat with q = 1 to randomOrderList.count then 
             testTile = gTiles[randomOrderList[q][2].locH].tls[randomOrderList[q][2].locV]
             
-            legalToPlace = true
+            legalToPlace: number = true
             repeat with a = 0 to testTile.sz.locH-1 then
               repeat with b = 0 to testTile.sz.locV-1 then
-                testPoint = tl + point(a,b)
-                spec = testTile.specs[(b+1) + (a*testTile.sz.locV)]
+                testPoint: point = tl + point(a,b)
+                spec: number = testTile.specs[(b+1) + (a*testTile.sz.locV)]
                 
                 if(tlsBlock.findPos(testPoint)=void)then
                   legalToPlace = false
@@ -3988,7 +4026,7 @@ on renderTileMaterial(layer, material, frntImg)
             end repeat
             
             if(legalToPlace)then
-              rootPos = tl + point(((testTile.sz.locH.float/2.0) + 0.4999).integer-1, ((testTile.sz.locV.float/2.0) + 0.4999).integer-1)
+              rootPos: point = tl + point(((testTile.sz.locH.float/2.0) + 0.4999).integer-1, ((testTile.sz.locV.float/2.0) + 0.4999).integer-1)
               if(rootPos.inside(rect(gRenderCameraTilePos, gRenderCameraTilePos+point(100, 60))))then
                 frntImg = drawATileTile(rootPos.loch,rootPos.locV,layer,testTile, frntImg)
               end if
@@ -4455,7 +4493,7 @@ on renderTileMaterial(layer, material, frntImg)
       end repeat
       
       repeat with tlC = 1 to tls.count
-        tl = tls.getAt(tlC)
+        tl = tls[tlC]
         the randomSeed = seedForTile(tl, gLOprops.tileSeed + layer)
         if (delL.findPos(tl) = VOID) then
           randomOrderList = []

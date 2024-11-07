@@ -64,7 +64,7 @@ on LDrawATileMaterial(q, c, l, nm) --frntImg,
         mText = matTl.texture
         matFile = member("MatTexImport")
         if (DRLastTexImp <> nm) then
-          member("MatTexImport").importFileInto("Materials\" & nm & "Texture.png")
+          member("MatTexImport").importFileInto("Materials" & the dirSeparator & nm & "Texture.png")
           matFile.name = "MatTexImport"
           DRLastTexImp = nm
         end if
@@ -205,7 +205,7 @@ on LDrawATileMaterial(q, c, l, nm) --frntImg,
             rnd = random(tlRnd) - 1
             matFile = member("MatImport")
             if (DRLastMatImp <> nm) then
-              member("MatImport").importFileInto("Materials\" & nm & ".png")
+              member("MatImport").importFileInto("Materials" & the dirSeparator & nm & ".png")
               matFile.name = "MatImport"
               DRLastMatImp = nm
             end if
@@ -289,7 +289,7 @@ on LDrawATileMaterial(q, c, l, nm) --frntImg,
           if (matTl.findPos(#slope) <> VOID) then
             matFile = member("MatSlpImport")
             if (DRLastSlpImp <> nm) then
-              member("MatSlpImport").importFileInto("Materials\" & nm & "Slopes.png")
+              member("MatSlpImport").importFileInto("Materials" & the dirSeparator & nm & "Slopes.png")
               matFile.name = "MatSlpImport"
               DRLastSlpImp = nm
             end if
@@ -345,7 +345,7 @@ on LDrawATileMaterial(q, c, l, nm) --frntImg,
           if (matTl.findPos(#floor) <> VOID) then
             matFile = member("MatFlrImport")
             if (DRLastFlrImp <> nm) then
-              member("MatFlrImport").importFileInto("Materials\" & nm & "Floor.png")
+              member("MatFlrImport").importFileInto("Materials" & the dirSeparator & nm & "Floor.png")
               matFile.name = "MatFlrImport"
               DRLastFlrImp = nm
             end if
@@ -403,7 +403,7 @@ on LDrawATileMaterial(q, c, l, nm) --frntImg,
         end if
         matFile = member("MatPipelikeImport")
         if (DRLastPipeImp <> nm) then
-          member("MatPipelikeImport").importFileInto("Materials\" & nm & "Pipes.png")
+          member("MatPipelikeImport").importFileInto("Materials" & the dirSeparator & nm & "Pipes.png")
           matFile.name = "MatPipelikeImport"
           DRLastPipeImp = nm
         end if
@@ -514,7 +514,7 @@ on LDrawATileMaterial(q, c, l, nm) --frntImg,
         end if
         matFile = member("MatTrshImport")
         if (DRLastTrshImp <> nm) then
-          member("MatTrshImport").importFileInto("Materials\" & nm & "Trash.png")
+          member("MatTrshImport").importFileInto("Materials" & the dirSeparator & nm & "Trash.png")
           matFile.name = "MatTrshImport"
           DRLastTrshImp = nm
         end if

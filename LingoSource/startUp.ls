@@ -162,7 +162,7 @@ on exitFrame me
   tilesInCat.add([#nm:"Dune Sand", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(255, 255, 100)])
   
   savLM = member("matInit")
-  member("matInit").importFileInto("Materials\Init.txt")
+  member("matInit").importFileInto("Materials" & the dirSeparator & "Init.txt")
   savLM.name = "matInit"
   DRCustomMatList = []
   if (savLM.text <> VOID) and (savLM.text <> "") then
@@ -209,7 +209,7 @@ on exitFrame me
   setFirstTileCat(gTiles.count + 1)
   
   sav = member("initImport")
-  member("initImport").importFileInto("Graphics\Init.txt")
+  member("initImport").importFileInto("Graphics" & the dirSeparator & "Init.txt")
   sav.text = sav.text&RETURN&RETURN&member("Drought Needed Init").text
   sav.name = "initImport"
   
@@ -225,8 +225,8 @@ on exitFrame me
   moreTilePreviews = getBoolConfig("More tile previews")
   prevw = member("previewTiles").image
   drprevw = member("previewTilesDR").image
-  repeat with q = 1 to the number of lines in sav.text
-    savTextLine = sav.text.line[q]
+  repeat with q = 1 to the number of lines in sav.text then
+    savTextLine: string = sav.text.line[q]
     if (savTextLine <> "") then
       if (savTextLine.char[1] = "-") then
         vl: list = value(savTextLine.char[2..savTextLine.length])
@@ -240,7 +240,7 @@ on exitFrame me
       else
         ad = value(savTextLine)
         sav2: member = member("previewImprt")
-        member("previewImprt").importFileInto("Graphics\" & ad.nm & ".png")
+        member("previewImprt").importFileInto("Graphics" & the dirSeparator & ad.nm & ".png")
         sav2.name = "previewImprt"
         --INTERNAL
         if (checkDRInternal(ad.nm)) then
@@ -282,7 +282,7 @@ on exitFrame me
   global gPEcolors
   gPEcolors = []
   sav = member("initImport")
-  member("initImport").importFileInto("Props\propColors.txt")
+  member("initImport").importFileInto("Props" & the dirSeparator & "propColors.txt")
   sav.name = "initImport"
   repeat with q = 1 to the number of lines in sav.text then
     if sav.text.line[q] <> "" then
@@ -291,7 +291,7 @@ on exitFrame me
   end repeat
   
   sav = member("initImport")
-  member("initImport").importFileInto("Props\Init.txt")
+  member("initImport").importFileInto("Props" & the dirSeparator & "Init.txt")
   sav.name = "initImport"
   
   repeat with q = 1 to 1000 ---- PJB fix 2000 --> 1000
@@ -764,7 +764,7 @@ on exitFrame me
   -- Custom effects
   sav = member("initImport")
   sav.text = ""
-  member("initImport").importFileInto("Effects\Init.txt")
+  member("initImport").importFileInto("Effects" & the dirSeparator & "Init.txt")
   sav.name = "initImport"
   
   didNewHeading = 0
@@ -834,6 +834,7 @@ on exitFrame me
       member("DEBUGTR").text = member("DEBUGTR").text & RETURN & gProps[gTrashPropOptions[tr].locH].prps[gTrashPropOptions[tr].locV].nm
     end repeat
     fileOpener = new xtra("fileio")
+    fileOpener.createFile(the moviePath & "largeTrashLog.txt")
     fileOpener.openFile(the moviePath & "largeTrashLog.txt", 0)
     fileOpener.writeString(member("DEBUGTR").text)
     fileOpener.writeReturn(#windows)

@@ -1,4 +1,4 @@
-global gViewRender, c, gPEprops, keepLooping, gRenderCameraTilePos, gLastImported, gProps, afterEffects, gAnyDecals, gRenderTrashProps, gCurrentlyRenderingTrash, gESoftProp, softProp, propsToRender, altGrafLG, DRPxl, DRRopeVari, DRBevelColors
+global gViewRender, c, gPEprops, keepLooping, gRenderCameraTilePos, gLastImported, gLastImportedImage, gProps, afterEffects, gAnyDecals, gRenderTrashProps, gCurrentlyRenderingTrash, gESoftProp, softProp, propsToRender, altGrafLG, DRPxl, DRRopeVari, DRBevelColors
 
 on exitFrame(me)
   if (checkMinimize()) then
@@ -133,46 +133,49 @@ on updateText(me)
 end
 
 on renderProp(prop, dp: number, qd: list, mdPoint: point, data: object)
-  sav2 = member("previewImprt")
+  type propImage: image
   if (gLastImported <> prop.nm) then
     tileAsProp: number = (prop.tags.getPos("Tile") > 0)
     if (tileAsProp) then
-      member("previewImprt").importFileInto("Graphics\" & prop.nm & ".png")
+      path = "Graphics" & the dirSeparator & prop.nm & ".png"
     else if (prop.tp = "customRope") then
-      member("previewImprt").importFileInto("Props\" & prop.nm & "Segment.png")
+      path = "Props" & the dirSeparator & prop.nm & "Segment.png"
     else if (prop.tp = "customLong") then
-      member("previewImprt").importFileInto("Props\" & prop.nm & "Segment.png")
+      path = "Props" & the dirSeparator & prop.nm & "Segment.png"
     else
-      member("previewImprt").importFileInto("Props\" & prop.nm & ".png")
+      path = "Props" & the dirSeparator & prop.nm & ".png"
     end if
-    sav2.name = "previewImprt"
+    propImage = cacheLoadImage(path)
     gLastImported = prop.nm
+    gLastImportedImage = propImage
+  else
+    propImage = gLastImportedImage
   end if
   --INTERNAL
   if (checkDRInternal(prop.nm)) then
-    sav2.image = member(prop.nm).image
+    propImage = member(prop.nm).image
   end if
   case (prop.tp) of
     "standard", "variedStandard":
-      renderVoxelProp(prop, dp, qd, mdPoint, data)
+      renderVoxelProp(prop, dp, qd, mdPoint, data, propImage)
     "simpleDecal", "variedDecal":
       gAnyDecals = 1
-      renderDecal(prop, dp, qd, mdPoint, data)
+      renderDecal(prop, dp, qd, mdPoint, data, propImage)
     "rope", "customRope":
       renderRope(prop, propsToRender[c][5], dp)
     "soft", "variedSoft", "antimatter", "coloredSoft":
       gESoftProp = 0
-      initRenderSoftProp(prop, qd, data, dp)
+      initRenderSoftProp(prop, qd, data, dp, propImage)
     "softEffect":
       gESoftProp = 1
-      initRenderSoftProp(prop, qd, data, dp)
+      initRenderSoftProp(prop, qd, data, dp, propImage)
     "long", "customLong":
       renderLongProp(qd, prop, propsToRender[c][5], dp)
   end case
   DoPropTags(prop, dp, qd)
 end
 
-on renderVoxelProp(prop, dp: number, qd: list, mdPoint: point, propData)
+on renderVoxelProp(prop, dp: number, qd: list, mdPoint: point, propData, propImage)
 
   type var: number
   type ps: number
@@ -190,12 +193,10 @@ on renderVoxelProp(prop, dp: number, qd: list, mdPoint: point, propData)
     var = propData.settings.variation - 1
   end if
   ps = 0
-  sav2 = member("previewImprt")
   --INTERNAL
   if (checkDRInternal(prop.nm)) then
-    sav2.image = member(prop.nm).image
+    propImage = member(prop.nm).image
   end if
-  sav2Img = sav2.image
   colored = (prop.tags.getPos("colored") > 0)
   if (colored) then
     gAnyDecals = 1
@@ -209,24 +210,24 @@ on renderVoxelProp(prop, dp: number, qd: list, mdPoint: point, propData)
       layerDpImg = member("layer" & string(dp)).image
       case (prop.colorTreatment) of
         "standard":
-          layerDpImg.copyPixels(sav2Img, qd, gtRect, {#ink:36})
+          layerDpImg.copyPixels(propImage, qd, gtRect, {#ink:36})
           if (effectColorA) then
             if (variedStandard) then
-              member("gradientA" & string(dp)).image.copyPixels(sav2Img, qd, gtRect + rect(prop.sz.locH * 20 * prop.vars, 0, prop.sz.locH * 20 * prop.vars, 0), {#ink:39})
+              member("gradientA" & string(dp)).image.copyPixels(propImage, qd, gtRect + rect(prop.sz.locH * 20 * prop.vars, 0, prop.sz.locH * 20 * prop.vars, 0), {#ink:39})
             else
-              member("gradientA" & string(dp)).image.copyPixels(sav2Img, qd, gtRect + rect(prop.sz.locH * 20, 0, prop.sz.locH * 20, 0), {#ink:39})
+              member("gradientA" & string(dp)).image.copyPixels(propImage, qd, gtRect + rect(prop.sz.locH * 20, 0, prop.sz.locH * 20, 0), {#ink:39})
             end if
           end if
           if (effectColorB) then
             if (variedStandard) then
-              member("gradientB" & string(dp)).image.copyPixels(sav2Img, qd, gtRect + rect(prop.sz.locH * 20 * prop.vars, 0, prop.sz.locH * 20 * prop.vars, 0), {#ink:39})
+              member("gradientB" & string(dp)).image.copyPixels(propImage, qd, gtRect + rect(prop.sz.locH * 20 * prop.vars, 0, prop.sz.locH * 20 * prop.vars, 0), {#ink:39})
             else
-              member("gradientB" & string(dp)).image.copyPixels(sav2Img, qd, gtRect + rect(prop.sz.locH * 20, 0, prop.sz.locH * 20, 0), {#ink:39})
+              member("gradientB" & string(dp)).image.copyPixels(propImage, qd, gtRect + rect(prop.sz.locH * 20, 0, prop.sz.locH * 20, 0), {#ink:39})
             end if
           end if
         "bevel":
           dumpImg = image(gtRect.width, gtRect.height, 1)
-          dumpImg.copyPixels(sav2Img, dumpImg.rect, gtRect)
+          dumpImg.copyPixels(propImage, dumpImg.rect, gtRect)
           inverseImg = makeSilhoutteFromImg(dumpImg, 1)
           dumpImg = image(layerDpImg.width, layerDpImg.height, 32)
           dumpImg.copyPixels(DRPxl, qd, rect(0, 0, 1, 1), {#color:color(0, 255, 0)})
@@ -247,9 +248,9 @@ on renderVoxelProp(prop, dp: number, qd: list, mdPoint: point, propData)
         if (effectColorA = FALSE) then
           if (effectColorB = FALSE) then
             if (variedStandard) then
-              member("layer" & string(dp) & "dc").image.copyPixels(sav2Img, qd, gtRect + rect(prop.sz.locH * 20 * prop.vars, 0, prop.sz.locH * 20 * prop.vars, 0), {#ink:36})
+              member("layer" & string(dp) & "dc").image.copyPixels(propImage, qd, gtRect + rect(prop.sz.locH * 20 * prop.vars, 0, prop.sz.locH * 20 * prop.vars, 0), {#ink:36})
             else
-              member("layer" & string(dp) & "dc").image.copyPixels(sav2Img, qd, gtRect + rect(prop.sz.locH * 20, 0, prop.sz.locH * 20, 0), {#ink:36})
+              member("layer" & string(dp) & "dc").image.copyPixels(propImage, qd, gtRect + rect(prop.sz.locH * 20, 0, prop.sz.locH * 20, 0), {#ink:36})
             end if
           end if
         end if
@@ -267,7 +268,7 @@ on renderVoxelProp(prop, dp: number, qd: list, mdPoint: point, propData)
 end
 
 
-on renderDecal(prop, dp, qd, mdPoint, data)
+on renderDecal(prop, dp: number, qd: list, mdPoint: point, data, propImage: image)
   type rnd: number
   type ps: number
   type depthzero: number
@@ -278,10 +279,9 @@ on renderDecal(prop, dp, qd, mdPoint, data)
   type clr: color
   rnd = 1
   ps = 1
-  sav2 = member("previewImprt")
   --INTERNAL
   if (checkDRInternal(prop.nm)) then
-    sav2.image = member(prop.nm).image
+    propImage = member(prop.nm).image
   end if
   -- put "render decal"
   depthZero = dp
@@ -305,7 +305,7 @@ on renderDecal(prop, dp, qd, mdPoint, data)
   averageSz = averageSz / ((4.0 + actualDepth)/5.0)
   dirq = dirq * averageSz
   
-  getRect = sav2.image.rect
+  getRect = propImage.rect
   if(prop.tp = "variedDecal")then
     getRect = rect(prop.pxlSize.locH * (data.settings.variation-1), 0, prop.pxlSize.locH * data.settings.variation, prop.pxlSize.locV)+rect(0,1,0,1)
   end if
@@ -319,7 +319,7 @@ on renderDecal(prop, dp, qd, mdPoint, data)
   end if
   
   repeat with q = 1 to data.settings.customDepth then
-    member("layer"&string(dp)&"dc").image.copyPixels(sav2.image, qd+(dirq*(dp-depthZero)), getRect, {#ink:36, #color:clr})
+    member("layer"&string(dp)&"dc").image.copyPixels(propImage, qd+(dirq*(dp-depthZero)), getRect, {#ink:36, #color:clr})
     dp = dp + 1
     if(dp > 29)then
       exit repeat
@@ -355,7 +355,7 @@ end
 
 
 
-on renderRope(prop, data, dp)
+on renderRope(prop, data, dp: number)
   type lastpos: point
   type lastdir: point
   type lastperp: point
@@ -1130,7 +1130,7 @@ end
 
 global wireBunchSav
 
-on DrawBezierWire(startDir, A, aHandle, B, bHandle, aDp, bDp)
+on DrawBezierWire(startDir: point, A: point, aHandle: point, B: point, bHandle: point, aDp: number, bDp: number)
   type repeats: number
   type lastdir: point
   type lastpos: point
@@ -1176,7 +1176,7 @@ end
 
 
 
-on initRenderSoftProp(prop, qd, propData, dp)
+on initRenderSoftProp(prop, qd: list, propData, dp, propImage: image)
   type lft: number
   type tp: number
   type rght: number
@@ -1210,7 +1210,7 @@ on initRenderSoftProp(prop, qd, propData, dp)
   offsetPnt = point(lft, tp)
   member("softPropRender").image = image(pasteRect.width, pasteRect.height, 32)
   
-  getRect = member("previewImprt").image.rect
+  getRect = propImage.rect
   if(prop.tp = "variedSoft")then
     getRect = rect((propData.settings.variation-1)*prop.pxlSize.locH, 0, propData.settings.variation*prop.pxlSize.locH, prop.pxlSize.locV) + rect(0,1,0,1)
   end if
@@ -1219,21 +1219,21 @@ on initRenderSoftProp(prop, qd, propData, dp)
     getRect = rect(0, 0, prop.pxlSize.locH, prop.pxlSize.locV) + rect(0,1,0,1)
   end if
   
-  member("softPropRender").image.copyPixels(member("previewImprt").image, qd-[offsetPnt, offsetPnt, offsetPnt, offsetPnt], getRect)
+  member("softPropRender").image.copyPixels(propImage, qd-[offsetPnt, offsetPnt, offsetPnt, offsetPnt], getRect)
   
   if(prop.tp = "variedSoft") or (prop.tp = "coloredSoft")then
     if(prop.colorize = 1)then
       if(propData.settings.applyColor)then
         gAnyDecals = true
         member("softPropColor").image = image(pasteRect.width, pasteRect.height, 32)
-        member("softPropColor").image.copyPixels(member("previewImprt").image, qd-[offsetPnt, offsetPnt, offsetPnt, offsetPnt], getRect+rect(0, getRect.height, 0, getRect.height))
+        member("softPropColor").image.copyPixels(propImage, qd-[offsetPnt, offsetPnt, offsetPnt, offsetPnt], getRect+rect(0, getRect.height, 0, getRect.height))
       end if
     end if
   end if
   
   if(prop.tags.GetPos("effectColorA") > 0 or prop.tags.GetPos("effectColorB") > 0)then
     member("softPropGrad").image = image(pasteRect.width, pasteRect.height, 32)
-    member("softPropGrad").image.copyPixels(member("previewImprt").image, qd-[offsetPnt, offsetPnt, offsetPnt, offsetPnt], getRect+rect(0, getRect.height, 0, getRect.height))
+    member("softPropGrad").image.copyPixels(propImage, qd-[offsetPnt, offsetPnt, offsetPnt, offsetPnt], getRect+rect(0, getRect.height, 0, getRect.height))
   end if
   
   clr = 0
@@ -1438,7 +1438,7 @@ on renderSoftProp()
   end if
 end
 
-on softPropDepth(pxl)
+on softPropDepth(pxl: point)
   type return: number
   type clr: color
 

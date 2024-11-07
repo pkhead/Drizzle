@@ -1,17 +1,20 @@
 --detta skript räknar ut distansen mellan två punkter
-on diag(point1, point2)
+on diag(point1: point, point2: point)
+  type return: number
   rectHeight: number = abs(point1.locV - point2.locV)
   rectWidth: number = abs(point1.locH - point2.locH)
   return sqrt((rectHeight * rectHeight) + (rectWidth * rectWidth))
 end
 
-on diagWI(point1, point2, dig)
+on diagWI(point1: point, point2: point, dig: number)
+  type return: number
   RectHeight: number = ABS(point1.locV - point2.locV)
   RectWidth: number = ABS(point1.locH - point2.locH)
   return ((RectHeight * RectHeight) + (RectWidth * RectWidth) < dig*dig )
 end 
 
-on diagNoSqrt(point1, point2)
+on diagNoSqrt(point1: point, point2: point)
+  type return: number
   RectHeight: number = ABS(point1.locV - point2.locV)
   RectWidth: number = ABS(point1.locH - point2.locH)
   
@@ -20,13 +23,13 @@ on diagNoSqrt(point1, point2)
   return diagonal
 end
 
-on vertFlipRect(rct)
+on vertFlipRect(rct: rect)
   type return: list
   return [point(rct.right, rct.top),point(rct.left, rct.top),point(rct.left, rct.bottom),point(rct.right, rct.bottom)]
 end
 
 --tar fram en förflyttning mellan två punkter, bergänsad till theMovement
-on moveToPoint(pointA, pointB, theMovement)
+on moveToPoint(pointA: point, pointB: point, theMovement: number)
   type return: point
   
   pointB = pointB-pointA
@@ -55,7 +58,7 @@ on returnAbsolutePoint p1, p2
   return point(realX, realY)
 end
 
-on lerp(A, B, val)
+on lerp(A: number, B: number, val: number)
   type return: number
   val = restrict(val, 0, 1)
   if(B < A)then
@@ -148,7 +151,7 @@ end
 
 
 
-on lookAtPoint(pos, lookAtpoint)
+on lookAtPoint(pos: point, lookAtpoint: point)
   type return: number
   
   
@@ -175,13 +178,13 @@ on lookAtPoint(pos, lookAtpoint)
   return ((rotationAngleRad * 180 / PI) + 90)
 end
 
-on degToVec(deg)
+on degToVec(deg: number)
   type return: point
   rad = -2 * PI * ((deg + 90) / 360.0).float
   return point(-cos(rad), sin(rad))
 end
 
-on degToVecFac2(deg, facH, facV)
+on degToVecFac2(deg: number, facH: number, facV: number)
   deg = deg + 90
   deg = -deg 
   rad: number = ((deg/360.0).float)*PI*2
@@ -190,7 +193,7 @@ on degToVecFac2(deg, facH, facV)
 end
 
 
-on closestPointOnLine(pnt, A, B)
+on closestPointOnLine(pnt: point, A: point, B: point)
   return giveCrossPoint(pnt, pnt + giveDirFor90degrToLine(A, B), A, B)
 end
 
@@ -198,8 +201,9 @@ end
 
 
 
-on giveDirFor90degrToLine(pnt1, pnt2)
-  
+
+on giveDirFor90degrToLine(pnt1: point, pnt2: point)
+  type return: point
   
   X1: number = pnt1.locH
   Y1: number = pnt1.locV
@@ -664,6 +668,9 @@ on Bezier(A, cA, B, cB, f)
   return LerpVector(cA, cB, f)
 end
 
+on CacheLoadImage(fileName: string)
+  -- implemented in C#
+end
 
 
 

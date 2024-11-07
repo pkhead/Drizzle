@@ -207,7 +207,7 @@ on pasteShortCutHole(mem: string, pnt: point, dp: number, cl)
   rct = giveMiddleOfTile(pnt) - (gRenderCameraTilePos * 20) - gRenderCameraPixelPos
   rct = depthPnt(rct, dp)
   rct = rect(rct, rct) + rect(-10, -10, 10, 10)
-  idString = ""
+  idString: string = ""
   repeat with dr in [point(-1, 0), point(0, -1), point(1, 0), point(0, 1)]
     type dr: point
     if (pnt + dr).inside(rect(1, 1, gLOprops.size.loch, gLOprops.size.locv)) then

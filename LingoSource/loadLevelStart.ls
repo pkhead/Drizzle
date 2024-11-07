@@ -14,9 +14,9 @@ on exitFrame me
   
   projects = []
   
-  pth = the moviePath & "LevelEditorProjects\"
+  pth = the moviePath & "LevelEditorProjects" & the dirSeparator
   repeat with f in gLOADPATH then
-    pth = pth & "\" & f
+    pth = pth & the dirSeparator & f
   end repeat
   
   fileList = [ ]
