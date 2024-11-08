@@ -1286,10 +1286,10 @@ on renderSoftProp()
           if member("layer"&dp).image.getPixel(q2+softProp.pasteRect.left, softProp.c+softProp.pasteRect.top) <> color(255, 255, 255) then
             member("layer"&dp).image.setPixel(q2+softProp.pasteRect.left, softProp.c+softProp.pasteRect.top, color(255, 255, 255))
             if(painted = false) then
-              repeat with clr in [[color(255, 0, 0), -1], [color(0, 0, 255), 1]] then
+              repeat with clrList in [[color(255, 0, 0), -1], [color(0, 0, 255), 1]] then
                 repeat with dir in [point(1,0), point(1,-1), point(0,1), point(2,0), point(2,-2), point(0,2)]then
-                  if member("layer"&dp).image.getPixel(q2+softProp.pasteRect.left+dir.locH*clr[2], softProp.c+softProp.pasteRect.top+dir.locV*clr[2]) <> color(255, 255, 255) then
-                    member("layer"&dp).image.setPixel(q2+softProp.pasteRect.left+dir.locH*clr[2], softProp.c+softProp.pasteRect.top+dir.locV*clr[2], clr[1])
+                  if member("layer"&dp).image.getPixel(q2+softProp.pasteRect.left+dir.locH*clrList[2], softProp.c+softProp.pasteRect.top+dir.locV*clrList[2]) <> color(255, 255, 255) then
+                    member("layer"&dp).image.setPixel(q2+softProp.pasteRect.left+dir.locH*clrList[2], softProp.c+softProp.pasteRect.top+dir.locV*clrList[2], clrList[1])
                   end if
                 end repeat
               end repeat
