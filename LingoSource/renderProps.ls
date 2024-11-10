@@ -1,21 +1,18 @@
-global gViewRender, c, gPEprops, keepLooping, gRenderCameraTilePos, gLastImported, gLastImportedImage, gProps, afterEffects, gAnyDecals, gRenderTrashProps, gCurrentlyRenderingTrash, gESoftProp
-global softProp, propsToRender, altGrafLG, DRPxl, DRRopeVari, DRBevelColors
+global gViewRender, c, gPEprops, keepLooping, gRenderCameraTilePos, gLastImported, gLastImportedImage, gProps, afterEffects, gAnyDecals, gRenderTrashProps, gCurrentlyRenderingTrash, gESoftProp, softProp, propsToRender, altGrafLG, DRPxl, DRRopeVari, DRBevelColors
 
-on exitFrame me
-  if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+on exitFrame(me)
+  if (checkMinimize()) then
     _player.appMinimize()
-    
   end if
-  if checkExit() then
+  if (checkExit()) then
     _player.quit()
   end if
-  
-  if gViewRender then
-    if checkExitRender() then
+  if (gViewRender) then
+    if (checkExitRender()) then
       _movie.go(9)
     end if
     me.newFrame()
-    if keepLooping then
+    if (keepLooping) then
       go the frame
     end if
   else
@@ -25,66 +22,60 @@ on exitFrame me
   end if
 end
 
-on newFrame me
+on newFrame(me)
   type qd: list
-  if(softProp <> void)then
-    if (gESoftProp < 1)then
+  type propData: list
+  if (softProp <> VOID) then
+    if (gESoftProp < 1) then
       renderSoftProp()
     else
       renderESoftProp()
     end if
   else
-    
-    if(gCurrentlyRenderingTrash)then
-      
-      if(c > gRenderTrashProps.count)then
-        gCurrentlyRenderingTrash = false
-        if(propsToRender.count > 0)then
+    if (gCurrentlyRenderingTrash) then
+      if (c > gRenderTrashProps.count) then
+        gCurrentlyRenderingTrash = FALSE
+        if (propsToRender.count > 0) then
           c = 1
-          propData: list = propsToRender[c]
+          propData = propsToRender[c]
         else
-          keepLooping = false
+          keepLooping = FALSE
           exit
         end if
       else
         propData = gRenderTrashProps[c]
       end if
     else
-      if(c > propsToRender.count)then
+      if (c > propsToRender.count) then
         keepLooping = 0
         exit
       end if
       propData = propsToRender[c]
     end if
-    
-    prop = gProps[propData[3].locH].prps[propData[3].locV]
-    if(ShouldThisPropRender(prop, propData[4], propData[5].settings))then
+    dt3 = propData[3]
+    prop = gProps[dt3.locH].prps[dt3.locV]
+    prpSets = propData[5].settings
+    if (ShouldThisPropRender(prop, propData[4], prpSets)) then
       me.updateText()
       qd = propData[4]
       dp = -propData[1]
-      
-      if(gCurrentlyRenderingTrash = false)then
-        qd = qd * (20.0/16.0)
+      if (gCurrentlyRenderingTrash = FALSE) then
+        qd = qd * (20.0 / 16.0)
       end if
-      
-      mdPoint: point = (qd[1] + qd[2] + qd[3] + qd[4])/4.0
-      
+      mdPoint: point = (qd[1] + qd[2] + qd[3] + qd[4]) / 4.0
       savSeed: number = the randomSeed
       global gLOprops
-      the randomSeed = seedForTile(giveGridPos(mdPoint), propData[5].settings.seed)
-      -- put "prop Seed " && propsToRender[c][2] && the randomSeed
-      if(gCurrentlyRenderingTrash = false)then
-        qd = qd - [gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20] -- [point(15*20, 10*20), point(15*20, 10*20), point(15*20, 10*20), point(15*20, 10*20)]
+      the randomSeed = seedForTile(giveGridPos(mdPoint), prpSets.seed)
+      if (gCurrentlyRenderingTrash = FALSE) then
+        camPos20 = gRenderCameraTilePos * 20
+        qd = qd - [camPos20, camPos20, camPos20, camPos20]
       end if
-      -- put prop.nm && prop.tp
-      if(gCurrentlyRenderingTrash)then
+      if (gCurrentlyRenderingTrash) then
         data = []
       else
         data = propsToRender[c][5]
       end if
-      
       renderProp(prop, dp, qd, mdPoint, data)
-      
       the randomSeed = savSeed
     end if
     c = c + 1
@@ -93,85 +84,58 @@ end
 
 on ShouldThisPropRender(prop, qd: list, settings)
   type return: number
-  
-  if(settings.renderTime <> afterEffects)then
-    return false
+  if (settings.renderTime <> afterEffects) then
+    return FALSE
   end if
-  
-  if(gCurrentlyRenderingTrash = false)then
-    qd = qd * (20.0/16.0)
-    qd = qd - [gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20]
+  if (gCurrentlyRenderingTrash = FALSE) then
+    qd = qd * (20.0 / 16.0)
+    camPos20 = gRenderCameraTilePos * 20
+    qd = qd - [camPos20, camPos20, camPos20, camPos20]
   end if
-  
-  mdPoint: point = (qd[1] + qd[2] + qd[3] + qd[4])/4.0
-  
+  mdPoint: point = (qd[1] + qd[2] + qd[3] + qd[4]) / 4.0
   dig: number = 0
-  repeat with q =  1 to 4 then
-    if(DiagWI(mdPoint, qd[q], dig) = false) then
+  repeat with q = 1 to 4
+    if (DiagWI(mdPoint, qd[q], dig) = FALSE) then
       dig = Diag(mdPoint, qd[q])
     end if
   end repeat
-  
-  -- put prop[1] && Diag(mdPoint, closestPntInRect(rect(-100, -100, 1700, 900), mdPoint)) && dig
-  
-  if(Diag(mdPoint, closestPntInRect(rect(-50, -100, 2050, 1100), mdPoint)) > dig) then
-    --   put "Culling a prop " & prop
+
+  if (diag(mdPoint, closestPntInRect(rect(-50, -100, 2050, 1100), mdPoint)) > dig) then
     return false
   end if
-  
-  
-  -- case prop.tp of
-  --   "simpleDecal", "variedDecal":
-  --      renderAfterEffects = 1
-  -- end case
+
   return true
 end
 
-on updateText me
-  txt = ""
-  put "<Rendering props>                                                Press TAB (VANILLA) / TAB + Z + R (DROUGHT) / TAB + X + C (DRY) to abort" after txt
-  
-  put RETURN after txt
-  
+on updateText(me)
+  txt = "<RENDERING PROPS>" & RETURN
   viewProp: number = c
-  if(softProp <> void)then
+  if (softProp <> VOID) then
     viewProp: number = c - 1
   end if
-  
-  if(gCurrentlyRenderingTrash = true)then
-    put "Trash props -   " & c & " / " & gRenderTrashProps.count after txt
-    put RETURN after txt
+  if (gCurrentlyRenderingTrash) then
+    put "Trash props -   " & string(c) & " / " & string(gRenderTrashProps.count) & RETURN after txt
   else
-    repeat with prp = 1 to propsToRender.count then
-      propAddress: point = propsToRender[prp][3]
-      if (ShouldThisPropRender(gProps[propAddress.loch].prps[propAddress.locV], propsToRender[prp][4], propsToRender[prp][5].settings))then
-        if prp = viewProp then
-          put string(prp)&". ->"&propsToRender[prp][2] after txt
+    repeat with prp = 1 to propsToRender.count
+      renderPrp = propsToRender[prp]
+      propAddress: point = renderPrp[3]
+      if (ShouldThisPropRender(gProps[propAddress.loch].prps[propAddress.locV], renderPrp[4], renderPrp[5].settings)) then
+        if (prp = viewProp) then
+          put string(prp) & ". ->" & renderPrp[2] after txt
         else
-          put string(prp)&". "&propsToRender[prp][2] after txt
+          put string(prp) & ". " & renderPrp[2] after txt
         end if
         put RETURN after txt
       end if
     end repeat
   end if
-  
   member("effectsL").text = txt
 end
 
 on renderProp(prop, dp: number, qd: list, mdPoint: point, data: object)
   type propImage: image
-
-  if gLastImported <> prop.nm then
-    tileAsProp: number = 0
-
-    repeat with q2 = 1 to prop.tags.count then
-      if prop.tags[q2] = "Tile" then
-        tileAsProp = 1
-        exit repeat
-      end if
-    end repeat
-
-    type path: string
+  if (gLastImported <> prop.nm) then
+    tileAsProp: number = (prop.tags.getPos("Tile") > 0)
     if (tileAsProp) then
       path = "Graphics" & the dirSeparator & prop.nm & ".png"
     else if (prop.tp = "customRope") then
@@ -181,9 +145,7 @@ on renderProp(prop, dp: number, qd: list, mdPoint: point, data: object)
     else
       path = "Props" & the dirSeparator & prop.nm & ".png"
     end if
-
     propImage = cacheLoadImage(path)
-
     gLastImported = prop.nm
     gLastImportedImage = propImage
   else
@@ -213,16 +175,18 @@ on renderProp(prop, dp: number, qd: list, mdPoint: point, data: object)
   DoPropTags(prop, dp, qd)
 end
 
-on renderVoxelProp(prop, dp: number, qd: list, mdPoint: point, propData, propImage: image)
+on renderVoxelProp(prop, dp: number, qd: list, mdPoint: point, propData, propImage)
+
   type var: number
   type ps: number
   type colored: number
-  type gtrect: rect
-  type dumpimg: image
-  type inverseimg: image
+  type gtRect: rect
+  type dumpImg: image
+  type inverseImg: image
   type layerDpImg: image
   type a: list
   type variedStandard: number
+
   var = 0
   variedStandard = (prop.tp = "variedStandard")
   if (variedStandard) then
@@ -366,7 +330,7 @@ end
 --used by renderDecal
 on directionsQuad()
   type return: list
-  type qdirs: list
+  type qDirs: list
   type frst: point
   type l1: list
   --  seed =  the randomSeed
@@ -398,6 +362,7 @@ on renderRope(prop, data, dp: number)
   type pos: point
   type dir: point
   type perp: point
+
   lastPos = data.points[1]
   lastDir = MoveToPoint(lastPos, data.points[2], 1.0)
   lastPerp = CorrectPerp(lastDir)
@@ -421,6 +386,8 @@ on renderRope(prop, data, dp: number)
       lastDir = dir
       lastPerp = perp
     end repeat
+  else if (prop.nm = "Small Chain") or (prop.nm = "Fat Chain") then
+    renderChainEffectProp(prop, data, dp)
   else
     repeat with q = 1 to data.points.count
       pos = data.points[q]
@@ -438,8 +405,67 @@ on renderRope(prop, data, dp: number)
   end if
 end
 
-on CorrectPerp(dir: point)
-  type return: point
+on renderChainEffectProp(prop, data, dp)
+  fat = (prop.nm = "Fat Chain")
+  if fat then
+    spacing = 16
+    graf = "bigChainSegment"
+  else
+    spacing = 8
+    graf = "chainSegment"
+  end if
+  
+  -- Calculate length
+  len = 0
+  repeat with q = 1 to data.points.count - 1 then
+    len = len + diag(data.points[q], data.points[q+1])
+  end repeat
+  numSegs = (len / spacing + 0.4999).integer
+  if numSegs < 2 then numSegs = 2
+  
+  -- Draw segments
+  repeat with q = 1 to numSegs then
+    -- Sizes
+    if (q mod 2) = 1 then
+      grab = rect(0,0,6,10)
+      place = rect(-3,-5,3,5)
+      if fat then
+        grab = grab * 2
+        place = place * 2
+      end if
+    else
+      grab = rect(7,0,8,10)
+      place = rect(-1,-5,1,5)
+      if fat then
+        grab = rect(13,0,16,20)
+        place = place * 2
+      end if
+    end if
+    p = 1
+    dst = q * spacing
+    repeat with i = 1 to data.points.count - 1 then
+      dst = dst - diag(data.points[i], data.points[i+1])
+      if dst <= 0 then
+        p = i + 1 + (dst / diag(data.points[i], data.points[i+1]))
+        exit repeat
+      end if
+    end repeat
+    pl = (p - 0.4999).integer
+    pn = (p + 0.4999).integer
+    lrp = p - pl
+    if pl = pn then next repeat
+    
+    -- Draw
+    lastPos = data.points[pl]
+    nextPos = data.points[pn]
+    pt = point(lerp(lastPos.locH, nextPos.locH, lrp), lerp(lastPos.locV, nextPos.locV, lrp)) - gRenderCameraTilePos*20
+    dir = lookAtpoint(lastPos, nextPos)
+    
+    member("layer"&string(dp)).image.copyPixels(member(graf).image, rotateToQuadFix(rect(pt,pt)+place, dir), grab, {#color:color(255,0,0)})
+  end repeat
+end
+
+on CorrectPerp(dir)
   --  if(dir = point(0, -1))then
   --    return point(1, 0)
   --  else if (dir = point(1, 0))then
@@ -511,7 +537,7 @@ end
 
 on renderCustomRopeSegment(num, prop, data, dp, pos, dir, perp, lastPos, lastDir, lastPerp, diffSeg)
   dr = dirVecLB(pos, lastPos) * diffSeg
-  wdth = prop.segmentLength
+  wdth = prop.pixelSize.locH * 0.5
   if (num = 1) then
     pntA = lastPos + (dr + lastDir * wdth) * 0.5
     pntB = pos - 1.5 * dr - lastDir * wdth
@@ -529,12 +555,10 @@ on renderCustomRopeSegment(num, prop, data, dp, pos, dir, perp, lastPos, lastDir
   end if
   effectColorA = (prop.tags.getPos("effectColorA") > 0)
   effectColorB = (prop.tags.getPos("effectColorB") > 0)
-  baseDp = dp
   ps = 0
   repeat with q = 1 to prop.repeatL.count
     gtRect = rect(0, 1, prop.pixelSize.locH, prop.pixelSize.locV + 1)
     gtRect = gtRect + rect(gtRect.width * DRRopeVari, gtRect.height * ps, gtRect.width * DRRopeVari, gtRect.height * ps)
-    dp = baseDp
     repeat with q2 = 1 to prop.repeatL[q]
       layerImg = member("layer" & string(dp)).image
       case (prop.colorTreatment) of
@@ -923,42 +947,6 @@ on renderRopeSegment(num: number, prop, data, dp: number, pos: point, dir: point
         member("layer"&string(pstDp)).image.copyPixels(member("HugeBikeChainSegment").image, pastQd, member("HugeBikeChainSegment").image.rect, {#ink:36, #color:color(0,255,0)})
       end if
       
-    "Small Chain":
-      -- chainSegment graphic has two parts: a 6x10 head-on bit and a 2x10 side-on bit. We need to draw both in alternating order.
-      
-      dst = diag(pos, lastPos)
-      len = (dst / 20 + 0.4999).integer -- How many double chain segments can we fit between the two points :3
-      if len < 1 then len = 1
-      lookPt = lookAtpoint(lastPos, pos)
-      repeat with a = 0 to len then
-        -- First half: the head-on chain link (the O)
-        b = (a + 0.25) / len
-        pt = lastPos * [1 - b, 1 - b] + pos * [b, b]
-        member("layer"&string(dp)).image.copyPixels(member("chainSegment").image, rotateToQuad(rect(pt,pt)+rect(-3,-5,3,5)-rect(gRenderCameraTilePos*20,gRenderCameraTilePos*20), lookPt), rect(0,0,6,10), {#color: color(255,0,0)})
-        -- Second half: the side-on chain link (the line)
-        b = (a + 0.75) / len
-        pt = lastPos * [1 - b, 1 - b] + pos * [b, b]
-        member("layer"&string(dp)).image.copyPixels(member("chainSegment").image, rotateToQuad(rect(pt,pt)+rect(-1,-5,1,5)-rect(gRenderCameraTilePos*20,gRenderCameraTilePos*20), lookPt), rect(7,0,8,10), {#color: color(255,0,0)})
-      end repeat
-      
-    "Fat Chain":
-      -- bigChainSegment graphic is like the chainSegment graphic except everything is twice as big so every number relating to the tile size is doubled.
-      
-      dst = diag(pos, lastPos)
-      len = (dst / 40 + 0.4999).integer
-      if len < 1 then len = 1
-      lookPt = lookAtpoint(lastPos, pos)
-      repeat with a = 0 to len then
-        -- First half: the head-on chain link (the O)
-        b = (a + 0.25) / len
-        pt = lastPos * [1 - b, 1 - b] + pos * [b, b]
-        member("layer"&string(dp)).image.copyPixels(member("bigChainSegment").image, rotateToQuad(rect(pt,pt)+rect(-6,-10,6,10)-rect(gRenderCameraTilePos*20,gRenderCameraTilePos*20), lookPt), rect(0,0,12,20), {#color: color(255,0,0)})
-        -- Second half: the side-on chain link (the line)
-        b = (a + 0.75) / len
-        pt = lastPos * [1 - b, 1 - b] + pos * [b, b]
-        member("layer"&string(dp)).image.copyPixels(member("bigChainSegment").image, rotateToQuad(rect(pt,pt)+rect(-2,-10,2,10)-rect(gRenderCameraTilePos*20,gRenderCameraTilePos*20), lookPt), rect(13,0,16,20), {#color: color(255,0,0)})
-      end repeat
-      
     "Fat Hose":
       wdth = 20
       pastQd = [pos - perp*wdth, pos + perp*wdth, lastPos + lastPerp*wdth, lastPos - lastPerp*wdth]
@@ -1153,7 +1141,7 @@ on DrawBezierWire(startDir: point, A: point, aHandle: point, B: point, bHandle: 
   type wdth: number
   type pastqd: list
   type mydp: number
-  
+
   repeats = (Diag(A, B) / 5.0).integer
   lastDir = startDir
   lastPos = A - startDir
@@ -1197,6 +1185,7 @@ on initRenderSoftProp(prop, qd: list, propData, dp, propImage: image)
   type pasterect: rect
   type offsetPnt: point
   type getrect: rect
+
   lft = qd[1].locH
   tp = qd[1].locV
   rght = qd[1].locH
@@ -1244,7 +1233,7 @@ on initRenderSoftProp(prop, qd: list, propData, dp, propImage: image)
   
   if(prop.tags.GetPos("effectColorA") > 0 or prop.tags.GetPos("effectColorB") > 0)then
     member("softPropGrad").image = image(pasteRect.width, pasteRect.height, 32)
-    member("softPropGrad").image.copyPixels(member("previewImprt").image, qd-[offsetPnt, offsetPnt, offsetPnt, offsetPnt], getRect+rect(0, getRect.height, 0, getRect.height))
+    member("softPropGrad").image.copyPixels(propImage, qd-[offsetPnt, offsetPnt, offsetPnt, offsetPnt], getRect+rect(0, getRect.height, 0, getRect.height))
   end if
   
   clr = 0
@@ -1278,6 +1267,7 @@ on renderSoftProp()
   type dpthremove: number
   type clrzclr: color
   type val: number
+
   effectColorA = (softProp.prop.tags.GetPos("effectColorA") > 0)
   effectColorB = (softProp.prop.tags.GetPos("effectColorB") > 0)
   
@@ -1296,10 +1286,10 @@ on renderSoftProp()
           if member("layer"&dp).image.getPixel(q2+softProp.pasteRect.left, softProp.c+softProp.pasteRect.top) <> color(255, 255, 255) then
             member("layer"&dp).image.setPixel(q2+softProp.pasteRect.left, softProp.c+softProp.pasteRect.top, color(255, 255, 255))
             if(painted = false) then
-              repeat with colornumstruct in [[color(255, 0, 0), -1], [color(0, 0, 255), 1]] then
+              repeat with clrList in [[color(255, 0, 0), -1], [color(0, 0, 255), 1]] then
                 repeat with dir in [point(1,0), point(1,-1), point(0,1), point(2,0), point(2,-2), point(0,2)]then
-                  if member("layer"&dp).image.getPixel(q2+softProp.pasteRect.left+dir.locH*colornumstruct[2], softProp.c+softProp.pasteRect.top+dir.locV*colornumstruct[2]) <> color(255, 255, 255) then
-                    member("layer"&dp).image.setPixel(q2+softProp.pasteRect.left+dir.locH*colornumstruct[2], softProp.c+softProp.pasteRect.top+dir.locV*colornumstruct[2], colornumstruct[1])
+                  if member("layer"&dp).image.getPixel(q2+softProp.pasteRect.left+dir.locH*clrList[2], softProp.c+softProp.pasteRect.top+dir.locV*clrList[2]) <> color(255, 255, 255) then
+                    member("layer"&dp).image.setPixel(q2+softProp.pasteRect.left+dir.locH*clrList[2], softProp.c+softProp.pasteRect.top+dir.locV*clrList[2], clrList[1])
                   end if
                 end repeat
               end repeat
@@ -1451,6 +1441,7 @@ end
 on softPropDepth(pxl: point)
   type return: number
   type clr: color
+
   clr = member("softPropRender").image.getPixel(pxl.locH, pxl.locV)
   if(clr = color(255, 255, 255)) or (clr = 0) then
     return 0.0
@@ -1583,9 +1574,9 @@ on renderLongProp(qd, prop, data, dp)
   
   
   if (prop.tp = "customLong") then
-    wdth = prop.segmentLength
-    steps = ((dist / wdth) + 0.4999).integer
-    diffSeg = ((prop.pixelSize.locV - wdth) + prop.pixelSize.locH) * 0.5
+    lgt = prop.segmentLength
+    steps = ((dist / lgt) + 0.4999).integer
+    diffSeg = ((prop.pixelSize.locV - lgt) + prop.pixelSize.locH) * 0.5
     sav2 = member("previewImprt")
     colored = (prop.tags.getPos("colored") > 0)
     if (colored) then
@@ -1604,12 +1595,12 @@ on renderLongProp(qd, prop, data, dp)
     sinAng = diffSeg * sin(prlAng)
     repeat with n = 1 to steps
       ps = 0
-      posProp = A + (dir * wdth * n)
+      dp = baseDp
+      posProp = A + (dir * lgt * n)
       pastQd = rotateToQuadLB(rect(posProp, posProp) + rect(-prop.pixelSize.locH * 0.5 - cosAng, -prop.pixelSize.locV * 0.5 - sinAng, prop.pixelSize.locH * 0.5 - cosAng, prop.pixelSize.locV * 0.5 - sinAng), dir)
       repeat with q = 1 to prop.repeatL.count
         gtRect = rect(0, 1, prop.pixelSize.locH, prop.pixelSize.locV + 1)
         gtRect = gtRect + rect(gtRect.width * vari, gtRect.height * ps, gtRect.width * vari, gtRect.height * ps)
-        dp = baseDp
         repeat with q2 = 1 to prop.repeatL[q]
           layerImg = member("layer" & string(dp)).image
           case (prop.colorTreatment) of
@@ -1888,6 +1879,7 @@ on DoPropTags(prop, dp, qd)
         mdPnt = (qd[1] + qd[2] + qd[3] + qd[4])/4.0
         
         repeat with r in [[point(-1,-1), color(0,0,255)], [point(-0,-1), color(0,0,255)], [point(-1,-0), color(0,0,255)], [point(-2,-2), color(0,0,255)], [point(1,1), color(255,0,0)],[point(0,1), color(255,0,0)],[point(1,0), color(255,0,0)],[point(2,2), color(255,0,0)],[point(0,0), color(0,255,0)]] then
+          
           member("layer" & string(restrict(dp, 0, 29))).image.copyPixels(img, rect(-60,-60,60,60)+rect(mdPnt,mdPnt)+rect(r[1],r[1]), rect(0,0,120,120), {#ink:36, #color:r[2]})
           
         end repeat

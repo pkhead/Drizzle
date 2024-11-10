@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading.Channels;
 using Serilog;
 
 namespace Drizzle.Lingo.Runtime;
@@ -99,6 +100,32 @@ public struct LingoColor : IEquatable<LingoColor>
     public override int GetHashCode()
     {
         return HashCode.Combine(RedByte, GreenByte, BlueByte);
+    }
+
+    public LingoNumber this[LingoNumber index] {
+        get {
+            return index.IntValue switch {
+                1 => red,
+                2 => green,
+                3 => blue,
+                _ => 0
+            };
+        }
+        set {
+            switch (index.IntValue) {
+                case 1:
+                    red = value;
+                    break;
+                case 2:
+                    green = value;
+                    break;
+                case 3:
+                    blue = value;
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 
     public static bool operator ==(LingoColor left, LingoColor right)

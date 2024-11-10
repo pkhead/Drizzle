@@ -2,13 +2,7 @@ global projects, ldPrps, gTEprops, gTiles, gLEProps, gEEprops, gLightEProps
 global gLEVEL, gLOprops, gLoadedName, gLOADPATH, massRenderSelectL, showControls
 
 on exitFrame me
---  if showControls then
---    sprite(32).blend = 100
---  else
---    sprite(32).blend = 0
---  end if
-  
-  if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+  if checkMinimize() then
     _player.appMinimize()
     
   end if
@@ -116,9 +110,9 @@ on exitFrame me
   if _key.keyPressed("A") and _movie.window.sizeState <> #minimized then
     
     
-    repeat with project in projects then
-      if ( massRenderSelectL.getPos(pth &project) = 0)and(chars(project, 1, 1) <> "#")then
-        massRenderSelectL.add(pth & project)
+    repeat with qStr in projects then
+      if ( massRenderSelectL.getPos(pth &qStr) = 0)and(chars(qStr, 1, 1) <> "#")then
+        massRenderSelectL.add(pth & qStr)
       end if
     end repeat
   else if _key.keyPressed("C") and _movie.window.sizeState <> #minimized then

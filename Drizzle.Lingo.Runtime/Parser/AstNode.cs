@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -29,6 +29,8 @@ public static class AstNode
     ) : Base;
 
     public sealed record ExitRepeat : Base;
+
+    public sealed record NextRepeat : Base;
 
     public sealed record Global(
         string[] Identifiers
@@ -212,6 +214,13 @@ public static class AstNode
     ) : Base;
 
     public sealed record RepeatWithCounter(
+        string Variable,
+        Base Start,
+        Base Finish,
+        StatementBlock Block
+    ) : Base;
+
+    public sealed record RepeatWithDownTo(
         string Variable,
         Base Start,
         Base Finish,

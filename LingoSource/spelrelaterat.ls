@@ -1,14 +1,11 @@
-
 on giveGridPos(pos: point)
   type return: point
-  -- pos = pos + point(8, 8)
-  return point(((pos.locH.float/20.0)+0.4999).integer, ((pos.locV.float/20.0)+0.4999).integer)
+  return point(((pos.locH.float / 20.0) + 0.4999).integer, ((pos.locV.float / 20.0) + 0.4999).integer)
 end
 
 on giveMiddleOfTile(pos: point)
   type return: point
-  --pos = pos - point(8, 8)
-  return point((pos.locH*20)-10, (pos.locV*20)-10)-- - point(8,8)
+  return point(pos.locH * 20 - 10, pos.locV * 20 - 10)
 end
 
 on restrict(val, low, high)
@@ -23,19 +20,17 @@ end
 
 on restrictWithFlip(val: number, low: number, high: number)
   type return: number
-  if val<low then
-    return val + (high-low)+1
-  else if val > high then
-    return val - (high-low)-1
+  if (val < low) then
+    return val + (high - low) + 1
+  else if (val > high) then
+    return val - (high - low) - 1
   else
     return val
   end if
 end
 
---/ Get the tile type of the tile on the specified position & layer.
 on afaMvLvlEdit(pos: point, layer: number)
   type return: number
-
   global gLEProps, gLOprops
   if pos.inside(rect(1, 1, gLOprops.size.locH + 1, gLOprops.size.locV + 1)) then
     return gLEProps.matrix[pos.locH][pos.locV][layer][1]
@@ -43,8 +38,6 @@ on afaMvLvlEdit(pos: point, layer: number)
     return 1
   end if
 end
-
-
 
 on solidAfaMv(pos: point, layer: number)
   type return: number
@@ -66,22 +59,30 @@ on seedForTile(tile: point, effectSeed: number)
   return effectSeed + tile.locH + tile.locV * gLEprops.matrix.count
 end
 
+on rotateToQuadFix(rct, deg)
+  mdpt = point((rct.left + rct.right) * 0.5, (rct.top + rct.bottom) * 0.5)
+  halfWidth = (rct.right - rct.left) / 2.0
+  halfHeight = (rct.bottom - rct.top) / 2.0
+  if deg.float mod 360.0 = 0.0 then return [point(rct.left, rct.top), point(rct.right, rct.top), point(rct.right, rct.bottom), point(rct.left, rct.bottom)]
+  else if deg.float mod 360.0 = 180.0 then return [point(rct.right, rct.bottom), point(rct.left, rct.bottom), point(rct.left, rct.top), point(rct.right, rct.top)]
+  else if deg.float mod 360.0 = 90.0  then return [mdpt + point(-halfHeight, halfWidth), mdpt + point(-halfHeight, -halfWidth), mdpt + point(halfHeight, -halfWidth), mdpt + point(halfHeight, halfWidth)]
+  else if deg.float mod 360.0 = 270.0 then return [mdpt + point(halfHeight, -halfWidth), mdpt + point(halfHeight, halfWidth),   mdpt + point(-halfHeight, halfWidth), mdpt + point(-halfHeight, -halfWidth)]
+  else return rotateToQuad(rct, deg)
+end
 
-
-on copyPixelsToEffectColor(gdLayer: string, lr: number, rct, getMember, gtRect: rect, zbleed: number, blnd: number)
+on copyPixelsToEffectColor(gdLayer: string, lr: number, rct, getMember, gtRect: rect, zbleed: number, blnd)
   global DRPxl
-  if (blnd = void) then
+  if (blnd = VOID) then
     blnd = 1.0
   end if
   if (gdLayer <> "C") and (blnd > 0) then
     lr = lr.integer
-    if lr < 0 then lr = 0
-    else if lr > 29 then lr = 29
-    
+    if (lr < 0) then lr = 0
+    else if (lr > 29) then lr = 29
     gtImg: image = member(getMember).image
-    if (blnd <> 0)and(blnd <> void) then
+    if (blnd <> 0) and (blnd <> VOID) then
       dmpImg: image = gtImg.duplicate()
-      dmpImg.copyPixels(DRPxl, dmpImg.rect, rect(0,0,1,1), {#blend:100.0*(1.0-blnd), #color:color(255, 255, 255)})
+      dmpImg.copyPixels(DRPxl, dmpImg.rect, rect(0, 0, 1, 1), {#blend:100.0 * (1.0 - blnd), #color:color(255, 255, 255)})
       gtImg = dmpImg
     end if   
     member("gradient" & gdLayer & string(lr)).image.copyPixels(gtImg, rct, gtRect, {#ink:39})
@@ -92,8 +93,8 @@ on copyPixelsToEffectColor(gdLayer: string, lr: number, rct, getMember, gtRect: 
         gtImg = dmpImg
       end if
       nxt: number = lr + 1
-      if nxt > 29 then nxt = 29
-      member("gradient"&gdLayer&string(nxt)).image.copyPixels(gtImg, rct, gtRect, {#ink:39})
+      if (nxt > 29) then nxt = 29
+      member("gradient" & gdLayer & string(nxt)).image.copyPixels(gtImg, rct, gtRect, {#ink:39})
       nxt = lr - 1
       if (nxt < 0) then nxt = 0
       member("gradient" & gdLayer & string(nxt)).image.copyPixels(gtImg, rct, gtRect, {#ink:39})
@@ -137,26 +138,19 @@ on copyPixelsToRootEffectColor(gdLayer, lr, rct, getMember, gtRect, zbleed, blnd
 end
 
 on makeSilhoutteFromImg(img: image, inverted: number)
-  global DRPxl
   type return: image
-  --/ I don't even know if this function gets used with anything with a depth != 32
-  --/ but if it does let's just guard this since makeSilhouette can't handle anything else.
-  if img.depth = 32 or img.depth = 1 then
-    return img.makeSilhouette(inverted)
-  end if
-
-  inv: image = image(img.width, img.height, 1)
-  inv.copyPixels(DRPxl, img.rect, rect(0,0,1,1), {#color:255})
-  inv.copyPixels(img,img.rect,img.rect, {#ink:36, #color:color(255,255,255)})
-  if inverted=0 then
-    inv = makeSilhoutteFromImg( inv, 1)
+  global DRPxl
+  inv = image(img.width, img.height, 1)
+  inv.copyPixels(DRPxl, img.rect, rect(0, 0, 1, 1), {#color:255})
+  inv.copyPixels(img, img.rect, img.rect, {#ink:36, #color:color(255, 255, 255)})
+  if (inverted = 0) then
+    inv = makeSilhoutteFromImg(inv, 1)
   end if
   return inv
 end
 
 on rotateToQuad(rct: rect, deg: number)
   type return: list
-
   dir: point = degToVec(deg.float)
   midPnt: point = point((rct.left + rct.right) * 0.5, (rct.top + rct.bottom) * 0.5)
   tlr: point = dir * rct.height * 0.5
@@ -166,9 +160,7 @@ on rotateToQuad(rct: rect, deg: number)
   return [topPnt + tlr, topPnt - tlr, bottomPnt - tlr, bottomPnt + tlr]
 end
 
-on giveDirFor90degrToLineLB(pnt1: point, pnt2: point)
-  type return: point
-
+on giveDirFor90degrToLineLB(pnt1, pnt2)
   X1: number = pnt1.locH
   Y1: number = pnt1.locV
   X2: number = pnt2.locH
@@ -187,7 +179,6 @@ end
 
 on dirVecLB(pointA: point, pointB: point)
   type return: point
-
   pointB = pointB - pointA
   if (pointB = point(0, 0)) then
     return point(0, 1)
@@ -198,7 +189,6 @@ end
 
 on rotateToQuadLB(rct: rect, dir: point)
   type return: list
-
   midPnt: point = point((rct.left + rct.right) * 0.5, (rct.top + rct.bottom) * 0.5)
   tlr: point = dir * rct.height * 0.5
   topPnt: point = midPnt + tlr
@@ -212,21 +202,17 @@ on flipQuadH(qd: list)
   return [qd[2], qd[1], qd[4], qd[3]]
 end
 
-
-
-
 on pasteShortCutHole(mem: string, pnt: point, dp: number, cl)
-  --cl here takes both string and color input
   global gLEProps, gLOprops, gCameraProps, gCurrentRenderCamera, gRenderCameraTilePos, gRenderCameraPixelPos
-  rctCenter: point = giveMiddleOfTile(pnt) - (gRenderCameraTilePos*20) - gRenderCameraPixelPos
-  rctCenter = depthPnt(rctCenter, dp)
-  rct: rect = rect(rctCenter,rctCenter)+rect(-10, -10, 10, 10)
-  
+  rct = giveMiddleOfTile(pnt) - (gRenderCameraTilePos * 20) - gRenderCameraPixelPos
+  rct = depthPnt(rct, dp)
+  rct = rect(rct, rct) + rect(-10, -10, 10, 10)
   idString: string = ""
-  repeat with dr in [point(-1,0), point(0,-1), point(1,0), point(0,1)] then
-  type dr: point
-    if (pnt+dr).inside(rect(1,1,gLOprops.size.loch,gLOprops.size.locv)) then
-      if (gLEProps.matrix[pnt.locH+dr.locH][pnt.locV+dr.locV][1][2].getPos(5)>0)or(gLEProps.matrix[pnt.locH+dr.locH][pnt.locV+dr.locV][1][2].getPos(4)>0)then
+  repeat with dr in [point(-1, 0), point(0, -1), point(1, 0), point(0, 1)]
+    type dr: point
+    if (pnt + dr).inside(rect(1, 1, gLOprops.size.loch, gLOprops.size.locv)) then
+      matProp = gLEProps.matrix[pnt.locH + dr.locH][pnt.locV + dr.locV][1][2]
+      if (matProp.getPos(5) > 0) or (matProp.getPos(4) > 0) then
         idString = idString & "1"
       else
         idString = idString & "0"
@@ -235,40 +221,23 @@ on pasteShortCutHole(mem: string, pnt: point, dp: number, cl)
       idString = idString & "0"
     end if
   end repeat
-  
   ps: number = ["0101", "1010", "1111", "1100", "0110", "0011", "1001", "1110", "0111", "1011", "1101", "0000"].getPos(idString)
-  
-  if cl = "BORDER" then
-    clL: list = []
-    clL.add([color(255, 0, 0), point(-1,0)])
-    clL.add([color(255, 0, 0), point(0,-1)])
-    clL.add([color(255, 0, 0), point(-1,-1)])
-    clL.add([color(255, 0, 0), point(-2,0)])
-    clL.add([color(255, 0, 0), point(0,-2)])
-    clL.add([color(255, 0, 0), point(-2,-2)])
-    
-    clL.add([color(0, 0, 255), point(1,0)])
-    clL.add([color(0, 0, 255), point(0,1)])
-    clL.add([color(0, 0, 255), point(1,1)])
-    clL.add([color(0, 0, 255), point(2,0)])
-    clL.add([color(0, 0, 255), point(0,2)])
-    clL.add([color(0, 0, 255), point(2,2)])
+  type clL: list
+  if (cl = "BORDER") then
+    clL = [[color(255, 0, 0), point(-1, 0)], [color(255, 0, 0), point(0, -1)], [color(255, 0, 0), point(-1, -1)], [color(255, 0, 0), point(-2, 0)], [color(255, 0, 0), point(0, -2)], [color(255, 0, 0), point(-2, -2)], [color(0, 0, 255), point(1, 0)], [color(0, 0, 255), point(0, 1)], [color(0, 0, 255), point(1, 1)], [color(0, 0, 255), point(2, 0)], [color(0, 0, 255), point(0, 2)], [color(0, 0, 255), point(2, 2)]]
   else
     clL = [[cl, point(0, 0)]]
   end if
-  
+  shortCutsGraf = member("shortCutsGraf").image
   memImage: image = member(mem).image
   getShCtRect: rect = rect(20 * (ps - 1), 1, 20 * ps, 21)
-  repeat with c in clL then
+  repeat with c in clL
     type c: list
-    memImage.copyPixels(member("shortCutsGraf").image, rct+rect(c[2], c[2]), getShCtRect, {#ink:36, #color:c[1]})
+    memImage.copyPixels(shortCutsGraf, rct + rect(c[2], c[2]), getShCtRect, {#ink:36, #color:c[1]})
   end repeat
 end
 
-
-
-
-on resizeLevel(sze: point, addTilesLeft: number, addTilesTop: number)
+on resizeLevel(sze: point, addTilesLeft: number, addTilesTop: number)--nt
   global gLEprops, gLOProps, gTEprops, gEEprops
   newMatrix: list = []
   newTEmatrix: list = []
@@ -292,7 +261,7 @@ on resizeLevel(sze: point, addTilesLeft: number, addTilesTop: number)
       if (q+addTilesLeft<=gTEprops.tlMatrix.count)and(c+addTilesTop<=gTEprops.tlMatrix[1].count)and(q-addTilesLeft>0)and(c-addTilesTop>0)then
         adder = gTEprops.tlMatrix[q-addTilesLeft][c-addTilesTop]
       else
-        adder = [[#tp:"default", #data:0], [#tp:"default", #data:0], [#tp:"default", #data:0]]
+        adder: list = [[#tp:"default", #data:0], [#tp:"default", #data:0], [#tp:"default", #data:0]]
       end if
       ql.add(adder)
     end repeat
@@ -301,14 +270,13 @@ on resizeLevel(sze: point, addTilesLeft: number, addTilesTop: number)
   
   
   repeat with effect in gEEprops.effects then
-    newEffMtrx: list = []
+    newEffMtrx = []
     
     repeat with q = 1 to sze.locH + addTilesLeft then
       ql = []
       repeat with c = 1 to sze.locV + addTilesTop then
         if (q+addTilesLeft<=effect.mtrx.count)and(c+addTilesTop<=effect.mtrx[1].count)and(q-addTilesLeft>0)and(c-addTilesTop>0)then
-          adder = effect.mtrx[q-addTilesLeft][c-addTilesTop]
-          ql.add(adder)
+          ql.add(effect.mtrx[q-addTilesLeft][c-addTilesTop])
         else
           ql.add(0)
         end if

@@ -1,38 +1,26 @@
-global r, gEEprops, solidMtrx, gRenderCameraTilePos, effectIn3D
+global r, gEEprops, solidMtrx, gRenderCameraTilePos, effectIn3D, DRWhite, DRPxl, DRPxlRect
 
-on DRFSlimeApply(q, c)
+on DRFSlimeApply(q, c, effectR)
   q2 = q + gRenderCameraTilePos.locH
   c2 = c + gRenderCameraTilePos.locV
-  
-  effectR = gEEprops.effects[r]
   tlPnt = point(q2, c2)
   sldMtrxLoc = solidMtrx[q2][c2]
   openAreas = effectR.affectOpenAreas
   efMtrx = effectR.mtrx[q2][c2]
   efRep = effectR.repeats
-  pixL = member("pxl").image
-  pixLRct = pixL.rect
-  whiteLoc = color(255, 255, 255)
-  
   fc = openAreas + (1.0 - openAreas) * (solidAfaMv(tlPnt, 3))
-  
   repeat with d = 1 to 30
     lr = 30 - d
-    
     flgPnt = 1 + (d > 9) + (d > 19)
-    
     if (lr = 9) or (lr = 19) then
       sld = (sldMtrxLoc[flgPnt])
       fc = openAreas + (1.0 - openAreas) * (solidAfaMv(tlPnt, flgPnt))
     end if
     deepEffect = 0
-    
     if (lr = 0) or (lr = 10) or (lr = 20) or (sld = 0) then
       deepEffect = 1
     end if
-    
     imgLr = member("layer" & string(lr)).image
-    
     mxCtr = efMtrx * (0.2 + (0.8 * deepEffect)) * 0.01 * efRep * fc
     repeat with cntr = 1 to mxCtr
       if (deepEffect) then
@@ -44,9 +32,8 @@ on DRFSlimeApply(q, c)
           pnt = (point(q - 1, c - 1) * 20) + point(random(20), 1 + 19 * (random(2) - 1))
         end if
       end if 
-      
       cl = imgLr.getPixel(pnt)     
-      if (cl <> whiteLoc) then
+      if (cl <> DRWhite) then
         ofst = random(2) - 1
         lgt = 3 + random(random(random(6)))
         if (effectIn3D) then
@@ -54,16 +41,13 @@ on DRFSlimeApply(q, c)
         else
           nwLr = restrict(lr - 1 + random(2), 0, 29)
         end if
-        
         nwImg = member("layer" & string(nwLr)).image
-        
         pntRct = rect(pnt, pnt)
-        
-        nwImg.copyPixels(pixL, pntRct + rect(ofst, 0, 1 + ofst, lgt), pixLRct, {#color:cl})
+        nwImg.copyPixels(DRPxl, pntRct + rect(ofst, 0, 1 + ofst, lgt), DRPxlRect, {#color:cl})
         if (random(2) = 1) then
-          nwImg.copyPixels(pixL, pntRct + rect(ofst + 1, 1, 2 + ofst, lgt - 1), pixLRct, {#color:cl})
+          nwImg.copyPixels(DRPxl, pntRct + rect(ofst + 1, 1, 2 + ofst, lgt - 1), DRPxlRect, {#color:cl})
         else
-          nwImg.copyPixels(pixL, pntRct + rect(ofst - 1, 1, ofst, lgt - 1), pixLRct, {#color:cl})
+          nwImg.copyPixels(DRPxl, pntRct + rect(ofst - 1, 1, ofst, lgt - 1), DRPxlRect, {#color:cl})
         end if
       end if
     end repeat
@@ -79,10 +63,3 @@ on DRFGet3DLr(lr)
   end if
   return nwLr
 end
-
---on cpy(me, source, imgRect, sourceRect, props)
---  x = 0
---  y = 0
---  repeat while x <> sourceRect.wi
---end
---

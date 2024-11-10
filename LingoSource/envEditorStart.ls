@@ -2,7 +2,6 @@ global gLOprops, gLeProps, gEnvEditButtons, gLastEnvEditButtons
 
 
 on exitFrame me
-  _movie.exitLock = TRUE
   cols = gLOprops.size.loch
   rows = gLOprops.size.locv
   

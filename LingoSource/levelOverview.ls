@@ -1,4 +1,4 @@
-global gLOprops, gBlurOptions, gEditLizard, gLevel, gLEprops, gLoadedName, levelName, gPrioCam, snapToGrid, preciseSnap, stg, ps, lvlPropOutput, showControls, hideHelpClick
+global gLOprops, gLevel, gLEprops, gLoadedName, levelName, gPrioCam, snapToGrid, preciseSnap, stg, ps, lvlPropOutput, showControls, hideHelpClick
 
 on exitFrame me
   if (showControls) then
@@ -61,122 +61,11 @@ on buttonClicked me, bttn
       _movie.go(11)
     "button load project":
       _movie.go(2)
-      --  #pal:1, totPalettes:2, #eCol1:1, #eCol2:2, #totEcols:2]
-    "button previous palette":
-      gLOprops.pal = gLOprops.pal - 1
-      if gLOprops.pal < 1 then
-        gLOprops.pal = gLOprops.pals.count
-      end if
-      sprite(21).member = member("libPal" & string(gLOprops.pal))
-      member("palName").text = gLOprops.pals[gLOprops.pal].name
-      gBlurOptions = [#blurLight:gLOprops.pals[gLOprops.pal].blurLight, #blurSky:gLOprops.pals[gLOprops.pal].blurSky]
-    "button next palette":
-      gLOprops.pal = gLOprops.pal + 1
-      if gLOprops.pal > gLOprops.pals.count then
-        gLOprops.pal = 1
-      end if
-      sprite(21).member = member("libPal" & string(gLOprops.pal))
-      member("palName").text = gLOprops.pals[gLOprops.pal].name
-      gBlurOptions = [#blurLight:gLOprops.pals[gLOprops.pal].blurLight, #blurSky:gLOprops.pals[gLOprops.pal].blurSky]
-    "button previous EC1":
-      gLOprops.eCol1 = gLOprops.eCol1 - 1
-      if gLOprops.eCol1 < 1 then
-        gLOprops.eCol1 = gLOprops.totEcols
-      end if
-      sprite(22).member = member("ecol" & string(gLOprops.eCol1))
-    "button next EC1":
-      gLOprops.eCol1 = gLOprops.eCol1 + 1
-      if gLOprops.eCol1 > gLOprops.totEcols then
-        gLOprops.eCol1 = 1
-      end if
-      sprite(22).member = member("ecol" & string(gLOprops.eCol1))
-    "button previous EC2":
-      gLOprops.eCol2 = gLOprops.eCol2 - 1
-      if gLOprops.eCol2 < 1 then
-        gLOprops.eCol2 = gLOprops.totEcols
-      end if
-      sprite(23).member = member("ecol" & string(gLOprops.eCol2))
-    "button next EC2":
-      gLOprops.eCol2 = gLOprops.eCol2 + 1
-      if gLOprops.eCol2 > gLOprops.totEcols then
-        gLOprops.eCol2 = 1
-      end if
-      sprite(23).member = member("ecol" & string(gLOprops.eCol2))
-    "button more flies":
-      gEditLizard[2] = restrict(gEditLizard[2]+1, 0, 40)
-      member("addLizardFlies").text = string(gEditLizard[2])
-    "button less flies":
-      gEditLizard[2] = restrict(gEditLizard[2]-1, 0, 40)
-      member("addLizardFlies").text = string(gEditLizard[2])
-    "button more time":
-      gEditLizard[3] = restrict(gEditLizard[3]+1, 0, 4000)
-      member("addLizardTime").text = string(gEditLizard[3])
-    "button less time":
-      gEditLizard[3] = restrict(gEditLizard[3]-1, 0, 4000)
-      member("addLizardTime").text = string(gEditLizard[3])
-    "button super more time":
-      gEditLizard[3] = restrict(gEditLizard[3]+100, 0, 4000)
-      member("addLizardTime").text = string(gEditLizard[3])
-    "button super less time":
-      gEditLizard[3] = restrict(gEditLizard[3]-100, 0, 4000)
-      member("addLizardTime").text = string(gEditLizard[3])
-    "button lizard hole":
-      me.nextHole()
-    "button delete lizard":
-      if gLevel.lizards.count > 0 then
-        gLevel.lizards.deleteAt(gLevel.lizards.count)
-        me.updateLizardsList()
-      end if
-    "button add lizard":
-      if gEditLizard[4]>0 then
-        if gLevel.lizards.count < 4 then
-          gLevel.lizards.add(gEditLizard.duplicate())
-          me.updateLizardsList()
-        end if
-      end if
-      if gEditLizard[1]<>"yellow" then
-        me.nextHole()
-      end if
-      
-    "button lizard color":
-      l1 = ["pink", "green", "blue", "white", "red", "yellow"]
-      curr = 1
-      repeat with q = 1 to l1.count then
-        if gEditLizard[1]=l1[q] then
-          curr = q
-          exit repeat
-        end if
-      end repeat
-      curr = curr + 1
-      if curr > l1.count then
-        curr = 1
-      end if
-      gEditLizard[1] = l1[curr]
-      sprite(43).color = [color(255, 0, 255), color(0,255,0), color(0, 100, 255), color(255, 255, 255), color(255,0,0), color(255,200,0)][curr]
-      
     "button standard medium":
       gLevel.defaultTerrain = 1-gLevel.defaultTerrain
       sprite(112).loc = point(312,312)+point(-1000+1000*gLevel.defaultTerrain, 0)
     "button light type":
       gLOprops.light = 1-gLOprops.light
-    "button next color glow 1":
-      gLOprops.colGlows[1] = gLOprops.colGlows[1] + 1
-      if gLOprops.colGlows[1] > 2 then
-        gLOprops.colGlows[1] = 0
-      end if
-      l = ["Dull", "Reflective", "Superflourescent"]
-      member("color glow effects").text = l[gLOprops.colGlows[1]+1] && return && l[gLOprops.colGlows[2]+1]
-    "button next color glow 2":
-      gLOprops.colGlows[2] = gLOprops.colGlows[2] + 1
-      if gLOprops.colGlows[2] > 2 then
-        gLOprops.colGlows[2] = 0
-      end if
-      l = ["Dull", "Reflective", "Superflourescent"]
-      member("color glow effects").text = l[gLOprops.colGlows[1]+1] && return && l[gLOprops.colGlows[2]+1]
-      
-    "button sound editor":
-      _movie.go(18)
-      
     "button mass render":
       global   massRenderSelectL 
       massRenderSelectL = []
@@ -324,7 +213,7 @@ on goToEditor me
     goFrm = 23
   else  if _key.keyPressed("9") and _movie.window.sizeState <> #minimized then
     goFrm = 30
-  else if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+  else if checkMinimize() then
     _player.appMinimize()
   else if checkExit() then
     _player.quit()
@@ -344,23 +233,6 @@ on goToEditor me
   
   
   if goFrm <> 0 then
-    repeat with q = 1 to 5 then
-      sound(q).stop()
-    end repeat
-    
-    global gSEprops
-    
-    if gSEprops.sounds <> void then
-      gLevel.ambientSounds = []
-      repeat with q = 1 to 4 then
-        if (gSEprops.sounds[q].mem <> "none")and(gSEprops.sounds[q].vol > 0) then
-          gLevel.ambientSounds.add(gSEprops.sounds[q].duplicate())
-          gSEprops.sounds[q].mem = "None"
-        end if
-      end repeat
-      gSEprops.sounds = void
-    end if
-    
     repeat with q = 1 to 22 then
       sprite(q).visibility = 1
     end repeat
@@ -370,85 +242,3 @@ on goToEditor me
     _movie.go(goFrm)
   end if
 end
-
-
-
-
-
-
-
-
-
-
-
-on updateLizardsList me
-  l1 = ["pink", "green", "blue", "white", "red", "yellow"]
-  l2 = [color(255, 0, 255), color(0,255,0), color(0, 100, 255), color(255, 255, 255), color(255,0,0), color(255,200,0)]
-  
-  
-  lz = []
-  repeat with q = 1 to gLOprops.size.loch then
-    repeat with c = 1 to gLOprops.size.locv then
-      if gLEprops.matrix[q][c][1][2].getPos(7)>0 then
-        lz.add(point(q,c))
-      end if
-    end repeat
-  end repeat
-  
-  if lz <> [] then
-    
-    repeat with q = 1 to gLevel.lizards.count then
-      member("lizard"&q&"text").text = gLevel.lizards[q][1] && "- Flies:"&& gLevel.lizards[q][2] && "- Time:" && gLevel.lizards[q][3]
-      sprite(51+q).color = l2[l1.getPos(gLevel.lizards[q][1])]
-      sprite(55+q).color = l2[l1.getPos(gLevel.lizards[q][1])]
-      if gLevel.lizards[q][4] > lz.count then
-        gLevel.lizards[q][4] = lz.count
-      end if
-      pnt1 = (lz[gLevel.lizards[q][4]]*10)+point(52, 112)+point(-5,-5)
-      pnt2 = point(sprite(51+q).rect.left, sprite(51+q).rect.top+sprite(51+q).rect.height*0.5)
-      sprite(55+q).rect = rect(pnt1, pnt2) 
-      sprite(55+q).member = member("line" & (1+(pnt1.locV>pnt2.locV)))
-    end repeat
-    repeat with q = gLevel.lizards.count+1 to 4 then
-      member("lizard"&q&"text").text = ""
-      sprite(55+q).rect = rect(-100,-100,-100,-100)
-    end repeat
-  else
-    repeat with q = 1 to 4 then
-      member("lizard"&q&"text").text = ""
-      sprite(55+q).rect = rect(-100,-100,-100,-100)
-    end repeat
-  end if
-end 
-
-
-on nextHole me
-  global gLoprops
-  lz = []
-  repeat with q = 1 to gLOprops.size.loch then
-    repeat with c = 1 to gLOprops.size.locv then
-      if gLEprops.matrix[q][c][1][2].getPos(7)>0 then
-        lz.add(point(q,c))
-      end if
-    end repeat
-  end repeat
-  if lz <> [] then
-    gEditLizard[4] = gEditLizard[4] + 1
-    if gEditLizard[4]>lz.count then
-      gEditLizard[4] = 1
-    end if
-    pnt = (lz[gEditLizard[4]]*10)+point(52, 112)+point(-5,-5)
-    sprite(60).rect = rect(pnt,pnt)+rect(-5,-5,5,5)
-  else
-    sprite(60).rect = rect(-5,-5,-5,-5)
-  end if
-end 
-
-
-
-
-
-
-
-
-

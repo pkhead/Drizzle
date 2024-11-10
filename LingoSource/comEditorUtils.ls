@@ -1,60 +1,58 @@
-global gLoadedName, INT_EXIT, INT_EXRD, DRInternalList, DRFirstTileCat, DRLastMatCat
-global RandomMetals_allowed, RandomMetals_grabTiles, ChaoticStone2_needed, DRRandomMetal_needed, SmallMachines_grabTiles, SmallMachines_forbidden
-global RandomMachines_forbidden, RandomMachines_grabTiles, RandomMachines2_forbidden, RandomMachines2_grabTiles, DRBevelColors
+global gLoadedName, INT_EXIT, INT_EXRD, DRInternalList, DRFirstTileCat, DRLastMatCat, RandomMetals_allowed, RandomMetals_grabTiles, ChaoticStone2_needed, DRRandomMetal_needed, SmallMachines_grabTiles, SmallMachines_forbidden, RandomMachines_forbidden, RandomMachines_grabTiles, RandomMachines2_forbidden, RandomMachines2_grabTiles, DRBevelColors, CommsDrizzle
 
 on clearLogs()
   --type fl: dynamic
   --type return: void
-  --member("logText").text = "Rain World Community Editor; V.0.4.21; Editor exception log"
-  --member("DEBUGTR").text = "Rain World Community Editor; V.0.4.21; Large trash log"
-  --fl = new xtra("fileio")
-  --fl.openFile(the moviePath & "editorExceptionLog.txt", 0)
-  --fl.delete()
-  --fl.createFile(the moviePath & "editorExceptionLog.txt")
-  --fl.openFile(the moviePath & "editorExceptionLog.txt", 0)
-  --fl.writeString(member("logText").text)
-  --fl.closeFile()
-  --fl.openFile(the moviePath & "largeTrashLog.txt", 0)
-  --fl.delete()
-  --fl.createFile(the moviePath & "largeTrashLog.txt")
-  --fl.openFile(the moviePath & "largeTrashLog.txt", 0)
-  --fl.writeString(member("DEBUGTR").text)
-  --fl.closeFile()
+  member("logText").text = "Rain World Community Editor; V.0.4.51; Editor exception log"
+  member("DEBUGTR").text = "Rain World Community Editor; V.0.4.51; Large trash log"
+  fl = new xtra("fileio")
+  fl.openFile(the moviePath & "editorExceptionLog.txt", 0)
+  fl.delete()
+  fl.createFile(the moviePath & "editorExceptionLog.txt")
+  fl.openFile(the moviePath & "editorExceptionLog.txt", 0)
+  fl.writeString(member("logText").text)
+  fl.closeFile()
+  fl.openFile(the moviePath & "largeTrashLog.txt", 0)
+  fl.delete()
+  fl.createFile(the moviePath & "largeTrashLog.txt")
+  fl.openFile(the moviePath & "largeTrashLog.txt", 0)
+  fl.writeString(member("DEBUGTR").text)
+  fl.closeFile()
 end
 
 on writeException(tp, msg)--(tp: string, msg: dynamic)
   --type fileOpener: dynamic
   --type return: void
-  --member("logText").text = member("logText").text&RETURN&string(gLoadedName)&" ! "&string(tp)&" Exception : "&string(msg)
-  --fileOpener = new xtra("fileio")
-  --fileOpener.openFile(the moviePath & "editorExceptionLog.txt", 0)
-  --fileOpener.writeString(member("logText").text)
-  --fileOpener.writeReturn(#windows)
+  member("logText").text = member("logText").text&RETURN&string(gLoadedName)&" ! "&string(tp)&" Exception : "&string(msg)
+  fileOpener = new xtra("fileio")
+  fileOpener.openFile(the moviePath & "editorExceptionLog.txt", 0)
+  fileOpener.writeString(member("logText").text)
+  fileOpener.writeReturn(#windows)
 end
 
 on writeMessage(msg)--(msg: dynamic)
   --type fileOpener: dynamic
   --type return: void
-  --member("logText").text = member("logText").text&RETURN&string(gLoadedName)&" : "&string(msg)
-  --fileOpener = new xtra("fileio")
-  --fileOpener.openFile(the moviePath & "editorExceptionLog.txt", 0)
-  --fileOpener.writeString(member("logText").text)
-  --fileOpener.writeReturn(#windows)
+  member("logText").text = member("logText").text&RETURN&string(gLoadedName)&" : "&string(msg)
+  fileOpener = new xtra("fileio")
+  fileOpener.openFile(the moviePath & "editorExceptionLog.txt", 0)
+  fileOpener.writeString(member("logText").text)
+  fileOpener.writeReturn(#windows)
 end
 
 on writeInfoMessage(msg)--(msg: dynamic)
   --type fileOpener: dynamic
   --type return: void
-  --member("logText").text = member("logText").text&RETURN&"Info : "&string(msg)
-  --fileOpener = new xtra("fileio")
-  --fileOpener.openFile(the moviePath & "editorExceptionLog.txt", 0)
-  --fileOpener.writeString(member("logText").text)
-  --fileOpener.writeReturn(#windows)
+  member("logText").text = member("logText").text&RETURN&"Info : "&string(msg)
+  fileOpener = new xtra("fileio")
+  fileOpener.openFile(the moviePath & "editorExceptionLog.txt", 0)
+  fileOpener.writeString(member("logText").text)
+  fileOpener.writeReturn(#windows)
 end
 
 on writeInternalMessage(msg)--(msg: dynamic)
   --type return: void
-  --member("logText").text = member("logText").text&RETURN&string(gLoadedName)&" : "&string(msg)
+  member("logText").text = member("logText").text&RETURN&string(gLoadedName)&" : "&string(msg)
 end
 
 on outputInternalLog()
@@ -98,31 +96,31 @@ on exportAll()
   --type objFileio: dynamic
   --type objImg: dynamic
   --type return: void
-  --pth = the moviePath & "Export\"
-  --objFileio = new xtra("fileio")
-  --objImg = new xtra("ImgXtra")
-  --repeat with c in [_movie.castLib["Internal"], _movie.castLib["customMems"], _movie.castLib["soundCast"], _movie.castLib["levelEditor"], _movie.castLib["Drought"], _movie.castLib["Dry Editor"]]
-  --  --type c: dynamic
-  --  --type cname: string
-  --  cname = c.name & "\"
-  --  repeat with m in c.member
-  --    --type m: dynamic
-  --    --type mname: string
-  --    mname = m.name
-  --    if (mname = VOID) or (mname = "") then
-  --      mname = string(m.number)
-  --    end if
-  --    if (m.type = #bitmap) then
-  --      objImg.ix_saveImage(["image": m.image, "filename": pth & cname & mname & ".bmp", "format": "BMP"])
-  --    else if (m.type = #script) then
-  --      createFile(objFileio, pth & cname & mname & ".lingo")
-  --      objFileio.openFile(pth & cname & mname & ".lingo", 0)
-  --      objFileio.writeString(m.scriptText)
-  --      objFileio.closeFile()
-  --    end if
-  --  end repeat
-  --end repeat
-  --_movie.halt()
+  pth = the moviePath & "Export\"
+  objFileio = new xtra("fileio")
+  objImg = new xtra("ImgXtra")
+  repeat with c in [_movie.castLib["Internal"], _movie.castLib["customMems"], _movie.castLib["soundCast"], _movie.castLib["levelEditor"], _movie.castLib["Drought"], _movie.castLib["Dry Editor"], _movie.castLib["MSC"]]
+    --type c: dynamic
+    --type cname: string
+    cname = c.name & "\"
+    repeat with m in c.member
+      --type m: dynamic
+      --type mname: string
+      mname = m.name
+      if (mname = VOID) or (mname = "") then
+        mname = string(m.number)
+      end if
+      if (m.type = #bitmap) then
+        objImg.ix_saveImage(["image": m.image, "filename": pth & cname & mname & ".bmp", "format": "BMP"])
+      else if (m.type = #script) then
+        createFile(objFileio, pth & cname & mname & ".lingo")
+        objFileio.openFile(pth & cname & mname & ".lingo", 0)
+        objFileio.writeString(m.scriptText)
+        objFileio.closeFile()
+      end if
+    end repeat
+  end repeat
+  _movie.halt()
 end
 
 on getBoolConfig(str)--(str: string)
@@ -151,28 +149,54 @@ on getStringConfig(str)--(str: string)
   return "VANILLA"
 end
 
-on checkExitRender()
-  --type txt: string
+on checkMinimize()
   --type return: number
-  txt = INT_EXRD
-  if (txt = "DROUGHT") then
-    return _key.keyPressed(48) and _key.keypressed("Z") and _key.keypressed("R") and _movie.window.sizeState <> #minimized
-  else if (txt = "DRY") then
-    return _key.keyPressed(48) and _key.keypressed("X") and _key.keypressed("C") and _movie.window.sizeState <> #minimized
+  if (_movie.window.sizeState <> #minimized) then
+    if (_key.keyPressed(56)) then
+      return (_key.keyPressed(48))
+    end if
   end if
-  return _key.keyPressed(48) and _movie.window.sizeState <> #minimized
+  return FALSE
+end
+
+on checkExitRender()
+  --type return: number
+  if (_movie.window.sizeState <> #minimized) then
+    if (_key.keyPressed(48)) then
+      if (INT_EXRD = "DROUGHT") then
+        if (_key.keyPressed("Z")) then
+          return (_key.keyPressed("R"))
+        end if
+      else if (INT_EXRD = "DRY") then
+        if (_key.keyPressed("X")) then
+          return (_key.keyPressed("C"))
+        end if
+      else
+        return TRUE
+      end if
+    end if
+  end if
+  return FALSE
 end
 
 on checkExit()
-  --type txt: string
   --type return: number
-  txt = INT_EXIT
-  if (txt = "DROUGHT") then
-    return _key.keyPressed(56) and _key.keyPressed(53) and _movie.window.sizeState <> #minimized
-  else if (txt = "DRY") then
-    return _key.keyPressed(48) and _key.keypressed("X") and _key.keypressed(36) and _movie.window.sizeState <> #minimized
+  if (_movie.window.sizeState <> #minimized) then
+    if (INT_EXIT = "DROUGHT") then
+      if (_key.keyPressed(56)) then
+        return (_key.keyPressed(53))
+      end if
+    else if (INT_EXIT = "DRY") then
+      if (_key.keyPressed(48)) then
+        if (_key.keypressed(36)) then
+          return (_key.keyPressed("X"))
+        end if
+      end if
+    else
+      return (_key.keyPressed(53))
+    end if
   end if
-  return _key.keyPressed(53) and _movie.window.sizeState <> #minimized
+  return FALSE
 end
 
 on checkDRInternal(nm)--(nm: string)

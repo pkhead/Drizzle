@@ -1,10 +1,12 @@
-global gSaveProps, gTEprops, gTiles, gLEProps, gFullRender, gEEprops, gEffects, gLightEProps, gBlurOptions, lvlPropOutput
-global gLEVEL, gLOprops, gLoadedName, gSEProps, gViewRender, gMassRenderL, gCameraProps, gImgXtra, gEnvEditorProps, gPEprops, altGrafLG, gMegaTrash, showControls
-global gProps, gLOADPATH, gTrashPropOptions, solidMtrx, INT_EXIT, INT_EXRD, DRCustomMatList, DRLastTL
+global gSaveProps, gTEprops, gTiles, gLEProps, gFullRender, gEEprops, gEffects, gLightEProps, gBlurOptions, lvlPropOutput, gLEVEL, gLOprops, gLoadedName, gSEProps, gViewRender, gMassRenderL, gCameraProps, gImgXtra, gEnvEditorProps, gPEprops, altGrafLG, gMegaTrash, showControls, gProps, gLOADPATH, gTrashPropOptions, solidMtrx, INT_EXIT, INT_EXRD, DRCustomMatList, DRLastTL, gCustomEffects
 
 on exitFrame me
+  --  clearAsObjects()
+  --  clearCache
+  --  _global.clearGlobals()
+  --  _movie.halt()
   member("editorConfig").importFileInto("editorConfig.txt")
-  if (member("editorConfig").text = VOID) or (member("editorConfig").text = "") or (member("editorConfig").text.line[1] <> "Rain World Community Editor; V.0.4.31; Editor configuration file") then
+  if (member("editorConfig").text = VOID) or (member("editorConfig").text = "") or (member("editorConfig").text.line[1] <> member("baseConfig").text.line[1]) then
     fileCo = new xtra("fileio")
     fileCo.createFile(the moviePath & "editorConfig.txt")
     fileCo.openFile(the moviePath & "editorConfig.txt", 0)
@@ -14,7 +16,7 @@ on exitFrame me
     _movie.go(1)
   end if
   clearLogs()
-  if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+  if checkMinimize() then
     _player.appMinimize()
   end if
   _global.clearGlobals()
@@ -24,9 +26,6 @@ on exitFrame me
   gFullRender = 1
   gViewRender = 1
   DRLastTL = 1
-  
-  -- saveImages("C:\Temp")
-  
   gMassRenderL = []
   gLOADPATH = []
   
@@ -42,9 +41,6 @@ on exitFrame me
   
   g: number = 21
   if (g=2) then
-    -- XC_ShowCursor(0)
-    --  _player.cursor(200)
-    
     gSaveProps = [baScreenInfo("width"), baScreenInfo("height"), baScreenInfo("depth")]
     
     fac: number = gSaveProps[1].float/gSaveProps[2] .float
@@ -57,11 +53,9 @@ on exitFrame me
     midPos: point = screenResolutionPoint/2
     windowRect: rect = rect(midPos-screenSize, midPos+screenSize)
     _movie.window.rect = windowRect
-    _movie.stage.drawRect = windowRect--rect(0,0,1366, 768)
-    -- _movie.stage.drawRect = rect(0,0,180, 180)
-    --_movie.stage.drawRect = windowRect
+    _movie.stage.drawRect = windowRect
   else
-    gSaveProps = [1,1,1]--[baScreenInfo("width"), baScreenInfo("height"), baScreenInfo("depth")]
+    gSaveProps = [1,1,1]
   end if
   
   solidMtrx = []
@@ -84,18 +78,6 @@ on exitFrame me
   
   
   ResetgEnvEditorProps()
-  
-  --  if member("matrixTxtLE").text <> "" then
-  --    savMtrx = value( member("matrixTxtLE").text )
-  --    gLEProps.matrix = savMtrx[2]
-  --    if gLEProps.matrix[1][1].count = 2 then
-  --      repeat with q = 1 to cols then
-  --        repeat with c = 1 to rows then
-  --          gLEProps.matrix[q][c].add([0, []])
-  --        end repeat
-  --      end repeat
-  --    end if
-  --  else
   repeat with q = 1 to cols then
     ql: list = []
     repeat with c = 1 to rows then
@@ -103,20 +85,11 @@ on exitFrame me
     end repeat
     gLEProps.matrix.add(ql)
   end repeat
-  --  end if
-  
-  
-  gBlurOptions = [#blurLight:0, #blurSky:0]
   
   --TILEEDITOR!!!
   
   gTEprops = [#lastKeys:[], #keys:[], #workLayer:1, #lstMsPs:point(0,0), #tlMatrix:[], #defaultMaterial:"Concrete", #toolType:"material", #toolData:"Big Metal",\
   tmPos:point(1,1), #tmSavPosL:[], #specialEdit:0]
-  
-  
-  
-  --  img = member("levelEditImageShortCuts").image.duplicate()
-  -- member("levelEditImageShortCuts").image.copyPixels(img, img.rect, img.rect, {#color:0, #bgColor:255})
   
   repeat with q = 1 to cols then
     l: list = []
@@ -249,6 +222,9 @@ on exitFrame me
     member("previewTilesDR").image = image(60000, 500, 1)
   end if
   
+  moreTilePreviews = getBoolConfig("More tile previews")
+  prevw = member("previewTiles").image
+  drprevw = member("previewTilesDR").image
   repeat with q = 1 to the number of lines in sav.text then
     savTextLine: string = sav.text.line[q]
     if (savTextLine <> "") then
@@ -277,8 +253,8 @@ on exitFrame me
           calculatedHeight = 1 + vertSZ + (20 * (ad.sz.locV + (ad.bfTiles * 2)) * ad.repeatL.count)
         end if
         rct = rect(0, calculatedHeight - vertSZ, horiSZ, calculatedHeight)
-        if ((ptPos + horiSZ + 1) > member("previewTiles").image.width) and (getBoolConfig("More tile previews")) then
-          member("previewTilesDR").image.copyPixels(sav2.image, rect(drPos, 0, drPos + horiSZ, vertSZ), rct)
+        if ((ptPos + horiSZ + 1) > prevw.width) and (moreTilePreviews) then
+          drprevw.copyPixels(sav2.image, rect(drPos, 0, drPos + horiSZ, vertSZ), rct)
           ad.ptPos = drPos + 60000
           ad.addProp(#category, gTiles.count)
           if (ad.tags.getPos("notTile") = 0) then
@@ -286,7 +262,7 @@ on exitFrame me
           end if
           drPos = drPos + horiSZ + 1
         else
-          member("previewTiles").image.copyPixels(sav2.image, rect(ptPos, 0, ptPos + horiSZ, vertSZ), rct)
+          prevw.copyPixels(sav2.image, rect(ptPos, 0, ptPos + horiSZ, vertSZ), rct)
           ad.ptPos = ptPos
           ad.addProp(#category, gTiles.count)
           if (ad.tags.getPos("notTile") = 0) then
@@ -318,12 +294,12 @@ on exitFrame me
   member("initImport").importFileInto("Props" & the dirSeparator & "Init.txt")
   sav.name = "initImport"
   
-  repeat with q = 1 to 1000 then
+  repeat with q = 1 to 1000 ---- PJB fix 2000 --> 1000
     (member q of castLib 2).erase()
   end repeat
   
-  repeat with q = 1 to the number of lines in sav.text then
-    savTextLine: string = sav.text.line[q]
+  repeat with q = 1 to the number of lines in sav.text
+    savTextLine = sav.text.line[q]
     if (savTextLine <> "") then
       if (savTextLine.char[1] = "-") then
         vl = value(savTextLine.char[2..savTextLine.length])
@@ -339,7 +315,7 @@ on exitFrame me
         ad.addProp(#category, gProps.count)
         if (ad.tp = "standard") or (ad.tp = "variedStandard") then
           dp: number = 0
-          repeat with i = 1 to ad.repeatL.count then
+          repeat with i = 1 to ad.repeatL.count
             dp = dp + ad.repeatL[i]
           end repeat
           ad.addProp(#depth, dp)
@@ -353,15 +329,16 @@ on exitFrame me
   gPageTick: number = 0
   
   --CAT CHANGE
-  repeat with q = getFirstTileCat() to gTiles.count then
-    repeat with c = 1 to gTiles[q].tls.count then
+  rndDisF = getBoolConfig("voxelStructRandomDisplace for tiles as props")
+  tAsPFixes = getBoolConfig("Tiles as props fixes")
+  repeat with q = getFirstTileCat() to gTiles.count
+    repeat with c = 1 to gTiles[q].tls.count
       if gPageTick = 0 then
         gPageTick = 21
         gPageCount = gPageCount + 1
         gProps.add([#nm:"Tiles as props " & gPageCount, #clr:color(255, 0,0), #prps:[]])
       end if
       tl = gTiles[q].tls[c]
-      rndDisF = getBoolConfig("voxelStructRandomDisplace for tiles as props")
       if((tl.tp = "voxelStruct") or (tl.tp = "voxelStructRandomDisplaceVertical" and rndDisF) or (tl.tp = "voxelStructRandomDisplaceHorizontal" and rndDisF))and(tl.tags.getPos("notProp") = 0)then
         --Ugly part Ik
         nTP = ""
@@ -426,7 +403,7 @@ on exitFrame me
           INTE = "INTERNAL"
         end if
         --End ugly part
-        if (getBoolConfig("Tiles as props fixes")) then
+        if (tAsPFixes) then
           if (tl.rnd > 1)then
             ad = [#nm:tl.nm, #tp:"variedStandard", #colorTreatment:"standard", #sz:tl.sz + point(tl.bfTiles*2, tl.bfTiles*2), #depth:10 + (tl.specs2 <> [])*10, #repeatL:tl.repeatL, #vars:tl.rnd, #random:1, #tags:["Tile", nTP, eCAT, eCBT, dcT, cCT, cCRT, rRT, rFXT, rFYT, cST, cSBT, lST, lSBT, INTE, NMTP], #layerExceptions:[], #notes:["Tile as prop"]]
           else
@@ -501,7 +478,7 @@ on exitFrame me
   
   gTrashPropOptions = []
   gMegaTrash = []
-  
+  ntrashPFix = getBoolConfig("notTrashProp fix")
   repeat with q = 1 to gProps.count then
     repeat with c = 1 to gProps[q].prps.count then
       gProps[q].prps[c].addProp(#settings, [:])
@@ -527,7 +504,7 @@ on exitFrame me
             end if
             
           else
-            if(gProps[q].prps[c].sz.locH < 5)and(gProps[q].prps[c].sz.locV < 5) and (gProps[q].prps[c].tags.getPos("INTERNAL") = 0) and (gProps[q].prps[c].tags.getPos("notTrashProp") = 0 or getBoolConfig("notTrashProp fix") = FALSE) then
+            if(gProps[q].prps[c].sz.locH < 5)and(gProps[q].prps[c].sz.locV < 5) and (gProps[q].prps[c].tags.getPos("INTERNAL") = 0) and (gProps[q].prps[c].tags.getPos("notTrashProp") = 0 or ntrashPFix = FALSE) then
               gTrashPropOptions.add(point(q,c))
               if(gProps[q].prps[c].sz.locH < 3)or(gProps[q].prps[c].sz.locV < 3)then
                 gTrashPropOptions.add(point(q,c))
@@ -585,8 +562,8 @@ on exitFrame me
           gProps[q].prps[c].notes.add("The tube can be colored white through the settings.")
       end case
       
-      repeat with t in gProps[q].prps[c].tags then
-        case t of
+      repeat with tstr in gProps[q].prps[c].tags then
+        case tstr of
           "customColor":
             gProps[q].prps[c].settings.addProp(#color, 0)
             gProps[q].prps[c].notes.add("Custom color available")
@@ -604,7 +581,7 @@ on exitFrame me
   savEf = member("effectsInit")
   member("effectsInit").importFileInto("effectsInit.txt")
   savEf.name = "effectsInit"
-  if (savEf.text = VOID) or (savEf.text = "") or (savEf.text.line[1] <> "Rain World Community Editor; V.0.4.31; Editor effects initialisation file") then
+  if (savEf.text = VOID) or (savEf.text = "") or (savEf.text.line[1] <> member("baseEffectsInit").text.line[1]) then
     fileEf = new xtra("fileio")
     fileEf.createFile(the moviePath & "effectsInit.txt")
     fileEf.openFile(the moviePath & "effectsInit.txt", 0)
@@ -733,7 +710,8 @@ on exitFrame me
     gEffects.add([#nm:"LB Natural", #efs:[]])
     gEffects[gEffects.count].efs.add( [#nm:"Colored Barnacles"]    )
     gEffects[gEffects.count].efs.add( [#nm:"Colored Rubble"]    )
-    gEffects[gEffects.count].efs.add( [#nm:"Fat Slime"]    )
+    gEffects[gEffects.count].efs.add([#nm:"Fat Slime"])
+    gEffects[gEffects.count].efs.add([#nm:"Sand"])
     
     gEffects.add([#nm:"LB Artificial", #efs:[]])
     gEffects[gEffects.count].efs.add( [#nm:"Assorted Trash"]    )
@@ -773,7 +751,50 @@ on exitFrame me
     gEffects[gEffects.count].efs.add([#nm:"Ice Growers"])
     gEffects[gEffects.count].efs.add([#nm:"Grass Growers"])
     gEffects[gEffects.count].efs.add([#nm:"Fancy Growers"])
+    
+    gEffects.add([#nm:"LudoCrypt Plants", #efs:[]])
+    gEffects[gEffects.count].efs.add([#nm:"Mushroom Stubs"])
+    
+    gEffects.add([#nm:"Alduris Effects", #efs:[]])
+    gEffects[gEffects.count].efs.add([#nm:"Mosaic Plants"])
+    gEffects[gEffects.count].efs.add([#nm:"Lollipop Mold"])
+    gEffects[gEffects.count].efs.add([#nm:"Cobwebs"])
   end if
+  
+  -- Custom effects
+  sav = member("initImport")
+  sav.text = ""
+  member("initImport").importFileInto("Effects" & the dirSeparator & "Init.txt")
+  sav.name = "initImport"
+  
+  didNewHeading = 0
+  gCustomEffects = []
+  repeat with q = 1 to the number of lines in sav.text
+    savTextLine = sav.text.line[q]
+    if (savTextLine <> "") then
+      if (savTextLine.char[1] = "-") then
+        didNewHeading = 1
+        vl: list = value(savTextLine.char[2..savTextLine.length])
+        gEffects.add([#nm:vl, #efs:[]])
+      else if (value(savTextLine) = VOID) then
+        writeException("Effects Init Error", "Line " && q && " is malformed in the Init.txt file from your Effects folder.")
+      else
+        ad = value(savTextLine)
+
+        -- New heading if needed
+        if didNewHeading = 0 then
+          gEffects.add([#nm:"Custom Effects", #efs:[]])
+          writeException("Effects Init Error", "Effects/Init.txt does not begin with a category. Creating temporary category, but please create one yourself.")
+          didNewHeading = 1
+        end if
+        
+        -- Ok add the effect
+        gEffects[gEffects.count].efs.add(ad)
+        gCustomEffects.append(ad.nm)
+
+      end if
+    end if
+  end repeat
   
   gEEprops = [#lastKeys:[], #keys:[], #lstMsPs:point(0,0), #effects:[], emPos:point(1,1), #editEffect:0, #selectEditEffect:0, #mode:"createNew", #brushSize:5]
   
@@ -784,18 +805,11 @@ on exitFrame me
   
   
   gLOprops = [#mouse:0, #lastMouse:0, #mouseClick:0, #pal:1, pals:[[#detCol:color(255, 0, 0)]], #eCol1:1, #eCol2:2, #totEcols:5, #tileSeed:random(400), #colGlows:[0,0], #size:point(cols, rows), #extraTiles:[12,3,12,5], #light:1]
-  -- gLOProps.pals = []--, , , ,,]
-  
   
   new(script"levelEdit_parentscript", 1)
   --new(script"levelEdit_parentscript", 2)
   
   gCameraProps = [#cameras:[point(gLOprops.size.locH*10, gLOprops.size.locV*10)-point(35*20, 20*20)], #selectedCamera:0, #quads:[[[0,0], [0,0], [0,0], [0,0]]], #keys:[#n:0, #d:0, #e:0, #p:0], #lastKeys:[#n:0, #d:0, #e:0, #p:0]]
-  
-  gSEProps = [#sounds:void, #ambientSounds:[], #songs:[], #rects:[], #pickedUpSound:"NONE"]
-  
-  
-  
   
   repeat with mem in ["rainBowMask","blackOutImg1","blackOutImg2"] then
     type mem: string
@@ -820,6 +834,7 @@ on exitFrame me
       member("DEBUGTR").text = member("DEBUGTR").text & RETURN & gProps[gTrashPropOptions[tr].locH].prps[gTrashPropOptions[tr].locV].nm
     end repeat
     fileOpener = new xtra("fileio")
+    fileOpener.createFile(the moviePath & "largeTrashLog.txt")
     fileOpener.openFile(the moviePath & "largeTrashLog.txt", 0)
     fileOpener.writeString(member("DEBUGTR").text)
     fileOpener.writeReturn(#windows)

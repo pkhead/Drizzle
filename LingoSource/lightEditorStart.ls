@@ -1,7 +1,6 @@
 global gTEprops, gTiles, gEEprops, gLightEProps, firstFrame, geverysecond, glgtimgQuad, gDirectionKeys,gLOprops
 
 on exitFrame me
-  _movie.exitLock = TRUE
   firstFrame = 1
   l = [ #m1:1, m2:0, #w:0, #a:0, #s:0, #d:0, #r:0, f:0]
   gLightEProps.lastKeys = l.duplicate()

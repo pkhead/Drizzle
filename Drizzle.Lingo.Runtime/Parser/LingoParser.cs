@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -541,13 +541,22 @@ public static class LingoParser
                     StatementBlock),
 
                 // repeat with .. = .. to ..
-                Map((varName, start, end, block) =>
+                Try(Map((varName, start, end, block) =>
                         (AstNode.Base)new AstNode.RepeatWithCounter(varName, start, end, block),
                     Identifier.Before(Tok('=')),
                     Expression.Before(Tok("to")),
                     Expression.Before(BTok("then").Optional()),
                     StatementBlock
-                ).TraceBegin("repeat with =")
+                ).TraceBegin("repeat with =")),
+
+                // repeat with .. = .. down to ..
+                Try(Map((varName, start, end, block) =>
+                        (AstNode.Base)new AstNode.RepeatWithDownTo(varName, start, end, block),
+                    Identifier.Before(Tok('=')),
+                    Expression.Before(Tok("down to")),
+                    Expression.Before(BTok("then").Optional()),
+                    StatementBlock
+                ).TraceBegin("repeat with ="))
             )).Before(Tok("end")).Before(Tok("repeat"));
 
     private static readonly Parser<char, AstNode.Base> Repeat =
@@ -729,6 +738,10 @@ public static class LingoParser
             .Then(Tok("repeat").Optional())
             .Select(r => r.HasValue ? (AstNode.Base)new AstNode.ExitRepeat() : new AstNode.Return(null));
 
+    private static readonly Parser<char, AstNode.Base> NextRepeat =
+        Try(Tok("next repeat"))
+            .Select(_ => (AstNode.Base)new AstNode.NextRepeat());
+
     private static readonly Parser<char, AstNode.TypeSpec> TypeSpec =
         Try(BTok("type")).TraceBegin("global begin")
             .Then(Identifier.Before(Tok(':')))
@@ -740,6 +753,7 @@ public static class LingoParser
                 Exit.TraceBegin("Statement -> exit"),
                 Case.TraceBegin("Statement -> case"),
                 Repeat.TraceBegin("Statement -> repeat"),
+                NextRepeat.TraceBegin("Statement -> next repeat"),
                 If.TraceBegin("Statement -> if"),
                 PutInto.TraceBegin("Statement -> put into"),
                 Try(Assignment.Cast<AstNode.Base>()).TraceBegin("Statement -> assignment"),

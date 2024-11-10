@@ -6,8 +6,6 @@ on exitFrame me
   snapToGrid = 0
   stg = 0
   ps = 0
-  _movie.exitLock = TRUE
-  
   member("propMenu").alignment = #left
   
   member("TEimg1").image = image(52*16, 40*16, 16)
@@ -79,9 +77,9 @@ on exitFrame me
   gPEprops.pmPos = point(1,1)
   
   --version fix
-  repeat with prop in gPeProps.props then
-    actualSettings = prop[5].settings
-    idealSettings = gProps[prop[3].loch].prps[prop[3].locV].settings
+  repeat with qb in gPeProps.props then
+    actualSettings = qb[5].settings
+    idealSettings = gProps[qb[3].loch].prps[qb[3].locV].settings
     repeat with i = 1 to idealSettings.count then
       smbl = idealSettings.getPropAt(i)
       if(actualSettings.findpos(smbl) = void)then

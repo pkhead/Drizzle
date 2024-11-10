@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -115,6 +115,9 @@ public sealed partial class LingoGlobal
     public static LingoNumber power(LingoNumber @base, LingoNumber exp) => LingoNumber.Pow(@base, exp);
     public static LingoSymbol symbol(string s) => new(s);
 
+    public static LingoNumber max(LingoNumber a, LingoNumber b) => LingoNumber.Max(a, b);
+    public static LingoNumber min(LingoNumber a, LingoNumber b) => LingoNumber.Min(a, b);
+
     public void put(object d)
     {
         Console.WriteLine(d);
@@ -178,6 +181,8 @@ public sealed partial class LingoGlobal
         Math.Clamp((int)r, 0, 255),
         Math.Clamp((int)g, 0, 255),
         Math.Clamp((int)b, 0, 255));
+
+    public LingoColor rgb(LingoNumber r, LingoNumber g, LingoNumber b) => color(r, g, b);
 
     public LingoColor color(LingoNumber palIdx) => palIdx;
 

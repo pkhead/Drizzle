@@ -348,6 +348,9 @@ internal static class Program
             case AstNode.ExitRepeat exitRepeat:
                 WriteExitRepeat(exitRepeat, ctx, indent);
                 break;
+            case AstNode.NextRepeat nextRepeat:
+                WriteNextRepeat(nextRepeat, ctx, indent);
+                break;
             case AstNode.Case @case:
                 WriteCase(@case, ctx, indent);
                 break;
@@ -356,6 +359,9 @@ internal static class Program
                 break;
             case AstNode.RepeatWithCounter repeatWithCounter:
                 WriteRepeatWithCounter(repeatWithCounter, ctx, indent);
+                break;
+            case AstNode.RepeatWithDownTo repeatWithDownToCounter:
+                WriteRepeatWithDownTo(repeatWithDownToCounter, ctx, indent);
                 break;
             case AstNode.RepeatWithList repeatWithList:
                 WriteRepeatWithList(repeatWithList, ctx, indent);
@@ -495,6 +501,22 @@ internal static class Program
         // ctx.LoopTempIdx--;
     }
 
+    private static void WriteRepeatWithDownTo(AstNode.RepeatWithDownTo node, HandlerContext ctx, int indent)
+    {
+        var start = WriteExpression(node.Start, ctx);
+        var end = WriteExpression(node.Finish, ctx);
+        var name = node.Variable;
+        var loopTmp = $"tmp_{name}";
+
+        ctx.Writer.WriteLine($"{Indent(indent)}for (int {loopTmp} = (int) ({start}); {loopTmp} >= {end}; {loopTmp}--)\n{Indent(indent)}{{");
+
+        MakeLoopTmp(ctx, name, $"(LingoNumber){loopTmp}", number: true, indent + 1);
+        WriteStatementBlock(node.Block, ctx, indent + 1);
+
+        ctx.Writer.WriteLine($"{Indent(indent + 1)}{loopTmp} = (int){WriteVariableNameCore(name, ctx)};");
+        ctx.Writer.WriteLine($"{Indent(indent)}}}");
+    }
+
     private static void MakeLoopTmp(HandlerContext ctx, string name, string loopTmp, bool number, int indent)
     {
         if (!IsGlobal(name, ctx, out _) && ctx.Locals.Add(name))
@@ -594,6 +616,11 @@ internal static class Program
     private static void WriteExitRepeat(AstNode.ExitRepeat node, HandlerContext ctx, int indent)
     {
         ctx.Writer.WriteLine($"{Indent(indent)}break;");
+    }
+
+    private static void WriteNextRepeat(AstNode.NextRepeat node, HandlerContext ctx, int indent)
+    {
+        ctx.Writer.WriteLine($"{Indent(indent)}continue;");
     }
 
     private static void WriteReturn(AstNode.Return ret, HandlerContext ctx, int indent)
