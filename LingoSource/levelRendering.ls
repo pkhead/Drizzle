@@ -1,9 +1,9 @@
-global gLEProps, gSkyColor, gTEprops, gLastImported, tileSetIndex, gTiles, gTinySignsDrawn, gLOprops
+global gLEProps, gTEprops, gLastImported, tileSetIndex, gTiles, gTinySignsDrawn, gLOprops
 global gRenderCameraTilePos, gRenderCameraPixelPos, gRenderTrashProps, gMegaTrash, gDRMatFixes, gDRInvI, gRRSpreadsMore
 global RandomMetals_allowed, RandomMetals_grabTiles, ChaoticStone2_needed, DRRandomMetal_needed, SmallMachines_forbidden, SmallMachines_grabTiles, RandomMachines_grabTiles, RandomMachines_forbidden, RandomMachines2_forbidden, RandomMachines2_grabTiles
 
 on renderLevel()
-  if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+  if checkMinimize() then
     _player.appMinimize()
     
   end if
@@ -13,15 +13,11 @@ on renderLevel()
   
   tm = _system.milliseconds
   
-  gSkyColor = color(0,0,0)
   gTinySignsDrawn = 0
   
   gRenderTrashProps = []
   
   RENDER = 0
-  
-  -- member("shortCutSymbolsImg").image = image(1040, 800, 1)
-  -- saveLvl()
   cols = 100--gLOprops.size.loch
   rows = 60--gLOprops.size.locv
   
@@ -76,80 +72,54 @@ on setUpLayer(layer)
   frntImg = image(cols*20, rows*20, 32)
   mdlFrntImg = image(cols*20, rows*20, 32)
   mdlBckImg = image(cols*20, rows*20, 32)
-  
-  -- pltt = [member("currentPalette").image.getPixel(0+ofst, 0), member("currentPalette").image.getPixel(1+ofst, 0), member("currentPalette").image.getPixel(2+ofst, 0)]
-  
   poleCol = color(255,0,0)
-  -- if gLOProps.pals[gLOProps.pal].detCol <> color(255,0,0) then
-  --  poleCol = color(0,0,255)
-  -- end if
-  
-  
-  -- floorsL = []
-  --/ drawLaterTiles and drawLastTiles contain lists of tiles that need drawing. Each entry is [random, x, y].
-  --/ the random value is so that sort() will shuffle the list, effectively.
-  --/ resulting in a random drawing order of tiles.
   drawLaterTiles = []
   drawLastTiles = []
   shortCutEntrences = []
   shortCuts = []
   -- depthPnt(pnt, dpt)
-  --/ Go over every visible tile.
   repeat with q = 1 to cols then
     repeat with c = 1 to rows then
       -- if((q >= gRenderCameraTilePos.locH)and(q < gRenderCameraTilePos.locH + cols)and(c >= gRenderCameraTilePos.locV)and(c < gRenderCameraTilePos.locV + rows))or(checkIfTileHasMaterialRenderTypeTiles(point(q,c), layer))then
       if(q+gRenderCameraTilePos.locH > 0)and(q+gRenderCameraTilePos.locH <= gLOprops.size.locH)and(c+gRenderCameraTilePos.locV > 0)and(c+gRenderCameraTilePos.locV <= gLOprops.size.locV)then
-        --/ absolute position (not camera relative)
         ps = point(q,c)+gRenderCameraTilePos
         
-        --/ tile type
         tp = gLEProps.matrix[ps.loch][ps.locV][layer][1]
         
-        --/ Go over tile features for some behavior
+        
         repeat with t in gLEProps.matrix[ps.locH][ps.locV][layer][2] then
           case t of
-            --/ Draw poles to mdlFrntImg if this tile has any.
             1:
-              --/ vertical pole
               rct = rect((q-1)*20, (c-1)*20, q*20, c*20)+rect(0, 8, 0, -8)--rect(gRenderCameraTilePos,gRenderCameraTilePos)*20
               mdlFrntImg.copyPixels(member("pxl").image, rct, member("pxl").image.rect, {color:poleCol})
             2:
-              --/ horizontal pole
               rct = rect((q-1)*20, (c-1)*20, q*20, c*20)+rect(8, 0, -8, 0)--rect(gRenderCameraTilePos,gRenderCameraTilePos)*20
               mdlFrntImg.copyPixels(member("pxl").image, rct, member("pxl").image.rect, {color:poleCol})
             3:
               -- rct = rect((q-1)*20, (c-1)*20, q*20, c*20)--+rect(0, 8, 0, -8)
               --   mdlFrntImg.copyPixels(member("hiveGrass").image, rct, member("hiveGrass").image.rect, {color:pltt[1]})
             4:
-              --/ shortcut entrance.
-              --/ Tile has a shortcut entrance, pretend it's solid wall for rendering so it looks filled.
               tp = 1
           end case
         end repeat
         
         --drawATile(q, c, layer)
         --  put gLEProps.matrix[q][c][layer][1]
-        --/ wait what 7 isn't a valid tile type ???
-        --/ not sure this code's being used.
         if (gLEProps.matrix[ps.locH][ps.locV][1][1] = 7)and(layer=1) then
           shortCutEntrences.add([random(1000), ps.locH, ps.locV])
         else
-          --/ Check if tile has a shortcut
-          if gLEProps.matrix[ps.locH][ps.locV][1][2].getPos(5)<>0 then
+          
+          if gLEProps.matrix[ps.locH][ps.locV][1][2].getPos(5)<>0 then--------------------
             if layer = 1 then
-              --/ tile must be solid.
               if gLEProps.matrix[ps.locH][ps.locV][1][1]=1 then
-                --/ shortcuts only valid on default or material tiles, I think.
-                if ["material", "default"].getPos(gTEprops.tlMatrix[ps.locH][ps.locV][layer].tp) <> 0 then
+                if ["material", "default"].getPos(gTEprops.tlMatrix[ps.locH][ps.locV][layer].tp) <> 0 then--------------------
                   shortCuts.add(point(ps.locH,ps.locV))
                 end if
               end if 
             else if layer = 2 then
-              --/ IF first layer not solid and second layer solid
               if gLEProps.matrix[ps.locH][ps.locV][2][1]=1 then
                 if gLEProps.matrix[ps.locH][ps.locV][1][1]<>1 then
-                  --/ shortcuts only valid on default or material tiles, I think.
-                  if ["material", "default"].getPos(gTEprops.tlMatrix[ps.locH][ps.locV][layer].tp) <> 0 then
+                  if ["material", "default"].getPos(gTEprops.tlMatrix[ps.locH][ps.locV][layer].tp) <> 0 then--------------------
                     shortCuts.add(point(ps.locH,ps.locV))
                   end if
                 end if 
@@ -157,18 +127,14 @@ on setUpLayer(layer)
             end if
           end if
           
-          --/ Add tiles to draw list.
           if gTEprops.tlMatrix[ps.locH][ps.locV][layer].tp = "tileHead" then
             dt = gTEprops.tlMatrix[ps.locH][ps.locV][layer].data
-            --/ Tile-tiles are added to last draw list if they have the tag for it. 
-            if (gTiles[dt[1].locH].tls[dt[1].locV].tags.getPos("drawLast")<>0) then
+            if (gTiles[dt[1].locH].tls[dt[1].locV].tags.getPos("drawLast")<>0) then--------------------
               drawLastTiles.add([random(999), ps.locH, ps.locV])
             else
               drawLaterTiles.add([random(999), ps.locH, ps.locV])
             end if
           else if gTEprops.tlMatrix[ps.locH][ps.locV][layer].tp <> "tileBody" then
-            --/ don't render tileBody directly, that's done from the head.
-            --/ otherwise add to draw list.
             drawLaterTiles.add([random(999), ps.locH, ps.locV])
           end if
           
@@ -179,11 +145,8 @@ on setUpLayer(layer)
     end repeat
   end repeat
   
-  --/ shuffle list, see above comment about randomness.
+  
   drawLaterTiles.sort()
-
-  --/ drawMaterials contains all tiles grouped by their material, as well as that material's render type.
-  --/ indxr has the names of the materials in drawMaterials so you can findpos to index into it.
   drawMaterials = []
   indxer = []
   --CAT CHANGE
@@ -369,7 +332,7 @@ on setUpLayer(layer)
   
   
   
-  --/ Render shortcuts
+  
   --shortCuts.sort()
   repeat with tl in shortCuts then
     if (shortCuts.getPos(tl+point(-1,0))>0)and((shortCuts.getPos(tl+point(1,0))>0))then--------------------
@@ -426,7 +389,7 @@ on setUpLayer(layer)
   member("layer"&string(dpt)).image.copyPixels(frntImg, frntImg.rect, frntImg.rect, {#ink:36})
   
   
-  --/ ADD CRACKS
+  --ADD CRACKS
   d = 0
   if layer = 2 then
     d = 10
@@ -477,7 +440,7 @@ on setUpLayer(layer)
     end repeat
   end repeat
   
-  --/ POLES ADDED AFTER CRACKS
+  -- POLES ADDED AFTER CRACKS
   member("layer"&string(dpt+4)).image.copyPixels(mdlFrntImg, mdlFrntImg.rect, mdlFrntImg.rect, {#ink:36})
   --  --ADD POLES (AGAIN)
   --  repeat with q = 1 to 52 then
@@ -516,7 +479,9 @@ end
 
 on drawATileMaterial(q: number, c: number, l: number, mat: string, frntImg: image)
   type dp: number
+
   global gLOprops, gEEprops, gAnyDecals
+  
   if l = 1 then
     dp = 0
   else if l = 2 then
@@ -525,11 +490,6 @@ on drawATileMaterial(q: number, c: number, l: number, mat: string, frntImg: imag
     dp = 20
   end if
   rct = rect((q-1)*20, (c-1)*20, q*20, c*20)
-  --  if ["Standard", "Concrete", "RainStone", "Rough Rock", "Steel", "Bricks", "BigMetal", "Tiny Signs", "Scaffolding", "Cliff", "Non-Slip Metal", "Sand Block", "SuperStructure", "SuperStructure2", "Stained Glass",  "ElectricMetal", "CageGrate", "Grate", "BulkMetal", "MassiveBulkMetal"].getPos(mat)>0 then
-  --    myTileSet = mat
-  --  else
-  --    myTileSet = tileSetIndex.getPos(mat)
-  --  end if
   myTileSet = mat
   if (mat = "Scaffolding") and (gDRMatFixes) then
     myTileSet = mat & "DR"
@@ -857,21 +817,21 @@ end
 on isMyTileSetOpenToThisTile(mat: string, tl: point, l: number)
   type return: number
   global gLOprops
+  rtrn = 0
   if tl.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1))then
     if [1,2,3,4,5].getPos(gLEProps.matrix[tl.locH][tl.locV][l][1]) > 0 then
       if (gTEprops.tlMatrix[tl.locH][tl.locV][l].tp = "material")and(gTEprops.tlMatrix[tl.locH][tl.locV][l].data = mat) then
-        return 1
+        rtrn = 1
       else if (gTEprops.tlMatrix[tl.locH][tl.locV][l].tp = "default")and(gTEprops.defaultMaterial=mat) then
-        return 1
+        rtrn = 1
       end if
     end if
   else
     if gTEprops.defaultMaterial=mat then
-      return 1
+      rtrn = 1
     end if
   end if
-
-  return 0
+  return rtrn
 end
 
 
@@ -924,6 +884,7 @@ end
 
 
 on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
+  
   global gAnyDecals
   
   --INTERNAL
@@ -950,8 +911,7 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
   type getrct:  rect
   type rnd:     number
   type d:       number
-
-
+  
   colored = (tl.tags.GetPos("colored") > 0)
   if(colored)then
     gAnyDecals = 1
@@ -973,6 +933,7 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
       nmOfTiles = tl.sz.locH*tl.sz.locV
       type nmOfTiles: number
       
+      
       n = 1
       type n: number
       repeat with g = strt.locH to strt.locH + tl.sz.locH-1 then
@@ -984,7 +945,18 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
           member("vertImg").image.copyPixels(tileImage, rct, getrct, {#ink:36})
           getrct = rect(0, (n-1)*20, 20, n*20)
           member("horiImg").image.copyPixels(tileImage, rct, getrct, {#ink:36})
-          n = n + 1  
+          --          if(colored)then
+          --            if (tl.tags.GetPos("effectColorA") = 0) and (tl.tags.GetPos("effectColorB") = 0) then
+          --              member("horiDc").image.copyPixels(tileImage, rct, getrct+rect(tl.sz.locH*20+(40*tl.bfTiles),0,tl.sz.locH*20+(40*tl.bfTiles), 0), {#ink:36})
+          --            end if
+          --          end if
+          --          if(effectColorA)then
+          --            member("horiGradA").image.copyPixels(tileImage, rct, getrct+rect(tl.sz.locH*20+(40*tl.bfTiles),0,tl.sz.locH*20+(40*tl.bfTiles), 0), {#ink:36})
+          --          end if
+          --          if(effectColorB)then
+          --            member("horiGradB").image.copyPixels(tileImage, rct, getrct+rect(tl.sz.locH*20+(40*tl.bfTiles),0,tl.sz.locH*20+(40*tl.bfTiles), 0), {#ink:36})
+          --          end if
+          n = n + 1
         end repeat
       end repeat
       rct = rect(strt*20, (strt+tl.sz)*20)+rect(-20*tl.bfTiles, -20*tl.bfTiles, 20*tl.bfTiles, 20*tl.bfTiles)+rect(-20, -20, -20, -20)
@@ -1032,6 +1004,7 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
         end if
       end if
       
+      
       frntImg.copyPixels(tileImage, rct, gtRect + rect(gtRect.width*(rnd-1), 0, gtRect.width*(rnd-1), 0)+rect(0,1,0,1), {#ink:36})
       
       
@@ -1047,7 +1020,7 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
             member("layer"&string(d+dp)).image.copyPixels(tileImage, rct, gtRect + rect(gtRect.width*(rnd-1),gtRect.height*(ps-1), gtRect.width*(rnd-1), gtRect.height*(ps-1))+rect(0,1,0,1), {#ink:36})
             
             if(colored)then
-              if (tl.tags.GetPos("effectColorA") = 0) and (tl.tags.GetPos("effectColorB") = 0) then
+              if (effectColorA = FALSE) and (effectColorB = FALSE) then
                 member("layer"&string(d+dp)&"dc").image.copyPixels(tileImage, rct, gtRect + rect(gtRect.width*(rnd-1),gtRect.height*(ps-1), gtRect.width*(rnd-1), gtRect.height*(ps-1))+rect(0,1,0,1)+rect((tl.sz.locH*20+(40*tl.bfTiles))*tl.rnd,0,(tl.sz.locH*20+(40*tl.bfTiles))*tl.rnd, 0), {#ink:36})
               end if
             end if
@@ -1086,7 +1059,7 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
       type gtRect2: rect
       type rct1: rect
       type rct2: rect
-
+      
       if tl.tp = "voxelStructRandomDisplaceVertical" then
         the randomSeed = gLOprops.tileSeed + q
         dsplcPoint: number = random(gtRect.height)
@@ -1117,7 +1090,7 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
           else
             member("layer"&string(d+dp)).image.copyPixels(tileImage, rct1, gtRect1 + rect(0,gtRect.height*(ps-1), 0, gtRect.height*(ps-1))+rect(0,1,0,1), {#ink:36})
             if(colored)then
-              if (tl.tags.GetPos("effectColorA") = 0) and (tl.tags.GetPos("effectColorB") = 0) then
+              if (effectColorA = FALSE) and (effectColorB = FALSE) then
                 member("layer"&string(d+dp)&"dc").image.copyPixels(tileImage, rct1, gtRect1 + rect(0,gtRect.height*(ps-1), 0, gtRect.height*(ps-1))+rect(0,1,0,1)+rect(tl.sz.locH*20+(40*tl.bfTiles),0,tl.sz.locH*20+(40*tl.bfTiles), 0), {#ink:36})
               end if
             end if
@@ -1132,7 +1105,7 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
             
             member("layer"&string(d+dp)).image.copyPixels(tileImage, rct2, gtRect2 + rect(0,gtRect.height*(ps-1), 0, gtRect.height*(ps-1))+rect(0,1,0,1), {#ink:36})
             if(colored)then
-              if (tl.tags.GetPos("effectColorA") = 0) and (tl.tags.GetPos("effectColorB") = 0) then
+              if (effectColorA = FALSE) and (effectColorB = FALSE) then
                 member("layer"&string(d+dp)&"dc").image.copyPixels(tileImage, rct2, gtRect2 + rect(0,gtRect.height*(ps-1), 0, gtRect.height*(ps-1))+rect(0,1,0,1)+rect(tl.sz.locH*20+(40*tl.bfTiles),0,tl.sz.locH*20+(40*tl.bfTiles), 0), {#ink:36})
               end if
             end if
@@ -1170,7 +1143,7 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
         member("layer"&string(d)).image.copyPixels(tileImage, rct, gtRect + rect(gtRect.width*(rnd-1), 0, gtRect.width*(rnd-1), 0)+rect(0,1,0,1), {#ink:36})
         
         if(colored)then
-          if (tl.tags.GetPos("effectColorA") = 0) and (tl.tags.GetPos("effectColorB") = 0) then
+          if (effectColorA = FALSE) and (effectColorB = FALSE) then
             member("layer"&string(d)&"dc").image.copyPixels(tileImage, rct, gtRect + rect(gtRect.width*(rnd-1), 0, gtRect.width*(rnd-1), 0)+rect(0,1,0,1)+rect((tl.sz.locH*20+(40*tl.bfTiles))*tl.rnd,0,(tl.sz.locH*20+(40*tl.bfTiles))*tl.rnd, 0), {#ink:36})
           end if
         end if
@@ -1211,12 +1184,12 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
         end if
       end repeat
   end case
-
+  
   repeat with tag in tl.tags then
     type tag: string
 
     type img: image
-    type r:   list
+    type r: list
     case tag of
       "Chain Holder":
         if (dt.count > 2)then
@@ -1234,11 +1207,11 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
             
             global gLOProps
             
-            steps:  number = ((diag(ps1, ps2)/12.0)+0.4999).integer
-            dr:     point = moveToPoint(ps1, ps2, 1.0)
-            ornt:   number = random(2)-1
+            steps: number = ((diag(ps1, ps2)/12.0)+0.4999).integer
+            dr: point = moveToPoint(ps1, ps2, 1.0)
+            ornt: number = random(2)-1
             degDir: number = lookatpoint(ps1, ps2)
-            stp:    number = random(100)*0.01
+            stp: number = random(100)*0.01
             repeat with q = 1 to steps then
               pos: point = ps1+(dr*12*(q-stp))
               if ornt then
@@ -1632,7 +1605,8 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
         end repeat
         
         actualTlPs = point(q,c) + gRenderCameraTilePos
-        type actualtlps: point
+        type actualrlps: point
+        
         
         
         nextIsFloor = 0
@@ -1644,9 +1618,8 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
             end if
           end if
         end if
-        
         prevIsFloor = 0
-        type previsfloor: number
+        type prevIsFloor: number
         if(actualTlPs.locH-8 > 0)then
           if(gTEProps.tlMatrix[actualTlPs.locH-8][actualTlPs.locV][l].tp = "tileHead")then
             if(gTEProps.tlMatrix[actualTlPs.locH-8][actualTlPs.locV][l].data[2] = "Temple Floor")then
@@ -1716,7 +1689,7 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
         end repeat
         
         copyPixelsToEffectColor("A", dp + 1, rect(mdPnt+point(-43,-53),mdPnt+point(43,53)), "largeSignGrad2", rect(0, 0, 86, 106), 1, 1.0)
-
+        
       "Larger Sign B":
         -- put "BIG SIGN"
         img = image(80+6,100+6,1)
@@ -2147,7 +2120,7 @@ on drawWVTypeTile(mat, tl, layer)
   end repeat
 end
 
---on drawWVTagTile(q, c, l, tl, frntImg, effectColorA, effectColorB, colored, tileImage)
+--on drawWVTagTile(q, c, l, tl, frntImg, effectColorA, effectColorB, colored, sav2)
 --  strt = point(q, c)
 --  tlt = 7
 --  case afaMvLvlEdit(strt, l) of
@@ -2327,9 +2300,8 @@ on drawLargeTrashTypeTile(mat, tl, layer, frntImg)
   
   
   --  pos = 
-  
   type pos: point
-
+  
   if(distanceToAir < 3)then
     global gTrashPropOptions, gProps
     
@@ -2750,81 +2722,6 @@ on drawDirtClot(pos, dp, var, layer, distanceToAir)
     end repeat
   end if
 end
-
---on drawSandMat (mat, tl, layer, frntImg)
---  savSeed = the randomSeed
---  global gEEprops, gLOprops
---  dCl = "C"
---  dCol = color(0,255,0)
---  repeat with nav = 1 to gEEprops.effects.count then
---    if(gEEprops.effects[nav].nm = "Sand")then
---      case gEEprops.effects[nav].options[3][3] of
---        "EffectColor1":
---          dCl = "A"
---          dCol = color(255,0,255)
---        "EffectColor2":
---          dCl = "B"
---          dCol = color(0,255,255)
---        otherwise:
---          dCl = "C"
---          dCol = color(0,255,0)
---      end case
---    end if
---  end repeat
---  
---  if(dCl = "A")or(dCl = "B")then
---    gAnyDecals = true
---  end if
---  the randomSeed = seedForTile(tl, gLOprops.tileSeed + layer)
---  pnt = giveMiddleOfTile(tl-gRenderCameraTilePos)
---  pnt1 = pnt + point(-5+random(9), -5+random(9))
---  pnt2 = pnt + point(-3+random(5), -3+random(5))
---  pnt3 = pnt + point(-5+random(11), -5+random(11))
---  pnt4 = pnt + point(-3+random(7), -3+random(7))
---  repeat with g = 1 to 3000 then
---    st = 0 - random(2)
---    st2 = 0 + random(2)
---    mg = point(-10+random(20)+[st,st2][random(2)], -10+random(20)+[st,st2][random(2)])
---    vr = point(-3+random(5), -3+random(5))
---    vr2 = point(-3+random(7), -3+random(7))
---    vt = point(-2+random(3), -2+random(3))
---    vt2 = point(-2+random(5), -2+random(5))
---    dLr = (layer*10)-random(10)
---    rndR = [pnt1,pnt2,pnt3,pnt4][random(4)]+mg+[vr,vr2][random(2)]+[vt,vt2][random(2)]
---    callt = random(20)
---    if callt = 1 then
---      tpr = 2
---    else
---      tpr = 0.5
---    end if
---    if random(2) = 1 then
---      if random(2) = 1 then
---        rspH = 1
---        rsp = 1
---      else
---        rspH = 1
---        rsp = 1
---      end if
---    else
---      rsp = 1
---      rspH = 1
---    end if
---    rct = rect(rndR, rndR)+rect(-tpr*rspH,-tpr*rsp,tpr*rspH,tpr*rsp)
---    var = random(4)
---    if (dCl = "C") then
---      if callt = 1 then
---        member("layer"&string(dLr)).image.copyPixels(member("rubbleGraf"&string(var)).image, rct, member("rubbleGraf"&string(var)).image.rect, {#color:[color(255,0,0), color(0,255,0), color(0,0,255)][random(3)], #ink:36})
---      else
---        member("layer"&string(dLr)).image.copyPixels(member("pxl").image, rct, member("pxl").image.rect, {#color:[color(255,0,0), color(0,255,0), color(0,0,255)][random(3)], #ink:36})
---      end if
---    else
---      member("layer"&string(dLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(-0.5,-0.5,0.5,0.5), member("pxl").image.rect, {#color:dCol, #ink:36})
---      member("gradient"&dCl&string(dLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(-0.5,-0.5,0.5,0.5), member("pxl").image.rect, {#ink:36})
---    end if
---  end repeat
---  the randomSeed = savSeed
---end
-
 
 on drawCeramicTypeTile(mat, tl, layer, frntImg)
   savSeed = the randomSeed
@@ -3831,57 +3728,26 @@ end
 
 
 
-on renderTileMaterial(layer: number, material: string, frntImg: image)
-  --  if(tilesToRender.count = 0)then
-  --    return frntImg
-  --  end if
-  
-  
+on renderTileMaterial(layer, material, frntImg)
   tlsOrdered: list = []
-  
-  
-  repeat with q = 1 to gLOprops.size.loch then
-    repeat with c = 1 to gLOprops.size.locv then
-      if (gLEProps.matrix[q][c][layer][1] <> 0) then
-        addMe: number = 0
-        if(gTEprops.tlMatrix[q][c][layer].tp = "material")then
-          if(gTEprops.tlMatrix[q][c][layer].data = material)then
+  repeat with q = 1 to gLOprops.size.loch
+    repeat with c = 1 to gLOprops.size.locv
+      LEPropqc = gLEProps.matrix[q][c][layer][1]
+      if (LEPropqc <> 0) then
+        addMe = 0
+        TEPropqc = gTEprops.tlMatrix[q][c][layer]
+        if(TEPropqc.tp = "material") then
+          if(TEPropqc.data = material) then
             addMe = 1
           end if
         else if (gTEprops.defaultMaterial = material)then
-          if (gTEprops.tlMatrix[q][c][layer].tp = "default")then
+          if (TEPropqc.tp = "default")then
             addMe = 1
           end if
         end if
         
         if(addMe)then
-          --          if (gLEProps.matrix[q][c][layer][1] = 1) then
-          --            tlsOrdered.add([random(gLOprops.size.loch+gLOprops.size.locV), point(q,c)])
-          --          else if (material = "Temple Stone")then
-          --            tlsOrdered.add([random(gLOprops.size.loch+gLOprops.size.locV), point(q,c)])
-          --          else if (material = "4Mosaic")then
-          --            tlsOrdered.add([random(gLOprops.size.loch+gLOprops.size.locV), point(q,c)])
-          --          else if (material = "3DBricks")then
-          --            tlsOrdered.add([random(gLOprops.size.loch+gLOprops.size.locV), point(q,c)])
-          --          else if (material = "Chaotic Stone")then
-          --            tlsOrdered.add([random(gLOprops.size.loch+gLOprops.size.locV), point(q,c)])
-          --          else if (material = "Tiled Stone")then
-          --            tlsOrdered.add([random(gLOprops.size.loch+gLOprops.size.locV), point(q,c)])
-          --          else if (material = "Random Machines")then
-          --            tlsOrdered.add([random(gLOprops.size.loch+gLOprops.size.locV), point(q,c)])
-          --          else if (material = "Random Metal")then
-          --            tlsOrdered.add([random(gLOprops.size.loch+gLOprops.size.locV), point(q,c)])
-          --            --For Dry's mats
-          --          else if (material = "Random Machines 2")then
-          --            tlsOrdered.add([random(gLOprops.size.loch+gLOprops.size.locV), point(q,c)])
-          --          else if (material = "Small Machines")then
-          --            tlsOrdered.add([random(gLOprops.size.loch+gLOprops.size.locV), point(q,c)])
-          --          else if (material = "Random Metals" or "Dune Sand" or "Chaotic Stone 2") then
-          --            tlsOrdered.add([random(gLOprops.size.loch+gLOprops.size.locV), point(q,c)])
-          --          else if (point(q,c).inside(rect(gRenderCameraTilePos, gRenderCameraTilePos+point(100, 60)))) then
-          --            frntImg = drawATileMaterial(q, c, layer, "Standard", frntImg)
-          --          end if
-          if (gLEProps.matrix[q][c][layer][1] = 1) then
+          if (LEPropqc = 1) then
             tlsOrdered.add([random(gLOprops.size.loch + gLOprops.size.locV), point(q, c)])
           else if (gDRMatFixes) or ((material <> "Tiled Stone") and (material <> "Chaotic Stone") and (material <> "Random Machines") and (material <> "3DBricks")) then
             tlsOrdered.add([random(gLOprops.size.loch + gLOprops.size.locV), point(q, c)])
@@ -3898,18 +3764,6 @@ on renderTileMaterial(layer: number, material: string, frntImg: image)
   repeat with q = 1 to tlsOrdered.count then
     tls.add(tlsOrdered[q][2])
   end repeat
-  
-  
-  --repeat with q = 1 to tilesToRender.count then
-  --   if gLEProps.matrix[tilesToRender[q][2]][tilesToRender[q][3]][layer][1] = 1 then
-  --        tls.add(point(tilesToRender[q][2], tilesToRender[q][3]))
-  --      else
-  --        frntImg = drawATileMaterial(tilesToRender[q][2], tilesToRender[q][3], layer, "Standard", frntImg)
-  --      end if
-  --end repeat
-  
-  
-  --"
   
   case material of
     "Chaotic Stone":
@@ -3977,7 +3831,7 @@ on renderTileMaterial(layer: number, material: string, frntImg: image)
         tls.deleteOne(del)
       end repeat
       
-      savSeed = the randomSeed
+      savSeed = the randomSeed 
       type savSeed: number
       repeat while tls.count > 0 then
         the randomSeed  = gLOprops.tileSeed + tls.count
@@ -4100,7 +3954,7 @@ on renderTileMaterial(layer: number, material: string, frntImg: image)
       
       randomMachines = []
       repeat with w = 1 to 8 then
-        lst = []
+        lst: list = []
         repeat with h = 1 to 8 then
           lst.add([])
         end repeat
@@ -4108,6 +3962,7 @@ on renderTileMaterial(layer: number, material: string, frntImg: image)
       end repeat
       
       repeat with a = 1 to RandomMachines_grabTiles.count then
+        type a: number
         repeat with q = 1 to gTiles.count then
           if(gTiles[q].nm = RandomMachines_grabTiles[a])then
             repeat with t = 1 to gTiles[q].tls.count then
@@ -4129,7 +3984,7 @@ on renderTileMaterial(layer: number, material: string, frntImg: image)
         the randomSeed = seedForTile(tl, gLOprops.tileSeed + layer)
         if delL.findPos(tl)=void then
           
-          randomOrderList = []
+          randomOrderList: list = []
           repeat with w = 1 to randomMachines.count then
             repeat with h = 1 to randomMachines[w].count then
               repeat with t = 1 to randomMachines[w][h].count then
@@ -4143,11 +3998,11 @@ on renderTileMaterial(layer: number, material: string, frntImg: image)
           repeat with q = 1 to randomOrderList.count then 
             testTile = gTiles[randomOrderList[q][2].locH].tls[randomOrderList[q][2].locV]
             
-            legalToPlace = true
+            legalToPlace: number = true
             repeat with a = 0 to testTile.sz.locH-1 then
               repeat with b = 0 to testTile.sz.locV-1 then
-                testPoint = tl + point(a,b)
-                spec = testTile.specs[(b+1) + (a*testTile.sz.locV)]
+                testPoint: point = tl + point(a,b)
+                spec: number = testTile.specs[(b+1) + (a*testTile.sz.locV)]
                 
                 if(tlsBlock.findPos(testPoint)=void)then
                   legalToPlace = false
@@ -4171,7 +4026,7 @@ on renderTileMaterial(layer: number, material: string, frntImg: image)
             end repeat
             
             if(legalToPlace)then
-              rootPos = tl + point(((testTile.sz.locH.float/2.0) + 0.4999).integer-1, ((testTile.sz.locV.float/2.0) + 0.4999).integer-1)
+              rootPos: point = tl + point(((testTile.sz.locH.float/2.0) + 0.4999).integer-1, ((testTile.sz.locV.float/2.0) + 0.4999).integer-1)
               if(rootPos.inside(rect(gRenderCameraTilePos, gRenderCameraTilePos+point(100, 60))))then
                 frntImg = drawATileTile(rootPos.loch,rootPos.locV,layer,testTile, frntImg)
               end if
@@ -4356,15 +4211,15 @@ on renderTileMaterial(layer: number, material: string, frntImg: image)
       the randomSeed = gLOprops.tileSeed + layer
       
       randomMachines = []
-      type randommachines: list
       repeat with w = 1 to 8 then
-        --/ 8 elements.
-        lst: list = [[],[],[],[],[],[],[],[]]
+        lst = []
+        repeat with h = 1 to 8 then
+          lst.add([])
+        end repeat
         randomMachines.add(lst)
       end repeat
       
       repeat with a = 1 to SmallMachines_grabTiles.count then
-        type a: number
         repeat with q = 1 to gTiles.count then
           if(gTiles[q].nm = SmallMachines_grabTiles[a])then
             repeat with t = 1 to gTiles[q].tls.count then
@@ -4386,7 +4241,7 @@ on renderTileMaterial(layer: number, material: string, frntImg: image)
         the randomSeed = seedForTile(tl, gLOprops.tileSeed + layer)
         if delL.findPos(tl)=void then
           
-          randomOrderList: list = []
+          randomOrderList = []
           repeat with w = 1 to randomMachines.count then
             repeat with h = 1 to randomMachines[w].count then
               repeat with t = 1 to randomMachines[w][h].count then
@@ -4400,11 +4255,11 @@ on renderTileMaterial(layer: number, material: string, frntImg: image)
           repeat with q = 1 to randomOrderList.count then 
             testTile = gTiles[randomOrderList[q][2].locH].tls[randomOrderList[q][2].locV]
             
-            legalToPlace: number = true
+            legalToPlace = true
             repeat with a = 0 to testTile.sz.locH-1 then
               repeat with b = 0 to testTile.sz.locV-1 then
-                testPoint: point = tl + point(a,b)
-                spec: number = testTile.specs[(b+1) + (a*testTile.sz.locV)]
+                testPoint = tl + point(a,b)
+                spec = testTile.specs[(b+1) + (a*testTile.sz.locV)]
                 
                 if(tlsBlock.findPos(testPoint)=void)then
                   legalToPlace = false
@@ -4557,7 +4412,7 @@ on renderTileMaterial(layer: number, material: string, frntImg: image)
             end repeat
             
             if(legalToPlace)then
-              rootPos: point = tl + point(((testTile.sz.locH.float/2.0) + 0.4999).integer-1, ((testTile.sz.locV.float/2.0) + 0.4999).integer-1)
+              rootPos = tl + point(((testTile.sz.locH.float/2.0) + 0.4999).integer-1, ((testTile.sz.locV.float/2.0) + 0.4999).integer-1)
               if(rootPos.inside(rect(gRenderCameraTilePos, gRenderCameraTilePos+point(100, 60))))then
                 frntImg = drawATileTile(rootPos.loch,rootPos.locV,layer,testTile, frntImg)
               end if

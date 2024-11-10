@@ -130,25 +130,11 @@ on newUpdate me
         end if
         
       "lizardHole":
-        --        if (p.lastInput[3]=0) then
-        --          if gLEProps.matrix[p.workPos.locH][p.workPos.locV][1][2].getPos(7) = 0 then
-        --            gLEProps.matrix[p.workPos.locH][p.workPos.locV][1][2].add(7)
-        --          else
-        --            gLEProps.matrix[p.workPos.locH][p.workPos.locV][1][2].deleteOne(7)
-        --          end if
-        --        end if
         if (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
           me.addRemoveFeature(7)
         end if
         
       "playerSpawn":
-        --        if (p.lastInput[3]=0) then
-        --          if gLEProps.matrix[p.workPos.locH][p.workPos.locV][1][2].getPos(6) = 0 then
-        --            gLEProps.matrix[p.workPos.locH][p.workPos.locV][1][2].add(6)
-        --          else
-        --            gLEProps.matrix[p.workPos.locH][p.workPos.locV][1][2].deleteOne(6)
-        --          end if
-        --        end if
         if (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
           me.addRemoveFeature(6)
         end if
@@ -280,7 +266,6 @@ on newUpdate me
         me.updateToolText()
       "mirrorToggle":
         if (p.lastInput[3]=0) then
-          --/ This is effectively a not operator, fyi.
           p.mirror = 1-p.mirror
         end if
       "rock":
@@ -449,7 +434,6 @@ end
 
 on slopeTile me, ps
   nbs = ""
-  --/ Order is left-up-right-down
   repeat with dir in [point(-1, 0), point(0, -1), point(1, 0), point(0, 1)] then
     nbs = nbs & afaMvLvlEdit(ps+dir, p.workLayer)
   end repeat

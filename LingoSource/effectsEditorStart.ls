@@ -1,8 +1,6 @@
 global gTEprops, gTiles, gEEprops, gLEprops, gLOprops, gEnvEditorProps
 
 on exitFrame me
-  _movie.exitLock = TRUE
-  
   sprite(243).color = color(255, 255, 255)
   
   member("effectsMatrix").image = image(52,40,32)

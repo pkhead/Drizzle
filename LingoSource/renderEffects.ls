@@ -1,23 +1,18 @@
-global vertRepeater, r, gEEprops, solidMtrx, gLEprops, colr, colrDetail, colrInd, gdLayer, gdDetailLayer, gdIndLayer, gLOProps, gLevel, gEffectProps, gViewRender, keepLooping, gRenderCameraTilePos, effectSeed, lrSup, chOp, fatOp, gradAf
-global effectIn3D, gAnyDecals, gRotOp, slimeFxt, DRDarkSlimeFix
-global DRWhite, DRPxl, DRPxlRect
-global colrIntensity, fruitDensity, leafDensity
+global vertRepeater, r, gEEprops, solidMtrx, gLEprops, colr, colrDetail, colrInd, gdLayer, gdDetailLayer, gdIndLayer, gLOProps, gLevel, gEffectProps, gViewRender, keepLooping, gRenderCameraTilePos, effectSeed, lrSup, chOp, fatOp, gradAf, effectIn3D, gAnyDecals, gRotOp, slimeFxt, DRDarkSlimeFix, DRWhite, DRPxl, DRPxlRect, colrIntensity, fruitDensity, leafDensity, mshrSzW, mshrSz, hasFlowers, effSide, gCustomEffects, gEffects, gLastImported
 
-on exitFrame me
-  if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+on exitFrame(me)
+  if (checkMinimize()) then
     _player.appMinimize()
-    
   end if
-  if checkExit() then
+  if (checkExit()) then
     _player.quit()
   end if
-  
-  if gViewRender then
-    if checkExitRender() then
+  if (gViewRender) then
+    if (checkExitRender()) then
       _movie.go(9)
     end if
     me.newFrame()
-    if keepLooping then
+    if (keepLooping) then
       go the frame
     end if
   else
@@ -27,26 +22,22 @@ on exitFrame me
   end if
 end
 
-
-on newFrame me
-  
+on newFrame(me)
   vertRepeater = vertRepeater + 1
-  
-  
-  if (gEEprops.effects.count = 0)then
+  efcnt = gEEprops.effects.count
+  if (efcnt = 0) then
     keepLooping = 0
     exit
-  else if (r=0)then
+  else if (r = 0) then
     vertRepeater = 1
     r = 1
     me.initEffect()
   end if
-  
-  if ((vertRepeater > 60)and(gEEprops.effects[r].crossScreen = 0))or((vertRepeater > gLOprops.size.locV)and(gEEprops.effects[r].crossScreen = 1)) then
+  efcsc = gEEprops.effects[r].crossScreen
+  if ((vertRepeater > 60) and (efcsc = 0)) or ((vertRepeater > gLOprops.size.locV) and (efcsc = 1)) then
     me.exitEffect()
     r = r + 1
-    
-    if r > gEEprops.effects.count then
+    if (r > efcnt) then
       keepLooping = 0
       exit
     else
@@ -54,323 +45,333 @@ on newFrame me
       vertRepeater = 1
     end if
   end if
-  
-  
-  
-  
-  if (gEEprops.effects[r].crossScreen = 0) then
-    sprite(59).locV = vertRepeater*20
-    repeat with q = 1 to 100 then
+  effectr = gEEprops.effects[r]
+  if (effectr.crossScreen = 0) then
+    sprite(59).locV = vertRepeater * 20
+    repeat with q = 1 to 100
       q2 = q + gRenderCameraTilePos.locH
       c2 = vertRepeater + gRenderCameraTilePos.locV
-      if(q2 > 0)and(q2 <= gLOprops.size.locH)and(c2 > 0)and(c2 <= gLOprops.size.locV)then
-        me.effectOnTile(q, vertRepeater, q2, c2)
+      if (q2 > 0) then
+        if (q2 <= gLOprops.size.locH) then
+          if (c2 > 0) then
+            if (c2 <= gLOprops.size.locV) then
+              me.effectOnTile(q, vertRepeater, q2, c2, effectr)
+            end if
+          end if
+        end if
       end if
     end repeat
   else
-    sprite(59).locV = (vertRepeater-gRenderCameraTilePos.locV)*20
-    repeat with q2 = 1 to gLOprops.size.locH then
-      me.effectOnTile(q2-gRenderCameraTilePos.locH, vertRepeater-gRenderCameraTilePos.locV, q2, vertRepeater)
+    repmcam = vertRepeater - gRenderCameraTilePos.locV
+    sprite(59).locV = repmcam * 20
+    repeat with q2 = 1 to gLOprops.size.locH
+      me.effectOnTile(q2 - gRenderCameraTilePos.locH, repmcam, q2, vertRepeater, effectr)
     end repeat
   end if
-  
-  
 end
 
-
-on effectOnTile me, q, c, q2, c2
-  if gEEprops.effects[r].mtrx[q2][c2] > 0 then
-    
+on effectOnTile me, q, c, q2, c2, effectr
+  if effectr.mtrx[q2][c2] > 0 then
+    efname = effectr.nm
     savSeed = the randomSeed
     the randomSeed = seedForTile(point(q2, c2), effectSeed)
-    
-    case gEEprops.effects[r].nm of
+    case efname of
       "Slime", "Rust", "Barnacles", "Erode", "Melt", "Roughen", "SlimeX3", "Destructive Melt", "Super Melt", "Super Erode", "DecalsOnlySlime", "Ultra Super Erode", "Colored Barnacles", "Sand", "Impacts", "Fat Slime":
-        me.applyStandardErosion(q,c,0, gEEprops.effects[r].nm)
-      "Root Grass", "Cacti", "Rubble", "Rain Moss", "Dandelions", "Seed Pods", "Grass", "Horse Tails", "Circuit Plants", "Feather Plants", "Storm Plants", "Colored Rubble", "Reeds", "Lavenders", "Seed Grass", "Hyacinths", "Orb Plants":
-        me.applyStandardPlant(q,c,0, gEEprops.effects[r].nm)
+        me.applyStandardErosion(q,c,0, efname, effectr)
+      "Root Grass", "Cacti", "Rubble", "Rain Moss", "Dandelions", "Seed Pods", "Grass", "Horse Tails", "Circuit Plants", "Feather Plants", "Storm Plants", "Colored Rubble", "Reeds", "Lavenders", "Seed Grass", "Hyacinths", "Orb Plants", "Lollipop Mold":
+        me.applyStandardPlant(q,c,0, efname)
       "LSlime":
-        DRFSlimeApply(q, c)
+        DRFSlimeApply(q, c, effectr)
       "Dense Mold":
         me.applyWLPlant(q, c)
       "Growers":
-        if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(2)=1) then
+        if (random(100)<effectr.mtrx[q2][c2]) and (random(2)=1) then
           me.applyhugeflower(q,c,0)
         end if
       "Mini Growers":
-        if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(2)=1)then
+        if (random(100)<effectr.mtrx[q2][c2]) and (random(2)=1)then
           me.applyMiniGrowers(q,c,0)
         end if
       "Arm Growers":
-        if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(2)=1) then
+        if (random(100)<effectr.mtrx[q2][c2]) and (random(2)=1) then
           me.ApplyArmGrower(q,c,0)
         end if
       "Fungi Flowers":
-        if gEEprops.effects[r].mtrx[q2][c2] > 0 then
+        if effectr.mtrx[q2][c2] > 0 then
           me.applyFungiFlower(q,c)
         end if
       "Colored Fungi Flowers":
         if (gdLayer = "C") then
-          if gEEprops.effects[r].mtrx[q2][c2] > 0 then
+          if effectr.mtrx[q2][c2] > 0 then
             me.applyFungiFlower(q,c)
           end if
         else
-          if gEEprops.effects[r].mtrx[q2][c2] > 0 then
+          if effectr.mtrx[q2][c2] > 0 then
             me.applyColoredFungiFlower(q,c)
           end if
         end if
       "Lighthouse Flowers":
-        if gEEprops.effects[r].mtrx[q2][c2] > 0 then
+        if effectr.mtrx[q2][c2] > 0 then
           me.applyLHFlower(q,c)
         end if
       "Colored Lighthouse Flowers":
         if (gdLayer = "C") then
-          if gEEprops.effects[r].mtrx[q2][c2] > 0 then
+          if effectr.mtrx[q2][c2] > 0 then
             me.applyLHFlower(q,c)
           end if
         else
-          if gEEprops.effects[r].mtrx[q2][c2] > 0 then
+          if effectr.mtrx[q2][c2] > 0 then
             me.applyColoredLHFlower(q,c)
           end if
         end if
       "Foliage":
-        if gEEprops.effects[r].mtrx[q2][c2] > 0 then
+        if effectr.mtrx[q2][c2] > 0 then
           me.applyFoliage(q,c)
         end if
       "Assorted Trash":
-        if gEEprops.effects[r].mtrx[q2][c2] > 0 then
+        if effectr.mtrx[q2][c2] > 0 then
           me.applyAssortedTrash(q,c)
         end if
       "High Grass":
-        if gEEprops.effects[r].mtrx[q2][c2] > 0 then
+        if effectr.mtrx[q2][c2] > 0 then
           me.applyHighGrass(q,c)
         end if
       "Small Springs":
-        if gEEprops.effects[r].mtrx[q2][c2] > 0 then
+        if effectr.mtrx[q2][c2] > 0 then
           me.applySmallSprings(q,c)
         end if
       "High Fern":
-        if gEEprops.effects[r].mtrx[q2][c2] > 0 then
+        if effectr.mtrx[q2][c2] > 0 then
           me.applyHighFern(q,c)
         end if
       "Mistletoe":
-        if gEEprops.effects[r].mtrx[q2][c2] > 0 then
+        if effectr.mtrx[q2][c2] > 0 then
           me.applyMistletoe(q,c)
         end if
       "Fern", "Giant Mushroom":
-        if gEEprops.effects[r].mtrx[q2][c2] > 0 then
+        if effectr.mtrx[q2][c2] > 0 then
           me.applyBigPlant(q,c)
         end if
       "Sprawlbush", "featherFern", "Fungus Tree":
-        if gEEprops.effects[r].mtrx[q2][c2] > 0 then
-          me.apply3Dsprawler(q,c, gEEprops.effects[r].nm)
+        if effectr.mtrx[q2][c2] > 0 then
+          me.apply3Dsprawler(q,c, efname)
         end if
       "hang roots":
         repeat with r2 = 1 to 3 then
-          if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) then
+          if (random(100)<effectr.mtrx[q2][c2]) then
             me.applyHangRoots(q,c,0)
           end if
         end repeat
       "Colored Hang Roots":
         if (gdLayer = "C") then
           repeat with r2 = 1 to 3 then
-            if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) then
+            if (random(100)<effectr.mtrx[q2][c2]) then
               me.applyHangRoots(q,c,0)
             end if
           end repeat
         else
           repeat with r2 = 1 to 3 then
-            if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) then
+            if (random(100)<effectr.mtrx[q2][c2]) then
               me.applyColoredHangRoots(q,c,0)
             end if
           end repeat
         end if
       "Ivy":
         repeat with r2 = 1 to 3 then
-          if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) then
+          if (random(100)<effectr.mtrx[q2][c2]) then
             me.applyIvy(q,c,0)
           end if
         end repeat
       "Clovers":
         me.applyResRoots(q,c)
-        me.applyStandardErosion(q,c,0, gEEprops.effects[r].nm)
+        me.applyStandardErosion(q,c,0, efname, effectr)
       "Wires":
-        if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(2)=1) then
+        if (random(100)<effectr.mtrx[q2][c2]) and (random(2)=1) then
           me.applyWire(q,c,0)
         end if
       "Chains":
-        if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(2)=1) then
+        if (random(100)<effectr.mtrx[q2][c2]) and (random(2)=1) then
           me.applyChain(q,c,0)
         end if
       "Colored Wires":
         if (gdIndLayer = "C") then
-          if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(2)=1) then
+          if (random(100)<effectr.mtrx[q2][c2]) and (random(2)=1) then
             me.applyWire(q,c,0)
           end if
         else
-          if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(2)=1) then
+          if (random(100)<effectr.mtrx[q2][c2]) and (random(2)=1) then
             me.applyColoredWires(q,c,0)
           end if
         end if
       "Colored Chains":
         if (gdIndLayer = "C") then
-          if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(2)=1) then
+          if (random(100)<effectr.mtrx[q2][c2]) and (random(2)=1) then
             me.applyChain(q,c,0)
           end if
         else
-          if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(2)=1) then
+          if (random(100)<effectr.mtrx[q2][c2]) and (random(2)=1) then
             me.applyColoredChains(q,c,0)
           end if
         end if
       "Ring Chains":
-        if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(2)=1) then
+        if (random(100)<effectr.mtrx[q2][c2]) and (random(2)=1) then
           me.applyRingChains(q,c,0)
         end if
       "BlackGoo":
         me.applyBlackGoo(q,c,0)
       "DarkSlime":
-        me.applyDarkSlime(q,c, gEEprops.effects[r].nm)
+        me.applyDarkSlime(q,c, effectr)
       "Restore As Scaffolding", "Restore As Pipes":
-        me.applyRestoreEffect(q,c, q2, c2, gEEprops.effects[r].nm)
+        me.applyRestoreEffect(q,c, q2, c2, efname)
       "Rollers":
-        if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(5)=1) then
+        if (random(100)<effectr.mtrx[q2][c2]) and (random(5)=1) then
           me.ApplyRoller(q,c,0)
         end if
       "Thorn Growers":
-        if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(3)>1) then
+        if (random(100)<effectr.mtrx[q2][c2]) and (random(3)>1) then
           me.ApplyThornGrower(q,c,0)
         end if
       "Horror Growers":
-        if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(3)>1) then
+        if (random(100)<effectr.mtrx[q2][c2]) and (random(3)>1) then
           me.ApplyHorrorGrower(q,c,0)
         end if
       "Spinets":
-        if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(3)>1) then
+        if (random(100)<effectr.mtrx[q2][c2]) and (random(3)>1) then
           me.ApplySpinets(q,c,0)
         end if
       "Garbage Spirals":
-        if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(6)=1) then
+        if (random(100)<effectr.mtrx[q2][c2]) and (random(6)=1) then
           me.ApplyGarbageSpiral(q,c,0)
         end if
       "Thick Roots":
-        if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) then
+        if (random(100)<effectr.mtrx[q2][c2]) then
           me.applyThickRoots(q,c,0)
         end if
       "Colored Thick Roots":
         if (gdLayer = "C") then
-          if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) then
+          if (random(100)<effectr.mtrx[q2][c2]) then
             me.applyThickRoots(q,c,0)
           end if
         else
-          if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) then
+          if (random(100)<effectr.mtrx[q2][c2]) then
             me.applyColoredThickRoots(q,c,0)
           end if
         end if
       "Shadow Plants":
-        if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(3)=1) then
+        if (random(100)<effectr.mtrx[q2][c2]) and (random(3)=1) then
           me.applyShadowPlants(q,c,0)
         end if
       "Colored Shadow Plants":
         if (gdLayer = "C") then
-          if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(3)=1) then
+          if (random(100)<effectr.mtrx[q2][c2]) and (random(3)=1) then
             me.applyShadowPlants(q,c,0)
           end if
         else
-          if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(3)=1) then
+          if (random(100)<effectr.mtrx[q2][c2]) and (random(3)=1) then
             me.applyColoredShadowPlants(q,c,0)
           end if
         end if
       "Root Plants":
-        if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(3)=1) then
+        if (random(100)<effectr.mtrx[q2][c2]) and (random(3)=1) then
           me.applyRootPlants(q,c,0)
         end if
       "DaddyCorruption":
-        me.applyDaddyCorruption(q,c,gEEprops.effects[r].mtrx[q2][c2])
+        me.applyDaddyCorruption(q,c,effectr.mtrx[q2][c2])
       "Corruption No Eye":
-        me.applyCorruptionNoEye(q,c,gEEprops.effects[r].mtrx[q2][c2])
+        me.applyCorruptionNoEye(q,c,effectr.mtrx[q2][c2])
       "Slag":-->to support older projects
-        me.applyCorruptionNoEye(q,c,gEEprops.effects[r].mtrx[q2][c2])
+        me.applyCorruptionNoEye(q,c,effectr.mtrx[q2][c2])
       "Wastewater Mold":
         if (gdLayer = "C") then
-          me.applyCorruptionNoEye(q,c,gEEprops.effects[r].mtrx[q2][c2])
+          me.applyCorruptionNoEye(q,c,effectr.mtrx[q2][c2])
         else
-          me.applyWastewaterMold(q,c,gEEprops.effects[r].mtrx[q2][c2])
+          me.applyWastewaterMold(q,c,effectr.mtrx[q2][c2])
         end if
       "Little Flowers":
-        me.applyFlowers(q,c,gEEprops.effects[r].mtrx[q2][c2])
+        me.applyFlowers(q,c,effectr.mtrx[q2][c2])
         --dakras stuff      
       "Left Facing Kelp":
-        if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(2)=1) then
+        if (random(100)<effectr.mtrx[q2][c2]) and (random(2)=1) then
           me.ApplySideKelp(q,c)
         end if
       "Right Facing Kelp":
-        if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(2)=1) then
+        if (random(100)<effectr.mtrx[q2][c2]) and (random(2)=1) then
           me.ApplyFlipSideKelp(q,c)
         end if
       "Mixed Facing Kelp":
-        if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(2)=1) then
+        if (random(100)<effectr.mtrx[q2][c2]) and (random(2)=1) then
           me.ApplyMixKelp(q,c)
         end if
       "Bubble Grower":
-        if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(2)=1) then
+        if (random(100)<effectr.mtrx[q2][c2]) and (random(2)=1) then
           me.ApplyBubbleGrower(q,c)
         end if
       "Moss Wall":
-        me.applyMossWall(q,c,gEEprops.effects[r].mtrx[q2][c2])
+        me.applyMossWall(q,c,effectr.mtrx[q2][c2])
       "Club Moss":
-        me.applyClubMoss(q,c,gEEprops.effects[r].mtrx[q2][c2])
+        me.applyClubMoss(q,c,effectr.mtrx[q2][c2])
       "Fuzzy Growers":
-        if (random(100) < gEEprops.effects[r].mtrx[q2][c2]) and (random(3) > 1) then
+        if (random(100) < effectr.mtrx[q2][c2]) and (random(3) > 1) then
           me.ApplyFuzzyGrower(q, c)
         end if
       "Coral Growers":
-        if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(3)>1) then
+        if (random(100)<effectr.mtrx[q2][c2]) and (random(3)>1) then
           me.ApplyCoralGrower(q,c,0)
         end if
       "Leaf Growers":
-        if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(3)>1) then
+        if (random(100)<effectr.mtrx[q2][c2]) and (random(3)>1) then
           me.ApplyLeafGrower(q,c,0)
         end if
       "Meat Growers":
-        if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(3)>1) then
+        if (random(100)<effectr.mtrx[q2][c2]) and (random(3)>1) then
           me.ApplyMeatGrower(q,c,0)
         end if
       "Thunder Growers":
-        if (random(100) < gEEprops.effects[r].mtrx[q2][c2]) and (random(3) > 1) then
+        if (random(100) < effectr.mtrx[q2][c2]) and (random(3) > 1) then
           me.ApplyThunderGrower(q,c,0)
         end if
       "Fancy Growers":
-        if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(3)>1) then
+        if (random(100)<effectr.mtrx[q2][c2]) and (random(3)>1) then
           me.ApplyFancyGrower(q,c,0)
         end if 
       "Ice Growers":
-        if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(3)>1) then
+        if (random(100)<effectr.mtrx[q2][c2]) and (random(3)>1) then
           me.ApplyIceGrower(q,c,0)
         end if
       "Grass Growers":
-        if (random(100)<gEEprops.effects[r].mtrx[q2][c2]) and (random(3)>1) then
+        if (random(100)<effectr.mtrx[q2][c2]) and (random(3)>1) then
           me.ApplyGrassGrower(q,c,0)
         end if
+      "Mushroom Stubs":
+        me.applyMushroomStubs(q,c,effectr.mtrx[q2][c2])
+      "Mosaic Plants":
+        me.ApplyMosaicPlant(q, c)
+      "Cobwebs":
+        me.ApplyCobweb(q, c)
+      otherwise:
+        if (gCustomEffects.getPos(efname) > 0) then
+          me.ApplyCustomEffect(q, c, effectr, efname)
+        end if
     end case
-    
     the randomSeed = savSeed
-    
   end if
 end
 
-
 on initEffect me
+  effectr = gEEprops.effects[r]
+  efopts =  effectr.options
   effectSeed = 0
-  repeat with a = 1 to gEEprops.effects[r].Options.count then
-    if(gEEprops.effects[r].Options[a][1] = "Seed")then
-      effectSeed = gEEprops.effects[r].Options[a][3]
+  repeat with a = 1 to efopts.count
+    curop = efopts[a]
+    if(curop[1] = "Seed")then
+      effectSeed = curop[3]
       exit repeat
     end if
   end repeat
   
   effectIn3D = false
   gRotOp = false
-  repeat with op in gEEprops.effects[r].options then
+  repeat with op in efopts
     case op[1] of 
       "Layers":
         lrSup = ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"][["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"].getPos(op[3])]
@@ -401,59 +402,68 @@ on initEffect me
         fruitDensity = ["H","M","L","N"][["High","Medium","Low","None"].getPos(op[3])]
       "Leaf Density":
         leafDensity = op[3]
+      "Mushroom Size":
+        mshrSz  = ["S", "M", "R"][["Small", "Medium", "Random"].getPos(op[3])]
+      "Mushroom Width":
+        mshrSzW  = ["S", "M", "L", "R"][["Small", "Medium", "Wide", "Random"].getPos(op[3])]
+      "Flowers":
+        hasFlowers = (op[3] = "On")
+      "Side":
+        effSide = ["?", "L", "R", "T", "B"][["Left", "Right", "Top", "Bottom"].getPos(op[3]) + 1] -- anti-error I think
     end case
   end repeat
   
-  case gEEprops.effects[r].nm of
+  case effectr.nm of
     "BlackGoo":
       cols = 100
       rows = 60
       
       member("blackOutImg1").image = image(cols*20, rows*20, 32)
-      member("blackOutImg1").image.copyPixels(member("pxl").image, rect(0,0,cols*20, rows*20), rect(0,0,1,1), {#color:255})
+      blk1 = member("blackOutImg1").image
+      blk1.copyPixels(DRPxl, rect(0,0,cols*20, rows*20), rect(0,0,1,1), {#color:255})
       member("blackOutImg2").image = image(cols*20, rows*20, 32)
-      member("blackOutImg2").image.copyPixels(member("pxl").image, rect(0,0,cols*20, rows*20), rect(0,0,1,1), {#color:255})
+      blk2 = member("blackOutImg2").image
+      blk2.copyPixels(DRPxl, rect(0,0,cols*20, rows*20), rect(0,0,1,1), {#color:255})
       sprite(57).visibility = 1
       sprite(58).visibility = 1
       
       global gRenderCameraTilePos, gRenderCameraPixelPos
       
-      repeat with q = 1 to 100 then
-        repeat with c = 1 to 60 then
+      repeat with q = 1 to 100
+        repeat with c = 1 to 60
           q2 = q + gRenderCameraTilePos.locH
           c2 = c + gRenderCameraTilePos.locV
           if(q2 < 1)or(q2 > gLOprops.size.locH)or(c2 < 1)or(c2 > gLOprops.size.locV)then
-            member("blackOutImg1").image.copyPixels(member("pxl").image, rect((q-1)*20, (c-1)*20, q*20, c*20), rect(0,0,1,1), {#color:color(255, 255, 255)})
-            member("blackOutImg2").image.copyPixels(member("pxl").image, rect((q-1)*20, (c-1)*20, q*20, c*20), rect(0,0,1,1), {#color:color(255, 255, 255)})
+            blk1.copyPixels(DRPxl, rect((q-1)*20, (c-1)*20, q*20, c*20), rect(0,0,1,1), {#color:color(255, 255, 255)})
+            blk2.copyPixels(DRPxl, rect((q-1)*20, (c-1)*20, q*20, c*20), rect(0,0,1,1), {#color:color(255, 255, 255)})
           end if
         end repeat
       end repeat
       
-      
-      rct = member("blob").image.rect
+      blobImg = member("blob").image
+      rct = blobImg.rect
       repeat with q2 = 1 to cols then
         repeat with c2 = 1 to rows then
           if(q2+gRenderCameraTilePos.locH > 0)and(q2+gRenderCameraTilePos.locH <= gLOprops.size.locH)and(c2+gRenderCameraTilePos.locV > 0)and(c2+gRenderCameraTilePos.locV <= gLOprops.size.locV)then
             tile = point(q2,c2)+gRenderCameraTilePos
             
-            if (gEEprops.effects[r].mtrx[tile.locH][tile.locV] = 0) then
+            if (effectr.mtrx[tile.locH][tile.locV] = 0) then
               sPnt = giveMiddleOfTile(point(q2,c2))+point(-10,-10)--+gRenderCameraPixelPos--gRenderCameraTilePos-gRenderCameraPixelPos
               
-              repeat with d = 1 to 10 then
-                repeat with e = 1 to 10 then
+              repeat with d = 1 to 10
+                repeat with e = 1 to 10
                   ps = point(sPnt.locH + d*2, sPnt.locV + e*2)
-                  -- if member("layer0").image.getPixel(ps) = color(255, 255, 255) then
-                  member("blackOutImg1").image.copyPixels(member("blob").image, rect(ps.locH-6-random(random(11)),ps.locV-6-random(random(11)),ps.locH+6+random(random(11)),ps.locV+6+random(random(11))), rct, {#color:0, #ink:36})
-                  member("blackOutImg2").image.copyPixels(member("blob").image, rect(ps.locH-7-random(random(14)),ps.locV-7-random(random(14)),ps.locH+7+random(random(14)),ps.locV+7+random(random(14))), rct, {#color:0, #ink:36})
+                  blk1.copyPixels(blobImg, rect(ps.locH-6-random(random(11)),ps.locV-6-random(random(11)),ps.locH+6+random(random(11)),ps.locV+6+random(random(11))), rct, {#color:0, #ink:36})
+                  blk2.copyPixels(blobImg, rect(ps.locH-7-random(random(14)),ps.locV-7-random(random(14)),ps.locH+7+random(random(14)),ps.locV+7+random(random(14))), rct, {#color:0, #ink:36})
                   -- end if 
                 end repeat
               end repeat
             else if ((gLEProps.matrix[tile.locH][tile.locV][1][2].getPos(5) > 0)or(gLEProps.matrix[tile.locH][tile.locV][1][2].getPos(4) > 0))and(gLEProps.matrix[tile.locH][tile.locV][2][1]=1) then
               ps = giveMiddleOfTile(point(q2,c2))--+gRenderCameraPixelPos--gRenderCameraTilePos-gRenderCameraPixelPos
-              member("blackOutImg1").image.copyPixels(member("blob").image, rect(ps.locH-4-random(random(9)),ps.locV-4-random(random(9)),ps.locH+4+random(random(9)),ps.locV+4+random(random(9))), rct, {#color:0, #ink:36})
-              member("blackOutImg2").image.copyPixels(member("blob").image, rect(ps.locH-7-random(random(9)),ps.locV-7-random(random(9)),ps.locH+7+random(random(9)),ps.locV+7+random(random(9))), rct, {#color:0, #ink:36})
-              member("blackOutImg1").image.copyPixels(member("blob").image, rect(ps.locH-4-random(random(9)),ps.locV-4-random(random(9)),ps.locH+4+random(random(9)),ps.locV+4+random(random(9))), rct, {#color:0, #ink:36})
-              member("blackOutImg2").image.copyPixels(member("blob").image, rect(ps.locH-7-random(random(9)),ps.locV-7-random(random(9)),ps.locH+7+random(random(9)),ps.locV+7+random(random(9))), rct, {#color:0, #ink:36})
+              blk1.copyPixels(blobImg, rect(ps.locH-4-random(random(9)),ps.locV-4-random(random(9)),ps.locH+4+random(random(9)),ps.locV+4+random(random(9))), rct, {#color:0, #ink:36})
+              blk2.copyPixels(blobImg, rect(ps.locH-7-random(random(9)),ps.locV-7-random(random(9)),ps.locH+7+random(random(9)),ps.locV+7+random(random(9))), rct, {#color:0, #ink:36})
+              blk1.copyPixels(blobImg, rect(ps.locH-4-random(random(9)),ps.locV-4-random(random(9)),ps.locH+4+random(random(9)),ps.locV+4+random(random(9))), rct, {#color:0, #ink:36})
+              blk2.copyPixels(blobImg, rect(ps.locH-7-random(random(9)),ps.locV-7-random(random(9)),ps.locH+7+random(random(9)),ps.locV+7+random(random(9))), rct, {#color:0, #ink:36})
             end if
           end if
         end repeat
@@ -464,50 +474,52 @@ on initEffect me
       rows = 60
       
       member("blackOutImg1").image = image(cols*20, rows*20, 32)
-      member("blackOutImg1").image.copyPixels(member("pxl").image, rect(0,0,cols*20, rows*20), rect(0,0,1,1), {#color:255})
+      blk1 = member("blackOutImg1").image
+      member("blackOutImg1").image.copyPixels(DRPxl, rect(0,0,cols*20, rows*20), rect(0,0,1,1), {#color:255})
       member("blackOutImg2").image = image(cols*20, rows*20, 32)
-      member("blackOutImg2").image.copyPixels(member("pxl").image, rect(0,0,cols*20, rows*20), rect(0,0,1,1), {#color:255})
+      blk2 = member("blackOutImg2").image
+      member("blackOutImg2").image.copyPixels(DRPxl, rect(0,0,cols*20, rows*20), rect(0,0,1,1), {#color:255})
       sprite(57).visibility = 1
       sprite(58).visibility = 1
       
       global gRenderCameraTilePos, gRenderCameraPixelPos
       
-      repeat with q = 1 to 100 then
-        repeat with c = 1 to 60 then
+      repeat with q = 1 to 100
+        repeat with c = 1 to 60
           q2 = q + gRenderCameraTilePos.locH
           c2 = c + gRenderCameraTilePos.locV
           if(q2 < 1)or(q2 > gLOprops.size.locH)or(c2 < 1)or(c2 > gLOprops.size.locV)then
-            member("blackOutImg1").image.copyPixels(member("pxl").image, rect((q-1)*20, (c-1)*20, q*20, c*20), rect(0,0,1,1), {#color:color(255, 255, 255)})
-            member("blackOutImg2").image.copyPixels(member("pxl").image, rect((q-1)*20, (c-1)*20, q*20, c*20), rect(0,0,1,1), {#color:color(255, 255, 255)})
+            blk1.copyPixels(DRPxl, rect((q-1)*20, (c-1)*20, q*20, c*20), rect(0,0,1,1), {#color:color(255, 255, 255)})
+            blk2.copyPixels(DRPxl, rect((q-1)*20, (c-1)*20, q*20, c*20), rect(0,0,1,1), {#color:color(255, 255, 255)})
           end if
         end repeat
       end repeat
       
-      
-      rct = member("blob").image.rect
-      repeat with q2 = 1 to cols then
-        repeat with c2 = 1 to rows then
+      blobImg = member("blob").image
+      rct = blobImg.rect
+      repeat with q2 = 1 to cols
+        repeat with c2 = 1 to rows
           if(q2+gRenderCameraTilePos.locH > 0)and(q2+gRenderCameraTilePos.locH <= gLOprops.size.locH)and(c2+gRenderCameraTilePos.locV > 0)and(c2+gRenderCameraTilePos.locV <= gLOprops.size.locV)then
             tile = point(q2,c2)+gRenderCameraTilePos
             
             if (gEEprops.effects[r].mtrx[tile.locH][tile.locV] = 0) then
               sPnt = giveMiddleOfTile(point(q2,c2))+point(-10,-10)--+gRenderCameraPixelPos--gRenderCameraTilePos-gRenderCameraPixelPos
               
-              repeat with d = 1 to 10 then
-                repeat with e = 1 to 10 then
+              repeat with d = 1 to 10
+                repeat with e = 1 to 10
                   ps = point(sPnt.locH + d*2, sPnt.locV + e*2)
                   -- if member("layer0").image.getPixel(ps) = color(255, 255, 255) then
-                  member("blackOutImg1").image.copyPixels(member("blob").image, rect(ps.locH-6-random(random(11)),ps.locV-6-random(random(11)),ps.locH+6+random(random(11)),ps.locV+6+random(random(11))), rct, {#color:0, #ink:36})
-                  member("blackOutImg2").image.copyPixels(member("blob").image, rect(ps.locH-7-random(random(14)),ps.locV-7-random(random(14)),ps.locH+7+random(random(14)),ps.locV+7+random(random(14))), rct, {#color:0, #ink:36})
+                  blk1.copyPixels(blobImg, rect(ps.locH-6-random(random(11)),ps.locV-6-random(random(11)),ps.locH+6+random(random(11)),ps.locV+6+random(random(11))), rct, {#color:0, #ink:36})
+                  blk2.copyPixels(blobImg, rect(ps.locH-7-random(random(14)),ps.locV-7-random(random(14)),ps.locH+7+random(random(14)),ps.locV+7+random(random(14))), rct, {#color:0, #ink:36})
                   -- end if 
                 end repeat
               end repeat
             else if ((gLEProps.matrix[tile.locH][tile.locV][1][2].getPos(5) > 0)or(gLEProps.matrix[tile.locH][tile.locV][1][2].getPos(4) > 0))and(gLEProps.matrix[tile.locH][tile.locV][2][1]=1) then
               ps = giveMiddleOfTile(point(q2,c2))--+gRenderCameraPixelPos--gRenderCameraTilePos-gRenderCameraPixelPos
-              member("blackOutImg1").image.copyPixels(member("blob").image, rect(ps.locH-4-random(random(9)),ps.locV-4-random(random(9)),ps.locH+4+random(random(9)),ps.locV+4+random(random(9))), rct, {#color:0, #ink:36})
-              member("blackOutImg2").image.copyPixels(member("blob").image, rect(ps.locH-7-random(random(9)),ps.locV-7-random(random(9)),ps.locH+7+random(random(9)),ps.locV+7+random(random(9))), rct, {#color:0, #ink:36})
-              member("blackOutImg1").image.copyPixels(member("blob").image, rect(ps.locH-4-random(random(9)),ps.locV-4-random(random(9)),ps.locH+4+random(random(9)),ps.locV+4+random(random(9))), rct, {#color:0, #ink:36})
-              member("blackOutImg2").image.copyPixels(member("blob").image, rect(ps.locH-7-random(random(9)),ps.locV-7-random(random(9)),ps.locH+7+random(random(9)),ps.locV+7+random(random(9))), rct, {#color:0, #ink:36})
+              blk1.copyPixels(blobImg, rect(ps.locH-4-random(random(9)),ps.locV-4-random(random(9)),ps.locH+4+random(random(9)),ps.locV+4+random(random(9))), rct, {#color:0, #ink:36})
+              blk2.copyPixels(blobImg, rect(ps.locH-7-random(random(9)),ps.locV-7-random(random(9)),ps.locH+7+random(random(9)),ps.locV+7+random(random(9))), rct, {#color:0, #ink:36})
+              blk1.copyPixels(blobImg, rect(ps.locH-4-random(random(9)),ps.locV-4-random(random(9)),ps.locH+4+random(random(9)),ps.locV+4+random(random(9))), rct, {#color:0, #ink:36})
+              blk2.copyPixels(blobImg, rect(ps.locH-7-random(random(9)),ps.locV-7-random(random(9)),ps.locH+7+random(random(9)),ps.locV+7+random(random(9))), rct, {#color:0, #ink:36})
             end if
           end if
         end repeat
@@ -637,11 +649,15 @@ on initEffect me
       global daddyCorruptionHoles
       daddyCorruptionHoles = []
       
+    "Mosaic Plants":
+      global mosaicPlantStarts
+      mosaicPlantStarts = []
+      me.InitMosaicPlants()
   end case
   
   
   txt = ""
-  put "<APPLYING EFFECTS>                                                Press TAB (VANILLA) / TAB + Z + R (DROUGHT) / TAB + X + C (DRY) to abort" after txt
+  put "<APPLYING EFFECTS>" after txt
   put RETURN after txt
   
   repeat with ef = 1 to gEEprops.effects.count then
@@ -661,9 +677,9 @@ on exitEffect me
   case gEEprops.effects[r].nm of
     "BlackGoo":
       
-      
-      member("layer0").image.copyPixels(member("blackOutImg1").image, rect(0,0,100*20, 60*20), rect(0,0,100*20, 60*20), {#ink:36, #color:color(0, 255, 0)})
-      member("layer0").image.copyPixels(member("blackOutImg2").image, rect(0,0,100*20, 60*20), rect(0,0,100*20, 60*20), {#ink:36, #color:color(255, 0, 0)})
+      lr0 = member("layer0").image
+      lr0.copyPixels(member("blackOutImg1").image, rect(0,0,100*20, 60*20), rect(0,0,100*20, 60*20), {#ink:36, #color:color(0, 255, 0)})
+      lr0.copyPixels(member("blackOutImg2").image, rect(0,0,100*20, 60*20), rect(0,0,100*20, 60*20), {#ink:36, #color:color(255, 0, 0)})
       
       
       member("blackOutImg1").image = image(1, 1, 1)
@@ -673,9 +689,9 @@ on exitEffect me
       
     "Super BlackGoo":
       
-      
-      member("layer0").image.copyPixels(member("blackOutImg1").image, rect(0,0,100*20, 60*20), rect(0,0,100*20, 60*20), {#ink:36, #color:color(0, 255, 0)})
-      member("layer0").image.copyPixels(member("blackOutImg2").image, rect(0,0,100*20, 60*20), rect(0,0,100*20, 60*20), {#ink:36, #color:color(255, 0, 0)})
+      lr0 = member("layer0").image
+      lr0.copyPixels(member("blackOutImg1").image, rect(0,0,100*20, 60*20), rect(0,0,100*20, 60*20), {#ink:36, #color:color(0, 255, 0)})
+      lr0.copyPixels(member("blackOutImg2").image, rect(0,0,100*20, 60*20), rect(0,0,100*20, 60*20), {#ink:36, #color:color(255, 0, 0)})
       
       
       member("blackOutImg1").image = image(1, 1, 1)
@@ -712,13 +728,505 @@ on exitEffect me
 end
 
 
-on applyStandardErosion me, q, c, eftc, tp
+on ApplyCustomEffect(me, q, c, effectr, efname)
   q2 = q + gRenderCameraTilePos.locH
   c2 = c + gRenderCameraTilePos.locV
+  mtrx = effectr.mtrx
   
-  fc = gEEprops.effects[r].affectOpenAreas + (1.0-gEEprops.effects[r].affectOpenAreas)* (     solidAfaMv(point(q2,c2), 3)   )
+  -- Find the effect
+  cEff = VOID
+  if (gCustomEffects.getPos(efname) > 0) then
+    repeat with i = 1 to gEffects.count
+      iefs = gEffects[i].efs
+      repeat with j = 1 to iefs.count
+        jef = iefs[j]
+        if (jef.nm = efname) then
+          cEff = jef
+          exit repeat
+        end if
+      end repeat
+      if (cEff <> VOID) then exit repeat
+    end repeat
+  end if
   
-  repeat with d = 1 to 30 then
+  -- Draw the effect
+  if (cEff <> VOID) then
+    effGraf = member("previewImprt")
+    if (gLastImported <> cEff.nm) then
+      member("previewImprt").importFileInto("Effects\" & cEff.nm & ".png")
+      effGraf.name = "previewImprt"
+      gLastImported = cEff.nm
+    end if
+    effGraf = effGraf.image
+    
+    case cEff.tp of
+      "standardPlant": -- standard plant effect
+        -- Get potential layers
+        case lrSup of
+          "All":
+            lsL = [1, 2, 3]
+          "1":
+            lsL = [1]
+          "2":
+            lsL = [2]
+          "3":
+            lsL = [3]
+          "1:st and 2:nd":
+            lsL = [1, 2]
+          "2:nd and 3:rd":
+            lsL = [2, 3]
+          otherwise:
+            lsL = [1, 2, 3]
+        end case
+        
+        -- Get amount
+        amount = 17
+        if (cEff.findPos("placeAmt") > 0) then
+          amount = cEff.placeAmt
+        end if
+        
+        -- Now we place the effect
+        repeat with layer in lsL
+          if solidMtrx[q2][c2][layer]=0 and solidAfaMv(point(q2,c2+1),layer)=1 then
+            repeat with i = 1 to mtrx[q2][c2] * 0.01 * amount then
+              pnt = me.giveGroundPos(q,c,layer)
+              d = random(9) + ((layer-1)*10)
+              
+              var = random(cEff.vars)
+              if cEff.findPos("strengthAffectVar") then var = random(restrict((cEff.vars*(mtrx[q2][c2]-11+random(21))*0.01).integer, 1, cEff.vars))
+              grab = rect(cEff.pxlSz.locH * (var-1), 1, cEff.pxlSz.locH * var, 1+cEff.pxlSz.locV)
+              rot = 0
+              if cEff.findPos("randRot") then rot = random(cEff.randRot * 2 + 1) - cEff.randRot
+              
+              sz = (random(41) + 79) / 100.0 -- default range: 0.8 to 1.2 (inclusive)
+              if cEff.findPos("szVar") then
+                if cEff.findPos("strengthAffectSize") then
+                  sz = cEff.szVar[1] * (1.0 - power(mtrx[q2][c2] / 100.0, 0.85)) + cEff.szVar[2] * power(mtrx[q2][c2] / 100.0, 0.85)
+                else
+                  sz = (random((cEff.szVar[2] * 1000.0 - cEff.szVar[1] * 1000.0)) / 1000.0) + cEff.szVar[1]
+                end if
+              end if
+              
+              rot = 0
+              if cEff.findPos("rotVar") then
+                rot = random(cEff.rotVar * 2 + 1) - cEff.rotVar
+              end if
+              
+              flp = 0
+              if cEff.findPos("randomFlip") then
+                if cEff.randomFlip then flp = random(2)-1
+              end if
+              rootAmt = 5
+              if cEff.findPos("rootAmt") then rootAmt = cEff.rootAmt
+              qd = rect(pnt, pnt) + rect(-(cEff.pxlSz.locH/2.0)*sz, -cEff.pxlSz.locV*sz, (cEff.pxlSz.locH/2.0)*sz, rootAmt)
+              qd = rotateToQuadFix(qd, rot)
+              if flp then qd = flipQuadH(qd)
+              
+              useEffCol = 0
+              if cEff.findPos("pickColor") then
+                if cEff.pickColor then useEffCol = 1
+              end if
+              
+              if useEffCol then
+                member("layer"&string(d)).image.copyPixels(effGraf, qd, grab, {#color:colr, #ink:36})
+                if colr <> color(0,255,0) then
+                  if cEff.findPos("hasGrad") then
+                    if cEff.hasGrad then grab = grab + rect(0, cEff.pxlSz.locV, 0, cEff.pxlSz.locV)
+                  end if
+                  copyPixelsToEffectColor(gdLayer, d, qd, "previewImprt", grab, 0.5, VOID)
+                end if
+              else
+                member("layer"&string(d)).image.copyPixels(effGraf, qd, grab, {#ink:36})
+                if cEff.findPos("forceGrad") then
+                  if cEff.forceGrad then
+                    grab = grab + rect(0, cEff.pxlSz.locV, 0, cEff.pxlSz.locV)
+                    copyPixelsToEffectColor("A", d, qd, "previewImprt", grab, 0.5, VOID)
+                    copyPixelsToEffectColor("B", d, qd, "previewImprt", grab, 0.5, VOID)
+                  end if
+                end if
+              end if
+            end repeat
+          end if
+        end repeat
+        
+      "grower", "hanger", "clinger": -- grower effect and its extended family
+        if (random(100) < mtrx[q2][c2]) and (random(3) > 1) then
+          
+          case lrSup of
+            "All":
+              d = random(29)
+            "1":
+              d = random(9)
+            "2":
+              d = random(10) - 1 + 10
+            "3":
+              d = random(10) - 1 + 20
+            "1:st and 2:nd":
+              d = random(19)
+            "2:nd and 3:rd":
+              d = random(20) - 1 + 10
+            otherwise:
+              d = random(29)
+          end case
+          lr = 1 + (d > 9) + (d > 19)
+          
+          -- Figure out grow direction
+          case cEff.tp of
+            "grower": -- the normal kind.
+              growDir = 180
+            "hanger": -- growers but they grow upside down.
+              growDir = 0
+            "clinger": -- growers but they grow from the sides. how fancy!
+              side = random(2)-1
+              if effSide = "L" then side = 0
+              else if effSide = "R" then side = 1
+              if side = 1 then growDir = 90
+              else growDir = 270
+          end case
+          
+          -- Do we have a tip? If so, do setup
+          doingTip = 0
+          if cEff.findPos("tipGraf") then
+            doingTip = 1
+            effGraf = member("previewImprt")
+            if gLastImported <> cEff.tipGraf then
+              member("previewImprt").importFileInto("Effects\" & cEff.tipGraf & ".png")
+              effGraf.name = "previewImprt"
+              gLastImported = cEff.tipGraf
+            end if
+            effGraf = effGraf.image
+          end if
+          
+          -- Set up other variables
+          sz = 1.0
+          blnd = 1.0
+          blnd2 = 1.0
+          mdPnt = giveMiddleOfTile(point(q,c))
+          pnt = mdPnt + point(random(21)-11, random(21)-11)
+          lastDir = growDir + random(cEff.initRotVar * 2 + 1) - cEff.initRotVar
+          
+          if cEff.findPos("szChange") then
+            sz = cEff.szChange[1]
+          end if
+          
+          -- Draw loop: as with every grower, draw from tip to ground (or void)
+          repeat while (pnt.locV < gLOprops.size.locV * 20 + 100) and (pnt.locV > -100) and (pnt.locH < gLOprops.size.locH * 20 + 100) and (pnt.locH > -100) then
+            if doingTip = 1 then
+              vars = cEff.tipVars
+              pxlSz = cEff.tipPxlSz
+              moveAmt = cEff.tipMoveAmt
+            else
+              vars = cEff.vars
+              pxlSz = cEff.pxlSz
+              moveAmt = cEff.segmentMoveAmt
+            end if
+            
+            -- Figure out grow direction and take a step in that direction. The area between the step is the segment.
+            dir = growDir + random(cEff.segmentRotVar * 2 + 1) - cEff.segmentRotVar
+            dir = lerp(lastDir, dir, cEff.segmentRotPull)
+            lastPnt = pnt
+            pnt = pnt + degToVec(dir) * moveAmt
+            lastDir = dir
+            
+            -- Set up the quad
+            qd = (lastPnt + pnt) / 2.0
+            qd = rect(qd, qd) + rect(-pxlSz.locH*sz/2.0,-pxlSz.locV/2.0, pxlSz.locH*sz/2.0, pxlSz.locV/2.0)
+            qd = rotateToQuadFix(qd, lookAtpoint(lastPnt, pnt))
+            
+            flp = 0
+            if cEff.findPos("randomFlip") then
+              if cEff.randomFlip then flp = random(2)-1
+            end if
+            if flp then qd = flipQuadH(qd)
+            
+            -- Figure out variation and effect color
+            var = random(vars)
+            grab = rect(pxlSz.locH*(var-1), 1, pxlSz.locH*var, 1+pxlSz.locV)
+            
+            useEffCol = 0
+            if cEff.findPos("pickColor") then
+              if cEff.pickColor then useEffCol = 1
+            end if
+            
+            -- Draw the damn thing
+            if useEffCol then
+              member("layer"&string(d)).image.copyPixels(effGraf, qd, grab, {#color:colr, #ink:36})
+              if colr <> color(0,255,0) then
+                if cEff.findPos("hasGrad") then
+                  if cEff.hasGrad then grab = grab + rect(0, pxlSz.locV, 0, pxlSz.locV)
+                end if
+                copyPixelsToEffectColor(gdLayer, d, qd, "previewImprt", grab, 0.5, blnd)
+                
+                if cEff.findPos("effectFadeOut2") and blnd2 > 0 and doingTip = 0 then
+                  qd = (lastPnt + pnt) / 2.0
+                  qd = rect(qd, qd) + rect(-pxlSz.locH*sz/1.6,-pxlSz.locV/1.6, pxlSz.locH*sz/1.6, pxlSz.locV/1.6)
+                  qd = rotateToQuadFix(qd, lookAtpoint(lastPnt, pnt))
+                  if flp then qd = flipQuadH(qd)
+                  copyPixelsToEffectColor(gdLayer, d, qd, "softBrush1", member("softBrush1").image.rect, 0.5, blnd2)
+                end if
+              end if
+            else
+              member("layer"&string(d)).image.copyPixels(effGraf, qd, grab, {#ink:36})
+              if cEff.findPos("forceGrad") then
+                if cEff.forceGrad then
+                  grab = grab + rect(0, pxlSz.locV, 0, pxlSz.locV)
+                  copyPixelsToEffectColor("A", d, qd, "previewImprt", grab, 0.5, blnd)
+                  copyPixelsToEffectColor("B", d, qd, "previewImprt", grab, 0.5, blnd)
+                end if
+              end if
+            end if
+            
+            -- Adjust per-segment variables
+            if cEff.findPos("effectFadeOut") then blnd = blnd * cEff.effectFadeOut
+            else blnd = blnd * 0.85
+            
+            if cEff.findPos("effectFadeOut2") then blnd2 = max(0.0, blnd2 - cEff.effectFadeOut2)
+            
+            if cEff.findPos("segmentSz") then
+              sz = restrict(sz + random(1000)/1000.0 * cEff.szChange[3], min(cEff.szChange[1], cEff.szChange[2]), max(cEff.szChange[1], cEff.szChange[2]))
+            end if
+            
+            -- Switch graphic and reset after tip
+            if doingTip = 1 then
+              doingTip = 0
+              effGraf = member("previewImprt")
+              if gLastImported <> cEff.nm then
+                member("previewImprt").importFileInto("Effects\" & cEff.nm & ".png")
+                effGraf.name = "previewImprt"
+                gLastImported = cEff.nm
+              end if
+              effGraf = effGraf.image
+            end if
+            
+            -- Stop once we hit solid ground
+            tlPos = giveGridPos(pnt) + gRenderCameraTilePos
+            if solidAfaMv(tlPos, lr) then exit repeat
+          end repeat
+        end if
+        
+      "individual": -- individual plant effect
+        case lrSup of
+          "All":
+            d = random(29)
+          "1":
+            d = random(9)
+          "2":
+            d = random(10) - 1 + 10
+          "3":
+            d = random(10) - 1 + 20
+          "1:st and 2:nd":
+            d = random(19)
+          "2:nd and 3:rd":
+            d = random(20) - 1 + 10
+          otherwise:
+            d = random(29)
+        end case
+        lr = 1 + (d > 9) + (d > 19)
+        
+        if solidMtrx[q2][c2][lr]=0 and solidAfaMv(point(q2,c2+1),lr)=1 then
+          -- Figure out variables
+          mdPnt = giveMiddleOfTile(point(q,c))
+          pnt = mdPnt + point(random(21)-11, 10)
+          
+          var = random(cEff.vars)
+          if cEff.findPos("strengthAffectVar") then var = random(restrict((cEff.vars*(mtrx[q2][c2]-11+random(21))*0.01).integer, 1, cEff.vars))
+          grab = rect(cEff.pxlSz.locH*(var-1), 1, cEff.pxlSz.locH*var, 1+cEff.pxlSz.locV)
+          
+          sz = (random(41) + 79) / 100.0 -- default range: 0.8 to 1.2 (inclusive)
+          if cEff.findPos("szVar") then
+            sz = (random((cEff.szVar[2] * 1000.0 - cEff.szVar[1] * 1000.0)) / 1000.0) + cEff.szVar[1]
+          end if
+          
+          rot = 0
+          if cEff.findPos("rotVar") then
+            rot = random(cEff.rotVar * 2 + 1) - cEff.rotVar
+          end if
+          
+          flp = 0
+          if cEff.findPos("randomFlip") then
+            if cEff.randomFlip then flp = random(2)-1
+          end if
+          rootAmt = 5
+          if cEff.findPos("rootAmt") then rootAmt = cEff.rootAmt
+          
+          qd = rect(pnt, pnt) + rect(-(cEff.pxlSz.locH/2.0)*sz, -cEff.pxlSz.locV*sz, (cEff.pxlSz.locH/2.0)*sz, rootAmt)
+          qd = rotateToQuadFix(qd, rot)
+          if flp then qd = flipQuadH(qd)
+          
+          -- Draw the thing
+          useEffCol = 0
+          if cEff.findPos("pickColor") then
+            if cEff.pickColor then useEffCol = 1
+          end if
+          
+          if useEffCol then
+            member("layer"&string(d)).image.copyPixels(effGraf, qd, grab, {#color:colr, #ink:36})
+            if colr <> color(0,255,0) then
+              if cEff.findPos("hasGrad") then
+                if cEff.hasGrad then grab = grab + rect(0, cEff.pxlSz.locV, 0, cEff.pxlSz.locV)
+              end if
+              copyPixelsToEffectColor(gdLayer, d, qd, "previewImprt", grab, 0.5, VOID)
+            end if
+          else
+            member("layer"&string(d)).image.copyPixels(effGraf, qd, grab, {#ink:36})
+            if cEff.findPos("forceGrad") then
+              if cEff.forceGrad then
+                grab = grab + rect(0, cEff.pxlSz.locV, 0, cEff.pxlSz.locV)
+                copyPixelsToEffectColor("A", d, qd, "previewImprt", grab, 0.5, VOID)
+                copyPixelsToEffectColor("B", d, qd, "previewImprt", grab, 0.5, VOID)
+              end if
+            end if
+          end if
+          
+        end if
+        
+      "wall": -- things that get placed on wall
+        case lrSup of
+          "All":
+            dmin = 0
+            dmax = 29
+          "1":
+            dmin = 0
+            dmax = 9
+          "2":
+            dmin = 10
+            dmax = 19
+          "3":
+            dmin = 20
+            dmax = 29
+          "1:st and 2:nd":
+            dmin = 0
+            dmax = 19
+          "2:nd and 3:rd":
+            dmin = 10
+            dmax = 29
+          otherwise:
+            dmin = 0
+            dmax = 29
+        end case
+        
+        mdPnt = giveMiddleOfTile(point(q,c))
+        amount = 20
+        if cEff.findPos("placeAmt") > 0 then
+          amount = cEff.placeAmt
+        end if
+        
+        repeat with k = 1 to max(1, (amount * mtrx[q2][c2] / 100.0).integer) then
+          -- Figure out where and how big (we need ow big to figure out depth believe it or not)
+          pnt = mdPnt + point(random(21)-11, random(21)-11)
+          
+          sz = (random(41) + 79) / 100.0 -- default range: 0.8 to 1.2 (inclusive)
+          if cEff.findPos("szVar") then
+            if cEff.findPos("strengthAffectSize") then
+              x = restrict(mtrx[q2][c2]-11+random(21),1,100)
+              sz = cEff.szVar[1] * (1.0 - power(x / 100.0, 0.85)) + cEff.szVar[2] * power(x / 100.0, 0.85)
+            else
+              sz = (random((cEff.szVar[2] * 1000.0) - (cEff.szVar[1] * 1000.0)+1)-1) / 1000.0 + cEff.szVar[1]
+            end if
+          end if
+          
+          -- Figure out depth and if we can actually place it
+          canPlace = 0
+          d = -1
+          lr = 0
+          cl = color(255,255,255)
+          repeat with dp = dmin to dmax then
+            rad = sz/2.0
+            repeat with dr in [point(0,0), point(-1,0), point(0,-1), point(0,1), point(1,0)] then
+              tempPt = point((pnt.locH + dr.locH*rad).integer, (pnt.locV + dr.locV*rad).integer)
+              if (member("layer"&string(dp)).getPixel(tempPt.locH, tempPt.locV) <> color(255,255,255)) then
+                canPlace = 1
+                cl = member("layer"&string(dp)).getPixel(tempPt.locH, tempPt.locV)
+                if (cEff.findPos("can3D")>0) then
+                  if cEff.can3D = 1 or (cEff.can3D = 2 and effectIn3D) then
+                    d = max(0, dp - 2)
+                  else
+                    d = dp
+                  end if
+                else
+                  d = dp
+                end if
+                lr = 1 + (d > 9) + (d > 19)
+                exit repeat
+              end if
+            end repeat
+            if canPlace = 1 then exit repeat
+          end repeat
+          
+          if (canPlace=1) and (cEff.findPos("requireSolid") > 0) then
+            if cEff.requireSolid = 1 then
+              canPlace = solidAfaMv(point(q2,c2),lr)
+            end if
+          end if
+          
+          -- Now draw it if we can
+          if canPlace = 1 and d > -1 then
+            d = restrict(d - 1 + random(2), dmin, dmax)
+            
+            var = random(cEff.vars)
+            if cEff.findPos("strengthAffectVar") then var = random(restrict((cEff.vars*(mtrx[q2][c2]-11+random(21))*0.01).integer, 1, cEff.vars))
+            grab = rect(cEff.pxlSz.locH*(var-1), 1, cEff.pxlSz.locH*var, 1+cEff.pxlSz.locV)
+            
+            rot = 0
+            if cEff.findPos("randomRotat") then
+              if cEff.randomRotat then rot = random(361) - 1
+            end if
+            
+            flp = 0
+            if cEff.findPos("randomFlip") then
+              if cEff.randomFlip then flp = random(2)-1
+            end if
+            
+            qd = rect(pnt, pnt) + rect(-(cEff.pxlSz/2.0), cEff.pxlSz/2.0)
+            qd = rotateToQuadFix(qd, rot)
+            if flp then qd = flipQuadH(qd)
+            
+            useEffCol = 0
+            if cEff.findPos("pickColor") then
+              if cEff.pickColor then useEffCol = 1
+            end if
+            
+            if cEff.findPos("outline") then -- outline, if wanted
+              if cEff.outline then
+                repeat with jlist in [[point(-1,-1), color(0,0,255)], [point(-0,-1), color(0,0,255)], [point(-1,-0), color(0,0,255)], [point(1,1), color(255,0,0)],[point(0,1), color(255,0,0)],[point(1,0), color(255,0,0)]] then
+                  oqd = [qd[1] + jlist[1], qd[2] + jlist[1], qd[3] + jlist[1], qd[4] + jlist[1]]
+                  member("layer"&string(d)).image.copyPixels(effGraf, oqd, grab, {#color:jlist[2], #ink:36})
+                end repeat
+              end if
+            end if
+            
+            if useEffCol then -- actually drawing
+              member("layer"&string(d)).image.copyPixels(effGraf, qd, grab, {#color:colr, #ink:36})
+              if colr <> color(0,255,0) then
+                if cEff.findPos("hasGrad") then
+                  if cEff.hasGrad then grab = grab + rect(0, cEff.pxlSz.locV, 0, cEff.pxlSz.locV)
+                end if
+                copyPixelsToEffectColor(gdLayer, d, qd, "previewImprt", grab, 0.5, VOID)
+              end if
+            else
+              member("layer"&string(d)).image.copyPixels(effGraf, qd, grab, {#ink:36})
+              if cEff.findPos("forceGrad") then
+                if cEff.forceGrad then
+                  grab = grab + rect(0, cEff.pxlSz.locV, 0, cEff.pxlSz.locV)
+                  copyPixelsToEffectColor("A", d, qd, "previewImprt", grab, 0.5, VOID)
+                  copyPixelsToEffectColor("B", d, qd, "previewImprt", grab, 0.5, VOID)
+                end if
+              end if
+            end if
+          end if
+        end repeat 
+    end case
+  end if
+end
+
+
+on applyStandardErosion me, q, c, eftc, tp, effectr
+  q2 = q + gRenderCameraTilePos.locH
+  c2 = c + gRenderCameraTilePos.locV
+  affop = effectr.affectOpenAreas
+  fc = affop + (1.0-affop)* (     solidAfaMv(point(q2,c2), 3)   )
+  
+  repeat with d = 1 to 30
     lr = 30-d
     case lrSup of--["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]
       "All":
@@ -750,19 +1258,24 @@ on applyStandardErosion me, q, c, eftc, tp
         dmin = 0
         dmax = 29
     end case
-    --end if
-    --clLr = 30-d
     if (lr = 9)or(lr=19) then
-      sld = (solidMtrx[q2][c2][ 1+(d>9)+(d>19) ])
-      fc = gEEprops.effects[r].affectOpenAreas + (1.0-gEEprops.effects[r].affectOpenAreas)* ( solidAfaMv(point(q2,c2), 1+(d>9)+(d>19)) )
+      lraddc = 1+(d>9)+(d>19)
+      sld = (solidMtrx[q2][c2][lraddc])
+      fc = affop + (1.0-affop)* ( solidAfaMv(point(q2,c2), lraddc) )
     end if
     deepEffect = 0
     
     if (lr = 0)or(lr=10)or(lr=20)or(sld=0)then
       deepEffect = 1
     end if
-    
-    repeat with cntr = 1 to gEEprops.effects[r].mtrx[q2][c2]*(0.2 + (0.8*deepEffect))*0.01*gEEprops.effects[r].repeats*fc then
+    mtrxq2c2 = effectr.mtrx[q2][c2]
+    strlr = string(lr)
+    layerlr = member("layer" & strlr).image
+    galr = member("gradientA" & strlr).image
+    gblr = member("gradientB" & strlr).image
+    dclr = member("layer" & strlr & "dc").image
+    endofloop = mtrxq2c2*(0.2 + (0.8*deepEffect))*0.01*effectr.repeats*fc
+    repeat with cntr = 1 to endofloop
       if deepEffect then
         pnt = (point(q-1, c-1)*20)+point(random(20), random(20))
       else
@@ -777,49 +1290,59 @@ on applyStandardErosion me, q, c, eftc, tp
         "Rust",  "Barnacles", "Colored Barnacles", "Clovers":
           pnt = pnt+degToVec(random(360))*4
           if (lr > dmax) or (lr < dmin) then
-            cl = color(255, 255, 255)
-            clA = color(255, 255, 255)
-            clB = color(255, 255, 255)
-            clDc = color(255, 255, 255)
+            cl = DRWhite
+            clA = DRWhite
+            clB = DRWhite
+            clDc = DRWhite
           else
-            cl = member(("layer")&string(lr)).image.getPixel(pnt)
-            clA = member(("gradientA")&string(lr)).image.getPixel(pnt)
-            clB = member(("gradientB")&string(lr)).image.getPixel(pnt)
-            clDc = member(("layer")&string(lr)&"dc").image.getPixel(pnt)
+            cl = layerlr.getPixel(pnt)
+            clA = galr.getPixel(pnt)
+            clB = gblr.getPixel(pnt)
+            clDc = dclr.getPixel(pnt)
           end if
-        "Erode", "Super Erode", "Ultra Super Erode":
+        "Erode", "Ultra Super Erode":
           pnt = pnt+degToVec(random(360))*2
-          if (member("layer"&string(lr)).image.getPixel(pnt) = color(255, 255, 255)) or ((random(108)=1) and (tp <> "Super Erode")) then
-            cl = "GOTHROUGH"
+          if (layerlr.getPixel(pnt) = DRWhite) or (random(108)=1) then
+            cl = "G"
           else
-            cl = color(255, 255, 255)
+            cl = DRWhite
           end if
-          if (member("layer"&string(lr)).image.getPixel(pnt) = color(255, 255, 255)) then
-            cl = "NOAPPLY"
+          if (layerlr.getPixel(pnt) = DRWhite) then
+            cl = "N"
+          end if
+        "Super Erode":
+          pnt = pnt+degToVec(random(360))*2
+          if (layerlr.getPixel(pnt) = DRWhite) then
+            cl = "G"
+          else
+            cl = DRWhite
+          end if
+          if (layerlr.getPixel(pnt) = DRWhite) then
+            cl = "N"
           end if
         "Destructive Melt", "Impacts":
           if (lr > dmax) or (lr < dmin) then
-            cl = color(255, 255, 255)
-            clA = color(255, 255, 255)
-            clB = color(255, 255, 255)
-            clDc = color(255, 255, 255)
+            cl = DRWhite
+            clA = DRWhite
+            clB = DRWhite
+            clDc = DRWhite
           else
-            cl = member(("layer")&string(lr)).image.getPixel(pnt)
-            clA = member(("gradientA")&string(lr)).image.getPixel(pnt)
-            clB = member(("gradientB")&string(lr)).image.getPixel(pnt)
-            clDc = member(("layer")&string(lr)&"dc").image.getPixel(pnt)
+            cl = layerlr.getPixel(pnt)
+            clA = galr.getPixel(pnt)
+            clB = gblr.getPixel(pnt)
+            clDc = dclr.getPixel(pnt)
           end if
-          if(cl = color(255, 255, 255))then
-            cl = "WHITE"
+          if(cl = DRWhite)then
+            cl = "W"
           end if
-          if(clA = color(255, 255, 255))then
-            clA = "WHITE"
+          if(clA = DRWhite)then
+            clA = "W"
           end if
-          if(clB = color(255, 255, 255))then
-            clB = "WHITE"
+          if(clB = DRWhite)then
+            clB = "W"
           end if
-          if(clDc = color(255, 255, 255))then
-            clDc = "WHITE"
+          if(clDc = DRWhite)then
+            clDc = "W"
           end if
         otherwise:
           if (lr > dmax) or (lr < dmin) then
@@ -828,16 +1351,16 @@ on applyStandardErosion me, q, c, eftc, tp
             clB = DRWhite
             clDc = DRWhite
           else
-            cl = member(("layer") & string(lr)).image.getPixel(pnt)
-            clA = member(("gradientA") & string(lr)).image.getPixel(pnt)
-            clB = member(("gradientB") & string(lr)).image.getPixel(pnt)
-            clDc = member(("layer") & string(lr) & "dc").image.getPixel(pnt)
+            cl = layerlr.getPixel(pnt)
+            clA = galr.getPixel(pnt)
+            clB = gblr.getPixel(pnt)
+            clDc = dclr.getPixel(pnt)
           end if
       end case
       
       case tp of
         "Slime", "SlimeX3":
-          if (cl <> color(255, 255, 255)) then
+          if (cl <> DRWhite) then
             ofst = random(2) - 1
             lgt = 3 + random(random(random(6)))
             if (effectIn3D) then
@@ -865,159 +1388,127 @@ on applyStandardErosion me, q, c, eftc, tp
             else if (nwLr < 0) then
               nwLr = 0
             end if
+            strnwlr = string(nwLr)
+            layernwlr = member("layer" & strnwlr).image
             if (gradAf) then
+              ondc = (clDc <> DRWhite)
+              ona = (clA <> DRWhite)
+              onb = (clB <> DRWhite)
               slmRect = rect(pnt, pnt) + rect(0 + ofst, 0, 1 + ofst, lgt)
-              member("layer" & string(nwLr)).image.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:cl})
-              if (clDc <> DRWhite) then
-                member("layer" & string(nwLr) & "dc").image.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:clDc})
+              layernwlr.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:cl})
+              if (ondc) then
+                dcnwlr = member("layer" & strnwlr & "dc").image
+                dcnwlr.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:clDc})
               end if
-              if (clA <> DRWhite) then
-                member("gradientA" & string(nwLr)).image.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:clA})
+              if (ona) then
+                ganwlr = member("gradientA" & strnwlr).image
+                ganwlr.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:clA})
               end if
-              if (clB <> DRWhite) then
-                member("gradientB" & string(nwLr)).image.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:clB})
+              if (onb) then
+                gbnwlr = member("gradientB" & strnwlr).image
+                gbnwlr.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:clB})
               end if
               if (random(2) = 1) then
                 slmRect = rect(pnt, pnt) + rect(0 + ofst + 1, 1 ,1 + ofst + 1, lgt - 1)
-                member("layer" & string(nwLr)).image.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:cl})
-                if (clDc <> DRWhite) then
-                  member("layer" & string(nwLr) & "dc").image.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:clDc})
+                layernwlr.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:cl})
+                if (ondc) then
+                  dcnwlr.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:clDc})
                 end if
-                if (clA <> DRWhite)then
-                  member("gradientA" & string(nwLr)).image.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:clA})
+                if (ona)then
+                  ganwlr.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:clA})
                 end if
-                if (clB <> DRWhite)then
-                  member("gradientB" & string(nwLr)).image.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:clB})
+                if (onb)then
+                  gbnwlr.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:clB})
                 end if
               else
                 slmRect = rect(pnt, pnt) + rect(0 + ofst - 1, 1, 1 + ofst - 1, lgt - 1)
-                member("layer" & string(nwLr)).image.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:cl})
-                if (clDc <> DRWhite) then
-                  member("layer" & string(nwLr) & "dc").image.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:clDc})
+                layernwlr.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:cl})
+                if (ondc) then
+                  dcnwlr.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:clDc})
                 end if
-                if (clA <> DRWhite) then
-                  member("gradientA" & string(nwLr)).image.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:clA})
+                if (ona) then
+                  ganwlr.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:clA})
                 end if
-                if (clB <> DRWhite) then
-                  member("gradientB" & string(nwLr)).image.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:clB})
+                if (onb) then
+                  gbnwlr.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:clB})
                 end if
               end if
             else if (slimeFxt) then
               slmRect = rect(pnt, pnt) + rect(0 + ofst, 0, 1 + ofst, lgt)
-              member("layer" & string(nwLr)).image.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:cl})
-              if (clDc <> DRWhite) then
-                member("layer" & string(nwLr) & "dc").image.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:clDc})
+              layernwlr.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:cl})
+              ondc = (clDc <> DRWhite)
+              if (ondc) then
+                dcnwlr = member("layer" & strnwlr & "dc").image
+                dcnwlr.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:clDc})
               end if
               if (random(2) = 1) then
                 slmRect = rect(pnt, pnt) + rect(0 + ofst + 1, 1 ,1 + ofst + 1, lgt - 1)
-                member("layer" & string(nwLr)).image.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:cl})
-                if (clDc <> DRWhite) then
-                  member("layer" & string(nwLr) & "dc").image.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:clDc})
+                layernwlr.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:cl})
+                if (ondc) then
+                  dcnwlr.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:clDc})
                 end if
               else
                 slmRect = rect(pnt, pnt) + rect(0 + ofst - 1, 1, 1 + ofst - 1, lgt - 1)
-                member("layer" & string(nwLr)).image.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:cl})
-                if (clDc <> DRWhite) then
-                  member("layer" & string(nwLr) & "dc").image.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:clDc})
+                layernwlr.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:cl})
+                if (ondc) then
+                  dcnwlr.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:clDc})
                 end if
               end if
             else
               slmRect = rect(pnt, pnt) + rect(0 + ofst, 0, 1 + ofst, lgt)
-              member("layer" & string(nwLr)).image.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:cl})
+              layernwlr.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:cl})
               if (random(2) = 1) then
                 slmRect = rect(pnt, pnt) + rect(0 + ofst + 1, 1 ,1 + ofst + 1, lgt - 1)
-                member("layer" & string(nwLr)).image.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:cl})
+                layernwlr.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:cl})
               else
                 slmRect = rect(pnt, pnt) + rect(0 + ofst - 1, 1, 1 + ofst - 1, lgt - 1)
-                member("layer" & string(nwLr)).image.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:cl})
+                layernwlr.copyPixels(DRPxl, slmRect, DRPxlRect, {#color:cl})
               end if
             end if
-            
-            --            member("layer"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst,0,1+ofst,lgt), member("pxl").image.rect, {#color:cl})
-            --            if (gradAf) or (slimeFxt) then
-            --              if (clDc <> color(255,255,255)) then
-            --                member("layer"&string(nwLr)&"dc").image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst,0,1+ofst,lgt), member("pxl").image.rect, {#color:clDc})
-            --              end if
-            --            end if
-            --            if (gradAf) then
-            --              if (clA <> color(255,255,255)) then
-            --                member("gradientA"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst,0,1+ofst,lgt), member("pxl").image.rect, {#color:clA})
-            --              end if
-            --              if (clB <> color(255,255,255)) then
-            --                member("gradientB"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst,0,1+ofst,lgt), member("pxl").image.rect, {#color:clB})
-            --              end if
-            --            end if
-            --            if (random(2) = 1) then
-            --              member("layer"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst+1,1,1+ofst+1,lgt-1), member("pxl").image.rect, {#color:cl})
-            --              if (gradAf) or (slimeFxt) then
-            --                if (clDc <> color(255,255,255))then
-            --                  member("layer"&string(nwLr)&"dc").image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst+1,1,1+ofst+1,lgt-1), member("pxl").image.rect, {#color:clDc})
-            --                end if
-            --              end if
-            --              if(gradAf)then
-            --                if (clA <> color(255,255,255))then
-            --                  member("gradientA"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst+1,1,1+ofst+1,lgt-1), member("pxl").image.rect, {#color:clA})
-            --                end if
-            --                if (clB <> color(255,255,255))then
-            --                  member("gradientB"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst+1,1,1+ofst+1,lgt-1), member("pxl").image.rect, {#color:clB})
-            --                end if
-            --              end if
-            --            else
-            --              member("layer"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst-1,1,1+ofst-1,lgt-1), member("pxl").image.rect, {#color:cl})--cl
-            --              if (gradAf) or (slimeFxt) then
-            --                member("layer"&string(nwLr)&"dc").image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst-1,1,1+ofst-1,lgt-1), member("pxl").image.rect, {#color:clDc})
-            --              end if
-            --              if (gradAf) then
-            --                if (clA <> color(255,255,255)) then
-            --                  member("gradientA"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst-1,1,1+ofst-1,lgt-1), member("pxl").image.rect, {#color:clA})
-            --                end if
-            --                if (clB <> color(255,255,255)) then
-            --                  member("gradientB"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst-1,1,1+ofst-1,lgt-1), member("pxl").image.rect, {#color:clB})
-            --                end if
-            --              end if
-            --            end if
           end if
           
         "DecalsOnlySlime":
-          if (cl <> color(255, 255, 255)) and (lr >= dmin) and (lr <= dmax) then
+          if (cl <> DRWhite) and (lr >= dmin) and (lr <= dmax) then
             ofst = random(2)-1
             lgt = 3 + random(random(random(6)))
-            
-            if (clDc <> color(255,255,255))then
-              member("layer"&string(lr)&"dc").image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst,0,1+ofst,lgt), member("pxl").image.rect, {#color:clDc})
+            ondc = (clDc <> DRWhite)
+            onga = (clA <> DRWhite)
+            ongb = (clB <> DRWhite)
+            if (ondc)then
+              dclr.copyPixels(DRPxl, rect(pnt, pnt)+rect(0+ofst,0,1+ofst,lgt), DRPxlRect, {#color:clDc})
             end if
-            if (clA <> color(255,255,255))then
-              member("gradientA"&string(lr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst,0,1+ofst,lgt), member("pxl").image.rect, {#color:clA})
+            if (onga)then
+              galr.copyPixels(DRPxl, rect(pnt, pnt)+rect(0+ofst,0,1+ofst,lgt), DRPxlRect, {#color:clA})
             end if
-            if (clB <> color(255,255,255))then
-              member("gradientB"&string(lr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst,0,1+ofst,lgt), member("pxl").image.rect, {#color:clB})
+            if (ongb)then
+              gblr.copyPixels(DRPxl, rect(pnt, pnt)+rect(0+ofst,0,1+ofst,lgt), DRPxlRect, {#color:clB})
             end if
             
             if random(2)=1 then
-              if (clDc <> color(255,255,255))then
-                member("layer"&string(lr)&"dc").image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst+1,1,1+ofst+1,lgt-1), member("pxl").image.rect, {#color:clDc})
+              if (ondc)then
+                dclr.copyPixels(DRPxl, rect(pnt, pnt)+rect(0+ofst+1,1,1+ofst+1,lgt-1), DRPxlRect, {#color:clDc})
               end if
-              if (clA <> color(255,255,255))then
-                member("gradientA"&string(lr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst+1,1,1+ofst+1,lgt-1), member("pxl").image.rect, {#color:clA})
+              if (onga)then
+                galr.copyPixels(DRPxl, rect(pnt, pnt)+rect(0+ofst+1,1,1+ofst+1,lgt-1), DRPxlRect, {#color:clA})
               end if
-              if (clB <> color(255,255,255))then
-                member("gradientB"&string(lr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst+1,1,1+ofst+1,lgt-1), member("pxl").image.rect, {#color:clB})
+              if (ongb)then
+                gblr.copyPixels(DRPxl, rect(pnt, pnt)+rect(0+ofst+1,1,1+ofst+1,lgt-1), DRPxlRect, {#color:clB})
               end if
             else
-              if (clDc <> color(255,255,255))then
-                member("layer"&string(lr)&"dc").image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst-1,1,1+ofst-1,lgt-1), member("pxl").image.rect, {#color:clDc})
+              if (ondc)then
+                dclr.copyPixels(DRPxl, rect(pnt, pnt)+rect(0+ofst-1,1,1+ofst-1,lgt-1), DRPxlRect, {#color:clDc})
               end if
-              if (clA <> color(255,255,255))then
-                member("gradientA"&string(lr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst-1,1,1+ofst-1,lgt-1), member("pxl").image.rect, {#color:clA})
+              if (onga)then
+                galr.copyPixels(DRPxl, rect(pnt, pnt)+rect(0+ofst-1,1,1+ofst-1,lgt-1), DRPxlRect, {#color:clA})
               end if
-              if (clB <> color(255,255,255))then
-                member("gradientB"&string(lr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst-1,1,1+ofst-1,lgt-1), member("pxl").image.rect, {#color:clB})
+              if (ongb)then
+                gblr.copyPixels(DRPxl, rect(pnt, pnt)+rect(0+ofst-1,1,1+ofst-1,lgt-1), DRPxlRect, {#color:clB})
               end if
             end if
           end if
           
         "Rust":
-          if (cl <> color(255, 255, 255)) then
+          if (cl <> DRWhite) then
             ofst = random(2)-1
             if  effectIn3D then
               nwLr = get3DLr(lr)
@@ -1045,26 +1536,26 @@ on applyStandardErosion me, q, c, eftc, tp
             else if nwLr < 0 then
               nwLr = 0
             end if
-            
-            member("layer"&string(nwLr)).image.copyPixels(member("rustDot").image, rect(pnt, pnt)+rect(-2+ofst,-2,2+ofst,2), member("rustDot").image.rect, {#color:cl, #ink:36})
+            strnwlr = string(nwLr)
+            rustdot = member("rustDot").image
+            member("layer"&strnwlr).image.copyPixels(rustdot, rect(pnt, pnt)+rect(-2+ofst,-2,2+ofst,2), rustdot.rect, {#color:cl, #ink:36})
             if(gradAf)then
-              if (clDc <> color(255,255,255))then
-                member("layer"&string(nwLr)&"dc").image.copyPixels(member("rustDot").image, rect(pnt, pnt)+rect(-2+ofst,-2,2+ofst,2), member("rustDot").image.rect, {#color:clDc, #ink:36})
+              if (clDc <> DRWhite)then
+                member("layer"&strnwlr&"dc").image.copyPixels(rustdot, rect(pnt, pnt)+rect(-2+ofst,-2,2+ofst,2), rustdot.rect, {#color:clDc, #ink:36})
               end if
-              if (clA <> color(255,255,255))then
-                member("gradientA"&string(nwLr)).image.copyPixels(member("rustDot").image, rect(pnt, pnt)+rect(-2+ofst,-2,2+ofst,2), member("rustDot").image.rect, {#color:clA, #ink:36})--comment below
+              if (clA <> DRWhite)then
+                member("gradientA"&strnwlr).image.copyPixels(rustdot, rect(pnt, pnt)+rect(-2+ofst,-2,2+ofst,2), rustdot.rect, {#color:clA, #ink:36})--comment below
               end if
-              if (clB <> color(255,255,255))then
-                member("gradientB"&string(nwLr)).image.copyPixels(member("rustDot").image, rect(pnt, pnt)+rect(-2+ofst,-2,2+ofst,2), member("rustDot").image.rect, {#color:clB, #ink:36})--not using 39-darker here because 36 makes things look better
+              if (clB <> DRWhite)then
+                member("gradientB"&strnwlr).image.copyPixels(rustdot, rect(pnt, pnt)+rect(-2+ofst,-2,2+ofst,2), rustdot.rect, {#color:clB, #ink:36})--not using 39-darker here because 36 makes things look better
               end if
             end if
           end if
         "Barnacles":
-          if (cl <> color(255, 255, 255)) then
+          if (cl <> DRWhite) then
             if  effectIn3D then
               nwLr = get3DLr(lr)
             else
-              -- nwLr = restrict(lr -1 + random(2), 0, 29)
               case lrSup of--["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]
                 "All":
                   nwLr = restrict(lr -1 + random(2), 0, 29)
@@ -1087,44 +1578,47 @@ on applyStandardErosion me, q, c, eftc, tp
             else if nwLr < 0 then
               nwLr = 0
             end if
-            
+            strnwlr = string(nwLr)
+            layernwlr = member("layer" & strnwlr).image
             if random(2)-1 then
-              member("layer"&string(nwLr)).image.copyPixels(member("barnacle1").image, rect(pnt, pnt)+rect(-3,-3,4,4), member("barnacle1").image.rect, {#color:cl, #ink:36})
+              b1 = member("barnacle1").image
+              b2 = member("barnacle2").image
+              layernwlr.copyPixels(b1, rect(pnt, pnt)+rect(-3,-3,4,4), b1.rect, {#color:cl, #ink:36})
               if(gradAf)then
-                if (clDc <> color(255,255,255))then
-                  member("layer"&string(nwLr)&"dc").image.copyPixels(member("barnacle1").image, rect(pnt, pnt)+rect(-3,-3,4,4), member("barnacle1").image.rect, {#color:clDc, #ink:36})
+                if (clDc <> DRWhite)then
+                  member("layer"&strnwlr&"dc").image.copyPixels(b1, rect(pnt, pnt)+rect(-3,-3,4,4), b1.rect, {#color:clDc, #ink:36})
                 end if
-                if (clA <> color(255,255,255))then
-                  member("gradientA"&string(nwLr)).image.copyPixels(member("barnacle1").image, rect(pnt, pnt)+rect(-3,-3,4,4), member("barnacle1").image.rect, {#color:clA, #ink:36})
+                if (clA <> DRWhite)then
+                  member("gradientA"&strnwlr).image.copyPixels(b1, rect(pnt, pnt)+rect(-3,-3,4,4), b1.rect, {#color:clA, #ink:36})
                 end if
-                if (clB <> color(255,255,255))then
-                  member("gradientB"&string(nwLr)).image.copyPixels(member("barnacle1").image, rect(pnt, pnt)+rect(-3,-3,4,4), member("barnacle1").image.rect, {#color:clB, #ink:36})
+                if (clB <> DRWhite)then
+                  member("gradientB"&strnwlr).image.copyPixels(b1, rect(pnt, pnt)+rect(-3,-3,4,4), b1.rect, {#color:clB, #ink:36})
                 end if
               end if
-              member("layer"&string(nwLr)).image.copyPixels(member("barnacle2").image, rect(pnt, pnt)+rect(-2,-2,3,3), member("barnacle2").image.rect, {#color:color(255,0,0), #ink:36})
+              layernwlr.copyPixels(b2, rect(pnt, pnt)+rect(-2,-2,3,3), b2.rect, {#color:color(255,0,0), #ink:36})
             else
+              rustdot = member("rustDot").image
               ofst = random(2)-1
-              member("layer"&string(nwLr)).image.copyPixels(member("rustDot").image, rect(pnt, pnt)+rect(-2+ofst,-2,2+ofst,2), member("rustDot").image.rect, {#color:[color(255,0,0),cl][random(2)], #ink:36})
+              layernwlr.copyPixels(rustdot, rect(pnt, pnt)+rect(-2+ofst,-2,2+ofst,2), rustdot.rect, {#color:[color(255,0,0),cl][random(2)], #ink:36})
               if(gradAf)then
-                if (clDc <> color(255,255,255))then
-                  member("layer"&string(nwLr)&"dc").image.copyPixels(member("rustDot").image, rect(pnt, pnt)+rect(-2+ofst,-2,2+ofst,2), member("rustDot").image.rect, {#color:clDc, #ink:36})
+                if (clDc <> DRWhite)then
+                  member("layer"&strnwlr&"dc").image.copyPixels(rustdot, rect(pnt, pnt)+rect(-2+ofst,-2,2+ofst,2), rustdot.rect, {#color:clDc, #ink:36})
                 end if
-                if (clA <> color(255,255,255))then
-                  member("gradientA"&string(nwLr)).image.copyPixels(member("rustDot").image, rect(pnt, pnt)+rect(-2+ofst,-2,2+ofst,2), member("rustDot").image.rect, {#color:clA, #ink:36})
+                if (clA <> DRWhite)then
+                  member("gradientA"&strnwlr).image.copyPixels(rustdot, rect(pnt, pnt)+rect(-2+ofst,-2,2+ofst,2), rustdot.rect, {#color:clA, #ink:36})
                 end if
-                if (clB <> color(255,255,255))then
-                  member("gradientB"&string(nwLr)).image.copyPixels(member("rustDot").image, rect(pnt, pnt)+rect(-2+ofst,-2,2+ofst,2), member("rustDot").image.rect, {#color:clB, #ink:36})
+                if (clB <> DRWhite)then
+                  member("gradientB"&strnwlr).image.copyPixels(rustdot, rect(pnt, pnt)+rect(-2+ofst,-2,2+ofst,2), rustdot.rect, {#color:clB, #ink:36})
                 end if --same use of 36 and not 39 as rust
               end if
             end if
           end if
           
         "Colored Barnacles":
-          if (cl <> color(255, 255, 255)) then
+          if (cl <> DRWhite) then
             if  effectIn3D then
               nwLr = get3DLr(lr)
             else
-              -- nwLr = restrict(lr -1 + random(2), 0, 29)
               case lrSup of--["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]
                 "All":
                   nwLr = restrict(lr -1 + random(2), 0, 29)
@@ -1147,23 +1641,31 @@ on applyStandardErosion me, q, c, eftc, tp
             else if nwLr < 0 then
               nwLr = 0
             end if
+            strnwlr = string(nwLr)
+            layernwlr = member("layer" & strnwlr).image
             if (gdIndLayer = "C") then
               if random(2)-1 then
-                member("layer"&string(nwLr)).image.copyPixels(member("barnacle1").image, rect(pnt, pnt)+rect(-3,-3,4,4), member("barnacle1").image.rect, {#color:cl, #ink:36})
-                member("layer"&string(nwLr)).image.copyPixels(member("barnacle2").image, rect(pnt, pnt)+rect(-2,-2,3,3), member("barnacle2").image.rect, {#color:color(255,0,0), #ink:36})
+                b1 = member("barnacle1").image
+                b2 = member("barnacle2").image
+                layernwlr.copyPixels(b1, rect(pnt, pnt)+rect(-3,-3,4,4), b1.rect, {#color:cl, #ink:36})
+                layernwlr.copyPixels(b2, rect(pnt, pnt)+rect(-2,-2,3,3), b2.rect, {#color:color(255,0,0), #ink:36})
               else
                 ofst = random(2)-1
-                member("layer"&string(nwLr)).image.copyPixels(member("rustDot").image, rect(pnt, pnt)+rect(-2+ofst,-2,2+ofst,2), member("rustDot").image.rect, {#color:[color(255,0,0),cl][random(2)], #ink:36})
+                rustdot = member("rustDot").image
+                layernwlr.copyPixels(rustdot, rect(pnt, pnt)+rect(-2+ofst,-2,2+ofst,2), rustdot.rect, {#color:[color(255,0,0),cl][random(2)], #ink:36})
               end if
             else
               if random(2)-1 then
-                member("layer"&string(nwLr)).image.copyPixels(member("barnacle1").image, rect(pnt, pnt)+rect(-3,-3,4,4), member("barnacle1").image.rect, {#color:cl, #ink:36})
-                member("layer"&string(nwLr)).image.copyPixels(member("barnacle2").image, rect(pnt, pnt)+rect(-2,-2,3,3), member("barnacle2").image.rect, {#color:colrInd, #ink:36})
-                member("gradient"&gdIndLayer&string(nwLr)).image.copyPixels(member("barnacle2").image, rect(pnt, pnt)+rect(-2,-2,3,3), member("barnacle2").image.rect, {#ink:39})
+                b1 = member("barnacle1").image
+                b2 = member("barnacle2").image
+                layernwlr.copyPixels(b1, rect(pnt, pnt)+rect(-3,-3,4,4), b1.rect, {#color:cl, #ink:36})
+                layernwlr.copyPixels(b2, rect(pnt, pnt)+rect(-2,-2,3,3), b2.rect, {#color:colrInd, #ink:36})
+                member("gradient"&gdIndLayer&strnwlr).image.copyPixels(b2, rect(pnt, pnt)+rect(-2,-2,3,3), b2.rect, {#ink:39})
               else
                 ofst = random(2)-1
-                member("layer"&string(nwLr)).image.copyPixels(member("rustDot").image, rect(pnt, pnt)+rect(-2+ofst,-2,2+ofst,2), member("rustDot").image.rect, {#color:colrInd, #ink:36})
-                member("gradient"&gdIndLayer&string(nwLr)).image.copyPixels(member("rustDot").image, rect(pnt, pnt)+rect(-2+ofst,-2,2+ofst,2), member("rustDot").image.rect, {#ink:39})
+                rustdot = member("rustDot").image
+                layernwlr.copyPixels(rustdot, rect(pnt, pnt)+rect(-2+ofst,-2,2+ofst,2), rustdot.rect, {#color:colrInd, #ink:36})
+                member("gradient"&gdIndLayer&strnwlr).image.copyPixels(rustdot, rect(pnt, pnt)+rect(-2+ofst,-2,2+ofst,2), rustdot.rect, {#ink:39})
               end if
             end if
           end if
@@ -1201,37 +1703,44 @@ on applyStandardErosion me, q, c, eftc, tp
               str = random(2)
             end if
             if str = 1 then
+              strnwlr = string(nwLr)
+              layernwlr = member("layer"&strnwlr).image
               if (gdLayer = "C") then
                 n = [1,1,1,1,1,1,2,1.5][random(8)]
                 h1 = -5*n
                 h2 = 6*n
                 nRect = rotateToQuad(rect(pnt, pnt)+rect(h1,h1,h2,h2), random(360))
                 if (random(60) = 1) then
-                  member("layer"&string(nwLr)).image.copyPixels(member("4LCloverGraf").image, nRect, member("4LCloverGraf").image.rect, {#color:[color(255,0,0), color(0,255,0), color(0,0,255)][random(3)], #ink:36})
+                  LC4 = member("4LCloverGraf").image
+                  layernwlr.copyPixels(LC4, nRect, LC4.rect, {#color:[color(255,0,0), color(0,255,0), color(0,0,255)][random(3)], #ink:36})
                 else
-                  member("layer"&string(nwLr)).image.copyPixels(member("3LCloverGraf").image, nRect, member("3LCloverGraf").image.rect, {#color:[color(255,0,0), color(0,255,0), color(0,0,255)][random(3)], #ink:36})
+                  LC3 = member("3LCloverGraf").image
+                  layernwlr.copyPixels(LC3, nRect, LC3.rect, {#color:[color(255,0,0), color(0,255,0), color(0,0,255)][random(3)], #ink:36})
                 end if
               else
                 n = [1,1,1,1,1,1,2,1.5][random(8)]
                 h1 = -5*n
                 h2 = 6*n
                 nRect = rotateToQuad(rect(pnt, pnt)+rect(h1,h1,h2,h2), random(360))
+                gradnwlr = member("gradient"&gdLayer&strnwlr).image
                 if (random(60) = 1) then
-                  member("layer"&string(nwLr)).image.copyPixels(member("4LCloverGraf").image, nRect, member("4LCloverGraf").image.rect, {#color:colr, #ink:36})
-                  member("gradient"&gdLayer&string(nwLr)).image.copyPixels(member("4LCloverGrad").image, nRect, member("4LCloverGrad").image.rect, {#ink:39})
+                  LC4 = member("4LCloverGraf").image
+                  LCG4 = member("4LCloverGrad").image
+                  layernwlr.copyPixels(LC4, nRect, LC4.rect, {#color:colr, #ink:36})
+                  gradnwlr.copyPixels(LCG4, nRect, LCG4.rect, {#ink:39})
                 else
-                  member("layer"&string(nwLr)).image.copyPixels(member("3LCloverGraf").image, nRect, member("3LCloverGraf").image.rect, {#color:colr, #ink:36})
-                  member("gradient"&gdLayer&string(nwLr)).image.copyPixels(member("3LCloverGrad").image, nRect, member("3LCloverGrad").image.rect, {#ink:39})
+                  LC3 = member("3LCloverGraf").image
+                  LCG3 = member("3LCloverGrad").image
+                  layernwlr.copyPixels(LC3, nRect, LC3.rect, {#color:colr, #ink:36})
+                  gradnwlr.copyPixels(LCG3, nRect, LCG3.rect, {#ink:39})
                 end if
               end if
             end if
           end if
           
         "Erode":
-          --if (cl <> "NOAPPLY") then
-          if (cl <> color(255, 255, 255)) then
+          if (cl <> DRWhite) then
             if(random(6)>1)then
-              --nwLr = lr
               case lrSup of--["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]
                 "All":
                   nwLr = lr
@@ -1265,27 +1774,24 @@ on applyStandardErosion me, q, c, eftc, tp
                 otherwise:
                   nwLr = restrict(lr + 1, 0, 29)
               end case
-              -- nwLr = restrict(lr + 1, 0, 29)
             end if
             if nwLr > 29 then
               nwLr = 29
             else if nwLr < 0 then
               nwLr = 0
             end if
-            
-            repeat with a = 1 to 6 then
+            layernwlr = member("layer"&string(nwLr)).image
+            rustdot = member("rustDot").image
+            repeat with a = 1 to 6
               pnt = pnt + point(-3+random(5), -3+random(5))
               ofst = random(2)-1
-              member("layer"&string(nwLr)).image.copyPixels(member("rustDot").image, rect(pnt, pnt)+rect(-2+ofst,-2,2+ofst,2), member("rustDot").image.rect, {#color:color(255, 255, 255), #ink:36})
+              layernwlr.copyPixels(rustdot, rect(pnt, pnt)+rect(-2+ofst,-2,2+ofst,2), rustdot.rect, {#color:DRWhite, #ink:36})
             end repeat
           end if
           
-          --end if
-          
         "Sand":
-          if (cl <> color(255,255,255)) then
-            if(random(6)>1)then
-              --nwLr = lr
+          if (cl <> DRWhite) then
+            if (random(6) > 1) then
               case lrSup of--["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]
                 "All":
                   nwLr = lr
@@ -1319,44 +1825,53 @@ on applyStandardErosion me, q, c, eftc, tp
                 otherwise:
                   nwLr = restrict(lr + 1, 0, 29)
               end case
-              -- nwLr = restrict(lr + 1, 0, 29)
             end if
-            if nwLr > 29 then
+            if (nwLr > 29) then
               nwLr = 29
-            else if nwLr < 0 then
+            else if (nwLr < 0) then
               nwLr = 0
             end if
-            
-            repeat with a = 1 to 6 then
-              pnt = pnt + point(-3+random(5), -3+random(5))
-              ofst = random(2)-1
-              if (cl <> color(255,255,255)) then
-                if (gdIndLayer = "C") then
-                  if (cl = color(255,0,0)) then
-                    member("layer"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(-0.5,-0.5,0.5,0.5), member("pxl").image.rect, {#color:[color(0,255,0), color(0,0,255), color(0,150,0), color(0,0,150)][random(4)], #ink:36})
-                  else if (cl = color(0,255,0)) then
-                    member("layer"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(-0.5,-0.5,0.5,0.5), member("pxl").image.rect, {#color:[color(255,0,0), color(0,0,255), color(150,0,0), color(0,0,150)][random(4)], #ink:36})
-                  else if (cl = color(0,0,255)) then
-                    member("layer"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(-0.5,-0.5,0.5,0.5), member("pxl").image.rect, {#color:[color(255,0,0), color(0,255,0), color(150,0,0), color(0,150,0)][random(4)], #ink:36})
-                  else
-                    member("layer"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(-0.5,-0.5,0.5,0.5), member("pxl").image.rect, {#color:[color(255,0,0), color(0,255,0), color(0,0,255), color(150,0,0), color(0,150,0), color(0,0,150)][random(6)], #ink:36})
-                  end if
-                else if (gdIndLayer = "A") then
-                  member("layer"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(-0.5,-0.5,0.5,0.5), member("pxl").image.rect, {#color:[color(255,0,255), color(150,0,150)][random(2)], #ink:36})
-                  member("gradientA"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(-0.5,-0.5,0.5,0.5), member("pxl").image.rect, {#ink:39})
-                else if (gdIndLayer = "B") then
-                  member("layer"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(-0.5,-0.5,0.5,0.5), member("pxl").image.rect, {#color:[color(0,255,255), color(0,150,150)][random(2)], #ink:36})
-                  member("gradientB"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(-0.5,-0.5,0.5,0.5), member("pxl").image.rect, {#ink:39})
+            strnwlr = string(nwLr)
+            layernwlr = member("layer" & strnwlr).image
+            if (gdIndLayer = "A") then
+              Cgrad = 1
+              ganwlr = member("gradientA" & strnwlr).image
+            else if (gdIndLayer = "B") then
+              Cgrad = 2
+              gbnwlr = member("gradientB" & strnwlr).image
+            else
+              Cgrad = 0
+              redC = (cl = color(255, 0, 0))
+              greenC = (cl = color(0, 255, 0))
+              blueC = (cl = color(0, 0, 255))
+            end if
+            repeat with a = 1 to 6
+              pnt = pnt + point(random(5) - 3, random(5) - 3)
+              ofst = random(2) -- can't remove, would change rng
+              prectsn = rect(pnt, pnt) + rect(-0.5, -0.5, 0.5, 0.5)
+              if (Cgrad = 0) then
+                if (redC) then
+                  layernwlr.copyPixels(DRPxl, prectsn, DRPxlRect, {#color:[color(0, 255, 0), color(0, 0, 255), color(0, 150, 0), color(0, 0, 150)][random(4)], #ink:36})
+                else if (greenC) then
+                  layernwlr.copyPixels(DRPxl, prectsn, DRPxlRect, {#color:[color(255, 0, 0), color(0, 0, 255), color(150, 0, 0), color(0, 0, 150)][random(4)], #ink:36})
+                else if (blueC) then
+                  layernwlr.copyPixels(DRPxl, prectsn, DRPxlRect, {#color:[color(255, 0, 0), color(0, 255, 0), color(150, 0, 0), color(0, 150, 0)][random(4)], #ink:36})
+                else
+                  layernwlr.copyPixels(DRPxl, prectsn, DRPxlRect, {#color:[color(255, 0, 0), color(0, 255, 0), color(0, 0, 255), color(150, 0, 0), color(0, 150, 0), color(0, 0, 150)][random(6)], #ink:36})
                 end if
+              else if (Cgrad = 1) then
+                layernwlr.copyPixels(DRPxl, prectsn, DRPxlRect, {#color:[color(255, 0, 255), color(150, 0, 150)][random(2)], #ink:36})
+                ganwlr.copyPixels(DRPxl, prectsn, DRPxlRect, {#ink:39})
+              else
+                layernwlr.copyPixels(DRPxl, prectsn, DRPxlRect, {#color:[color(0, 255, 255), color(0, 150, 150)][random(2)], #ink:36})
+                gbnwlr.copyPixels(DRPxl, prectsn, DRPxlRect, {#ink:39})
               end if
             end repeat
           end if
           
         "Super Erode":
-          if (cl <> color(255, 255, 255)) then
-            --if (cl <> "NOAPPLY") then
+          if (cl <> DRWhite) then
             if(random(40 + 4 * lr * (lr > 19))>1)then
-              --nwLr = lr
               case lrSup of--["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]
                 "All":
                   nwLr = lr
@@ -1374,7 +1889,6 @@ on applyStandardErosion me, q, c, eftc, tp
                   nwLr = lr
               end case
             else
-              -- nwLr = restrict(lr -2 + random(3), 0, 29)
               case lrSup of--["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]
                 "All":
                   nwLr = restrict(lr -2 + random(3), 0, 29)
@@ -1397,18 +1911,16 @@ on applyStandardErosion me, q, c, eftc, tp
             else if nwLr < 0 then
               nwLr = 0
             end if
-            
-            repeat with a = 1 to 6 then
+            layernwlr = member("layer"&string(nwLr)).image
+            ermask = member("SuperErodeMask").image
+            repeat with a = 1 to 6
               pnt = pnt + point(-4+random(7), -4+random(7))
-              member("layer"&string(nwLr)).image.copyPixels(member("SuperErodeMask").image, rect(pnt, pnt)+rect(-4, -4, 4, 4), member("SuperErodeMask").image.rect, {#color:color(255, 255, 255), #ink:36})
+              layernwlr.copyPixels(ermask, rect(pnt, pnt)+rect(-4, -4, 4, 4), ermask.rect, {#color:DRWhite, #ink:36})
             end repeat
           end if
-          --end if
           
         "Ultra Super Erode":
-          --if (cl <> "NOAPPLY") then
           if(random(40 + 4 * lr * (lr > 19))>1)then
-            --nwLr = lr
             case lrSup of--["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]
               "All":
                 nwLr = lr
@@ -1426,7 +1938,6 @@ on applyStandardErosion me, q, c, eftc, tp
                 nwLr = lr
             end case
           else
-            -- nwLr = restrict(lr -2 + random(3), 0, 29)
             case lrSup of--["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]
               "All":
                 nwLr = restrict(lr -2 + random(3), 0, 29)
@@ -1449,62 +1960,56 @@ on applyStandardErosion me, q, c, eftc, tp
           else if nwLr < 0 then
             nwLr = 0
           end if
-          
+          blob = member("Blob").image
+          layernwlr = member("layer"&string(nwLr)).image
           repeat with a = 1 to 6 then
             pnt = pnt + point(-4+random(7), -4+random(7))
-            member("layer"&string(nwLr)).image.copyPixels(member("Blob").image, rect(pnt, pnt)+rect(-8, -8, 8, 8), member("Blob").image.rect, {#color:color(255, 255, 255), #ink:36})
-            member("layer"&string(nwLr)).image.copyPixels(member("Blob").image, rect(pnt, pnt)+rect(-8, -8, 8, 8), member("Blob").image.rect, {#color:color(255, 255, 255), #ink:36})
+            rctdel = rect(pnt, pnt)+rect(-8, -8, 8, 8)
+            layernwlr.copyPixels(blob, rctdel, blob.rect, {#color:DRWhite, #ink:36})
+            layernwlr.copyPixels(blob, rctdel, blob.rect, {#color:DRWhite, #ink:36})
           end repeat
-          --end if
           
         "Melt":
-          if (cl <> color(255, 255, 255)) and (lr >= dmin) and (lr <= dmax) then
-            --if cl <> color(255,255,255)then
+          if (cl <> DRWhite) and (lr >= dmin) and (lr <= dmax) then
             cp = image(4,4,32)
             rct = rect(pnt,pnt)+rect(-2,-2,2,2)
-            cp.copyPixels(member("layer"&string(lr)).image, rect(0,0,4,4), rct)
-            cp.setPixel(point(0,0), color(255,255,255))
-            cp.setPixel(point(3,0), color(255,255,255))
-            cp.setPixel(point(0,3), color(255,255,255))
-            cp.setPixel(point(3,3), color(255,255,255))
-            member("layer"&string(lr)).image.copyPixels(cp, rct+rect(0,1,0,1), rect(0,0,4,4), {#ink:36})
+            cp.copyPixels(layerlr, rect(0,0,4,4), rct)
+            cp.setPixel(point(0,0), DRWhite)
+            cp.setPixel(point(3,0), DRWhite)
+            cp.setPixel(point(0,3), DRWhite)
+            cp.setPixel(point(3,3), DRWhite)
+            layerlr.copyPixels(cp, rct+rect(0,1,0,1), rect(0,0,4,4), {#ink:36})
             member("tst").image = cp
-            --end if
-            --if clA <> color (255,255,255)then
             if (gradAf)then
               cpA = image(4,4,32)
-              cpA.copyPixels(member("gradientA"&string(lr)).image, rect(0,0,4,4), rct)
-              cpA.setPixel(point(0,0), color(255,255,255))
-              cpA.setPixel(point(3,0), color(255,255,255))
-              cpA.setPixel(point(0,3), color(255,255,255))
-              cpA.setPixel(point(3,3), color(255,255,255))
-              member("gradientA"&string(lr)).image.copyPixels(cpA, rct+rect(0,1,0,1), rect(0,0,4,4), {#ink:39})
+              cpA.copyPixels(galr, rect(0,0,4,4), rct)
+              cpA.setPixel(point(0,0), DRWhite)
+              cpA.setPixel(point(3,0), DRWhite)
+              cpA.setPixel(point(0,3), DRWhite)
+              cpA.setPixel(point(3,3), DRWhite)
+              galr.copyPixels(cpA, rct+rect(0,1,0,1), rect(0,0,4,4), {#ink:39})
               member("tstGradA").image = cpA
-              -- end if
-              --if clB <> color (255,255,255)then
               cpB = image(4,4,32)
-              cpB.copyPixels(member("gradientB"&string(lr)).image, rect(0,0,4,4), rct)
-              cpB.setPixel(point(0,0), color(255,255,255))
-              cpB.setPixel(point(3,0), color(255,255,255))
-              cpB.setPixel(point(0,3), color(255,255,255))
-              cpB.setPixel(point(3,3), color(255,255,255))
-              member("gradientB"&string(lr)).image.copyPixels(cpB, rct+rect(0,1,0,1), rect(0,0,4,4), {#ink:39})
+              cpB.copyPixels(gblr, rect(0,0,4,4), rct)
+              cpB.setPixel(point(0,0), DRWhite)
+              cpB.setPixel(point(3,0), DRWhite)
+              cpB.setPixel(point(0,3), DRWhite)
+              cpB.setPixel(point(3,3), DRWhite)
+              gblr.copyPixels(cpB, rct+rect(0,1,0,1), rect(0,0,4,4), {#ink:39})
               member("tstGradB").image = cpB
-              --end if
-              --if clDc <> color (255,255,255)then
               cpDc = image(4,4,32)
-              cpDc.copyPixels(member("layer"&string(lr)&"dc").image, rect(0,0,4,4), rct)
-              cpDc.setPixel(point(0,0), color(255,255,255))
-              cpDc.setPixel(point(3,0), color(255,255,255))
-              cpDc.setPixel(point(0,3), color(255,255,255))
-              cpDc.setPixel(point(3,3), color(255,255,255))
-              member("layer"&string(lr)&"dc").image.copyPixels(cpDc, rct+rect(0,1,0,1), rect(0,0,4,4), {#ink:36})
+              cpDc.copyPixels(dclr, rect(0,0,4,4), rct)
+              cpDc.setPixel(point(0,0), DRWhite)
+              cpDc.setPixel(point(3,0), DRWhite)
+              cpDc.setPixel(point(0,3), DRWhite)
+              cpDc.setPixel(point(3,3), DRWhite)
+              dclr.copyPixels(cpDc, rct+rect(0,1,0,1), rect(0,0,4,4), {#ink:36})
               member("tstDc").image = cpDc
             end if
           end if
           
         "Fat Slime":
-          if (cl <> color(255, 255, 255)) then
+          if (cl <> DRWhite) then
             ofst = random(2)-1
             lgt = 3 + random(random(random(6)))
             big = random(3)
@@ -1512,7 +2017,6 @@ on applyStandardErosion me, q, c, eftc, tp
             if  effectIn3D then
               nwLr = get3DLr(lr)
             else
-              --nwLr = restrict(lr -1 + random(2), 0, 29)
               case lrSup of--["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]
                 "All":
                   nwLr = restrict(lr -1 + random(2), 0, 29)
@@ -1535,61 +2039,67 @@ on applyStandardErosion me, q, c, eftc, tp
             else if nwLr < 0 then
               nwLr = 0
             end if
-            --if (nwLr >= dmin and nwLr <= dmax) then
-            member("layer"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst,0,big+ofst,fat+lgt), member("pxl").image.rect, {#color:[cl, cl, cl, cl, cl, cl, cl, color(255, 0, 0), color(0, 255, 0), color(0, 0, 255)][random(10)]})--cl
+            strnwlr = string(nwLr)
+            layernwlr = member("layer"&strnwlr).image
+            layernwlr.copyPixels(DRPxl, rect(pnt, pnt)+rect(0+ofst,0,big+ofst,fat+lgt), DRPxl.rect, {#color:[cl, cl, cl, cl, cl, cl, cl, color(255, 0, 0), color(0, 255, 0), color(0, 0, 255)][random(10)]})--cl
             if(gradAf)then
-              if (clDc <> color(255,255,255))then
-                member("layer"&string(nwLr)&"dc").image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst,0,big+ofst,fat+lgt), member("pxl").image.rect, {#color:clDc})
+              ondc = (clDc <> DRWhite)
+              onga = (clA <> DRWhite)
+              ongb = (clB <> DRWhite)
+              if (ondc)then
+                dcnwlr = member("layer"&strnwlr&"dc").image
+                dcnwlr.copyPixels(DRPxl, rect(pnt, pnt)+rect(0+ofst,0,big+ofst,fat+lgt), DRPxlRect, {#color:clDc})
               end if
-              if (clA <> color(255,255,255))then
-                member("gradientA"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst,0,big+ofst,fat+lgt), member("pxl").image.rect, {#color:clA})
+              if (onga)then
+                ganwlr = member("gradientA"&strnwlr).image
+                ganwlr.copyPixels(DRPxl, rect(pnt, pnt)+rect(0+ofst,0,big+ofst,fat+lgt), DRPxlRect, {#color:clA})
               end if
-              if (clB <> color(255,255,255))then
-                member("gradientB"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst,0,big+ofst,fat+lgt), member("pxl").image.rect, {#color:clB})
+              if (ongb)then
+                gbnwlr = member("gradientB"&strnwlr).image
+                gbnwlr.copyPixels(DRPxl, rect(pnt, pnt)+rect(0+ofst,0,big+ofst,fat+lgt), DRPxlRect, {#color:clB})
               end if
             end if
             if random(2)=1 then
-              member("layer"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst+1,1,big+ofst+1,fat+lgt-1), member("pxl").image.rect, {#color:[cl, cl, cl, cl, cl, cl, cl, color(255, 0, 0), color(0, 255, 0), color(0, 0, 255)][random(10)]})--cl
+              layernwlr.copyPixels(DRPxl, rect(pnt, pnt)+rect(0+ofst+1,1,big+ofst+1,fat+lgt-1), DRPxlRect, {#color:[cl, cl, cl, cl, cl, cl, cl, color(255, 0, 0), color(0, 255, 0), color(0, 0, 255)][random(10)]})--cl
               if(gradAf)then
-                if (clDc <> color(255,255,255))then
-                  member("layer"&string(nwLr)&"dc").image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst+1,1,big+ofst+1,fat+lgt-1), member("pxl").image.rect, {#color:clDc})
+                if (ondc)then
+                  dcnwlr.copyPixels(DRPxl, rect(pnt, pnt)+rect(0+ofst+1,1,big+ofst+1,fat+lgt-1), DRPxlRect, {#color:clDc})
                 end if
-                if (clA <> color(255,255,255))then
-                  member("gradientA"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst+1,1,big+ofst+1,fat+lgt-1), member("pxl").image.rect, {#color:clA})
+                if (onga)then
+                  ganwlr.copyPixels(DRPxl, rect(pnt, pnt)+rect(0+ofst+1,1,big+ofst+1,fat+lgt-1), DRPxlRect, {#color:clA})
                 end if
-                if (clB <> color(255,255,255))then
-                  member("gradientB"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst+1,1,big+ofst+1,fat+lgt-1), member("pxl").image.rect, {#color:clB})
+                if (ongb)then
+                  gbnwlr.copyPixels(DRPxl, rect(pnt, pnt)+rect(0+ofst+1,1,big+ofst+1,fat+lgt-1), DRPxlRect, {#color:clB})
                 end if
               end if
             else
-              member("layer"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst-1,1,big+ofst-1,fat+lgt-1), member("pxl").image.rect, {#color:[cl, cl, cl, cl, cl, cl, cl, color(255, 0, 0), color(0, 255, 0), color(0, 0, 255)][random(10)]})--cl
+              layernwlr.copyPixels(DRPxl, rect(pnt, pnt)+rect(0+ofst-1,1,big+ofst-1,fat+lgt-1), DRPxlRect, {#color:[cl, cl, cl, cl, cl, cl, cl, color(255, 0, 0), color(0, 255, 0), color(0, 0, 255)][random(10)]})--cl
               if(gradAf)then
-                if (clDc <> color(255,255,255))then
-                  member("layer"&string(nwLr)&"dc").image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst-1,1,big+ofst-1,fat+lgt-1), member("pxl").image.rect, {#color:clDc})
+                if (ondc)then
+                  dcnwlr.copyPixels(DRPxl, rect(pnt, pnt)+rect(0+ofst-1,1,big+ofst-1,fat+lgt-1), DRPxlRect, {#color:clDc})
                 end if
-                if (clA <> color(255,255,255))then
-                  member("gradientA"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst-1,1,big+ofst-1,fat+lgt-1), member("pxl").image.rect, {#color:clA})
+                if (onga)then
+                  ganwlr.copyPixels(DRPxl, rect(pnt, pnt)+rect(0+ofst-1,1,big+ofst-1,fat+lgt-1), DRPxlRect, {#color:clA})
                 end if
-                if (clB <> color(255,255,255))then
-                  member("gradientB"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst-1,1,big+ofst-1,fat+lgt-1), member("pxl").image.rect, {#color:clB})
+                if (ongb)then
+                  gbnwlr.copyPixels(DRPxl, rect(pnt, pnt)+rect(0+ofst-1,1,big+ofst-1,fat+lgt-1), DRPxlRect, {#color:clB})
                 end if
               end if
             end if
-            -- end if
           end if
           
           
         "Roughen":
           if (lr >= dmin) and (lr <= dmax) then
             if(cl = color(0, 255, 0))then
+              roughenImg = member("roughenTexture").image
               var = random(20)
-              --member("layer"&string(lr)).image.copyPixels(member("roughenTexture").image, rect(pnt, pnt)+rect(-3, -3, 4, 4), rect((var-1)*7, 0, var*7, 7), {#ink:36})
-              repeat with lch = 0 to 6 then
-                repeat with lcv = 0 to 6 then
-                  if(member("layer"&string(lr)).image.getPixel(pnt.locH-3+lch, pnt.locV-3+lcv) = color(0, 255, 0))then
-                    gtCl = member("roughenTexture").image.getPixel(lch+(var-1)*7, lcv)
-                    if gtCl <> color(255, 255, 255) then
-                      member("layer"&string(lr)).image.setPixel(pnt.locH-3+lch, pnt.locV-3+lcv, gtCl)
+              repeat with lch = 0 to 6
+                repeat with lcv = 0 to 6
+                  if(layerlr.getPixel(pnt.locH-3+lch, pnt.locV-3+lcv) = color(0, 255, 0))then
+                    gtCl = roughenImg.getPixel(lch+(var-1)*7, lcv)
+                    if gtCl <> DRWhite then
+                      layerlr.setPixel(pnt.locH-3+lch, pnt.locV-3+lcv, gtCl)
                     end if
                   end if
                 end repeat
@@ -1599,23 +2109,23 @@ on applyStandardErosion me, q, c, eftc, tp
           
           
         "Super Melt":
-          if (cl <> color(255, 255, 255)) and (lr >= dmin) and (lr <= dmax) then
+          if (cl <> DRWhite) and (lr >= dmin) and (lr <= dmax) then
             maskImg = member("destructiveMeltMask").image
             pntCal = point(maskImg.width,maskImg.height)/2.0
             cpImg = image(maskImg.width,maskImg.height,32)
             rct = rect(pnt-pntCal, pnt+pntCal)
-            cpImg.copyPixels(member("layer"&string(lr)).image, cpImg.rect, rct)
+            cpImg.copyPixels(layerlr, cpImg.rect, rct)
             cpImg.copyPixels(maskImg, cpImg.rect, maskImg.rect, {#ink:36, #color:DRWhite})
-            mvDown = random(7)*(gEEprops.effects[r].mtrx[q2][c2]/100.0)
+            mvDown = random(7)*(mtrxq2c2/100.0)
             if (gradAf) then
               cpAImg = image(maskImg.width,maskImg.height,32)
               cpBImg = image(maskImg.width,maskImg.height,32)
               cpDcImg = image(maskImg.width,maskImg.height,32)
-              cpAImg.copyPixels(member("gradientA"&string(lr)).image, cpAImg.rect, rct)
+              cpAImg.copyPixels(galr, cpAImg.rect, rct)
               cpAImg.copyPixels(maskImg, cpAImg.rect, maskImg.rect, {#ink:36, #color:DRWhite})
-              cpBImg.copyPixels(member("gradientB"&string(lr)).image, cpBImg.rect, rct)
+              cpBImg.copyPixels(gblr, cpBImg.rect, rct)
               cpBImg.copyPixels(maskImg, cpBImg.rect, maskImg.rect, {#ink:36, #color:DRWhite})
-              cpDcImg.copyPixels(member("layer"&string(lr)&"dc").image, cpDcImg.rect, rct)
+              cpDcImg.copyPixels(dclr, cpDcImg.rect, rct)
               cpDcImg.copyPixels(maskImg, cpDcImg.rect, maskImg.rect, {#ink:36, #color:DRWhite})
             end if
             if (effectIn3D) then
@@ -1662,37 +2172,36 @@ on applyStandardErosion me, q, c, eftc, tp
               nwLr = 0
             end if
             nwRect = rct + rect(0, 0, 0, mvDown)
-            member("layer"&string(nwLr)).image.copyPixels(cpImg, nwRect, cpImg.rect, {#ink:36})
+            strnwlr = string(nwLr)
+            member("layer"&strnwlr).image.copyPixels(cpImg, nwRect, cpImg.rect, {#ink:36})
             if (gradAf)then
-              member("gradientA"&string(nwLr)).image.copyPixels(cpAImg, nwRect, cpAImg.rect, {#ink:39})
-              member("gradientB"&string(nwLr)).image.copyPixels(cpBImg, nwRect, cpBImg.rect, {#ink:39})
-              member("layer"&string(nwLr)&"dc").image.copyPixels(cpDcImg, nwRect, cpDcImg.rect, {#ink:36})
+              member("gradientA"&strnwlr).image.copyPixels(cpAImg, nwRect, cpAImg.rect, {#ink:39})
+              member("gradientB"&strnwlr).image.copyPixels(cpBImg, nwRect, cpBImg.rect, {#ink:39})
+              member("layer"&strnwlr&"dc").image.copyPixels(cpDcImg, nwRect, cpDcImg.rect, {#ink:36})
             end if
           end if
           
         "Destructive Melt":
-          if (cl <> color(255, 255, 255)) and (lr >= dmin) and (lr <= dmax) then
+          if (cl <> DRWhite) and (lr >= dmin) and (lr <= dmax) then
             maskImg = member("destructiveMeltMask").image
             cpImg = image(maskImg.width,maskImg.height,32)
             rct = rect(pnt-point(maskImg.width,maskImg.height)/2.0, pnt+point(maskImg.width,maskImg.height)/2.0)
             
-            cpImg.copyPixels(member("layer"&string(lr)).image, cpImg.rect, rct)
+            cpImg.copyPixels(layerlr, cpImg.rect, rct)
             if (gradAf) then
               cpAImg = image(maskImg.width,maskImg.height,32)
-              cpAImg.copyPixels(member("gradientA"&string(lr)).image, cpAImg.rect, rct)
+              cpAImg.copyPixels(galr, cpAImg.rect, rct)
               cpBImg = image(maskImg.width,maskImg.height,32)
-              cpBImg.copyPixels(member("gradientB"&string(lr)).image, cpBImg.rect, rct)
+              cpBImg.copyPixels(gblr, cpBImg.rect, rct)
               cpDcImg = image(maskImg.width,maskImg.height,32)
-              cpDcImg.copyPixels(member("layer"&string(lr)&"dc").image, cpDcImg.rect, rct)
+              cpDcImg.copyPixels(dclr, cpDcImg.rect, rct)
             end if
             pnt = point(-2+random(3), -2+random(3))
             rct = rct + rect(pnt, pnt)
-            -- cpImg.copyPixels(maskImg, cpImg.rect, maskImg.rect, {#ink:36, #color:color(255, 255, 255)})
-            mvDown = random(7)*(gEEprops.effects[r].mtrx[q2][c2]/100.0)
+            mvDown = random(7)*(mtrxq2c2/100.0)
             if effectIn3D then
               nwLr = get3DLr(lr)
             else
-              -- nwLr = restrict(lr -1 + random(2), 0, 29)
               case lrSup of--["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]
                 "All":
                   nwLr = restrict(lr -1 + random(2), 0, 29)
@@ -1733,28 +2242,29 @@ on applyStandardErosion me, q, c, eftc, tp
             else if nwLr < 0 then
               nwLr = 0
             end if
-            member("layer"&string(lr)).image.copyPixels(cpImg, rct + rect(0, 0, 0, mvDown), cpImg.rect, {#mask:member("destructiveMeltDestroy").image.createMask()})
-            -- if(cl = "WHITE")then
-            member("layer"&string(nwLr)).image.copyPixels(cpImg, rct + rect(0, 0, 0, mvDown*0.5), cpImg.rect, {#mask:member("destructiveMeltDestroy").image.createMask(), #ink:36})
-            -- end if
-            if(cl = "WHITE")then
-              member("layer"&string(lr)).image.copyPixels(member("destructiveMeltDestroy").image,  rect(rct.left, rct.top, rct.right, rct.bottom+mvDown), member("destructiveMeltDestroy").image.rect, {#ink:36, #color: color(255, 255, 255)})
+            strnwlr = string(nwLr)
+            destroyImg = member("destructiveMeltDestroy").image
+            destroyMask = destroyImg.createMask()
+            layerlr.copyPixels(cpImg, rct + rect(0, 0, 0, mvDown), cpImg.rect, {#mask:destroyMask})
+            member("layer"&strnwlr).image.copyPixels(cpImg, rct + rect(0, 0, 0, mvDown*0.5), cpImg.rect, {#mask:destroyMask, #ink:36})
+            if(cl = "W")then
+              layerlr.copyPixels(destroyImg,  rect(rct.left, rct.top, rct.right, rct.bottom+mvDown), destroyImg.rect, {#ink:36, #color: DRWhite})
             end if
             if (gradAf) then
-              member("gradientA"&string(lr)).image.copyPixels(cpAImg, rct + rect(0, 0, 0, mvDown), cpAImg.rect, {#mask:member("destructiveMeltDestroy").image.createMask()})
-              member("gradientA"&string(nwLr)).image.copyPixels(cpAImg, rct + rect(0, 0, 0, mvDown*0.5), cpAImg.rect, {#mask:member("destructiveMeltDestroy").image.createMask(), #ink:39})
-              if(clA = "WHITE")then
-                member("gradientA"&string(lr)).image.copyPixels(member("destructiveMeltDestroy").image,  rect(rct.left, rct.top, rct.right, rct.bottom+mvDown), member("destructiveMeltDestroy").image.rect, {#ink:36, #color: color(255, 255, 255)})
+              galr.copyPixels(cpAImg, rct + rect(0, 0, 0, mvDown), cpAImg.rect, {#mask:destroyMask})
+              member("gradientA"&strnwlr).image.copyPixels(cpAImg, rct + rect(0, 0, 0, mvDown*0.5), cpAImg.rect, {#mask:destroyMask, #ink:39})
+              if(clA = "W")then
+                galr.copyPixels(destroyImg, rect(rct.left, rct.top, rct.right, rct.bottom+mvDown), destroyImg.rect, {#ink:36, #color: DRWhite})
               end if
-              member("gradientB"&string(lr)).image.copyPixels(cpBImg, rct + rect(0, 0, 0, mvDown), cpBImg.rect, {#mask:member("destructiveMeltDestroy").image.createMask()})
-              member("gradientB"&string(nwLr)).image.copyPixels(cpBImg, rct + rect(0, 0, 0, mvDown*0.5), cpBImg.rect, {#mask:member("destructiveMeltDestroy").image.createMask(), #ink:39})
-              if(clB = "WHITE")then
-                member("gradientB"&string(lr)).image.copyPixels(member("destructiveMeltDestroy").image,  rect(rct.left, rct.top, rct.right, rct.bottom+mvDown), member("destructiveMeltDestroy").image.rect, {#ink:36, #color: color(255, 255, 255)})
+              gblr.copyPixels(cpBImg, rct + rect(0, 0, 0, mvDown), cpBImg.rect, {#mask:destroyMask})
+              member("gradientB"&strnwlr).image.copyPixels(cpBImg, rct + rect(0, 0, 0, mvDown*0.5), cpBImg.rect, {#mask:destroyMask, #ink:39})
+              if(clB = "W")then
+                gblr.copyPixels(destroyImg, rect(rct.left, rct.top, rct.right, rct.bottom+mvDown), destroyImg.rect, {#ink:36, #color: DRWhite})
               end if
-              member("layer"&string(lr)&"dc").image.copyPixels(cpDcImg, rct + rect(0, 0, 0, mvDown), cpDcImg.rect, {#mask:member("destructiveMeltDestroy").image.createMask()})
-              member("layer"&string(nwLr)&"dc").image.copyPixels(cpDcImg, rct + rect(0, 0, 0, mvDown*0.5), cpDcImg.rect, {#mask:member("destructiveMeltDestroy").image.createMask(), #ink:36})
-              if(clDc = "WHITE")then
-                member("layer"&string(lr)&"dc").image.copyPixels(member("destructiveMeltDestroy").image,  rect(rct.left, rct.top, rct.right, rct.bottom+mvDown), member("destructiveMeltDestroy").image.rect, {#ink:36, #color: color(255, 255, 255)})
+              dclr.copyPixels(cpDcImg, rct + rect(0, 0, 0, mvDown), cpDcImg.rect, {#mask:destroyMask})
+              member("layer"&strnwlr&"dc").image.copyPixels(cpDcImg, rct + rect(0, 0, 0, mvDown*0.5), cpDcImg.rect, {#mask:destroyMask, #ink:36})
+              if(clDc = "W")then
+                dclr.copyPixels(destroyImg, rect(rct.left, rct.top, rct.right, rct.bottom+mvDown), destroyImg.rect, {#ink:36, #color: DRWhite})
               end if
             end if
           end if
@@ -1768,42 +2278,26 @@ on applyStandardErosion me, q, c, eftc, tp
               chance = random(90)
             end if
             if (chance=1) then
-              if(cl <> color(255, 255, 255))then
+              if(cl <> DRWhite)then
                 var = random(8)
-                --if (member("layer"&string(restrict(lr-1, dmin, dmax))).image.getPixel((pnt.locH-15+lch), (pnt.locV-15+lcv)) = color(255, 255, 255)) then
-                --                  if (lr <= 9) then
-                --                    tbh = 1
-                --                  else if (lr >= 20) then
-                --                    tbh = random(10)
-                --                  else
-                --                    tbh = random(8)
-                --                  end if
-                --tbh = 1
-                --if (tbh = 1) then
-                repeat with lch = 0 to 19 then
-                  repeat with lcv = 1 to 20 then
-                    if(member("layer"&string(lr)).image.getPixel((pnt.locH-15+lch), (pnt.locV-15+lcv)) <> color(255, 255, 255))then
-                      repeat with iVar = 1 to 3 then
+                repeat with lch = 0 to 19
+                  repeat with lcv = 1 to 20
+                    if(layerlr.getPixel((pnt.locH-15+lch), (pnt.locV-15+lcv)) <> DRWhite)then
+                      repeat with iVar = 1 to 3
                         gtCl = member("Impact"&string(iVar)).image.getPixel(lch+(var-1)*20, lcv)
-                        if gtCl <> color(255, 255, 255) then
-                          member("layer"&string(restrict(lr+iVar-1, dmin, dmax))).image.setPixel((pnt.locH-15+lch), (pnt.locV-15+lcv), color(255,255,255))
+                        if gtCl <> DRWhite then
+                          member("layer"&string(restrict(lr+iVar-1, dmin, dmax))).image.setPixel((pnt.locH-15+lch), (pnt.locV-15+lcv), DRWhite)
                         end if
                       end repeat
                     end if
                   end repeat
                 end repeat
-                --end if
               end if
-              --end if
             end if
           end if
       end case
-      --end if
     end repeat
   end repeat
-  
-  
-  --reDrawPoles(point(q2, c2), layer, q, c, drawLayer)
 end
 
 on ApplyFuzzyGrower(me, q, c)
@@ -1888,7 +2382,6 @@ end
 
 
 on get3DLr(lr)
-  -- nwLr = restrict(lr - 2 + random(3), 0, 29)
   case lrSup of--["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]
     "All":
       nwLr = restrict(lr -2 + random(3), 0, 29)
@@ -1905,33 +2398,25 @@ on get3DLr(lr)
     otherwise:
       nwLr = restrict(lr -2 + random(3), 0, 29)
   end case
-  if(lr = 6)and(nwLr=5)then
+  if (lr = 6) and (nwLr = 5) then
     nwLr = 6
-  else if(lr = 5)and(nwLr=6)then
+  else if (lr = 5) and (nwLr = 6) then
     nwLr = 5
   end if
-  if nwLr > 29 then
-    nwLr = 29
-  else if nwLr < 0 then
-    nwLr = 0
+  if (nwLr > 29) then
+    return 29
+  else if (nwLr < 0) then
+    return 0
   end if
   return nwLr
 end 
 
-
-
-
-
-
-on applyDarkSlime me, q, c, unused_nm --> PJB fix : redundant argument
+on applyDarkSlime me, q, c, effectR
   q2 = q + gRenderCameraTilePos.locH
   c2 = c + gRenderCameraTilePos.locV
-  
-  --gEEprops.effects[r].mtrx[q][c]
   cls = [color(255, 0,0), color(0,255, 0), color(0,0,255)]
   
-  fc = 0 + (1.0-0)* (     solidAfaMv(point(q2,c2), 1)   )
-  --lr = 
+  fc = solidAfaMv(point(q2,c2), 1)
   case lrSup of--["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]
     "All":
       dmin = 0
@@ -1955,8 +2440,7 @@ on applyDarkSlime me, q, c, unused_nm --> PJB fix : redundant argument
       dmin = 0
       dmax = 29
   end case
-  repeat with d = 0 to 29 then
-    --lr = d
+  repeat with d = 0 to 29
     case lrSup of--["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]
       "All":
         lr = d
@@ -1974,11 +2458,12 @@ on applyDarkSlime me, q, c, unused_nm --> PJB fix : redundant argument
         lr = d
     end case
     if (lr=0)or(lr = 10)or(lr=20) then
-      sld = (solidMtrx[q2][c2][ 1+(lr>9)+(lr>19) ])
+      lraddc = 1+(lr>9)+(lr>19)
+      sld = (solidMtrx[q2][c2][ lraddc ])
       if (DRDarkSlimeFix) then
-        fc = 0 + (1.0-0)* ( solidAfaMv(point(q2,c2), 1+(lr>9)+(lr>19)) )
+        fc = solidAfaMv(point(q2,c2), lraddc)
       else
-        fc = 0 + (1.0-0)* ( solidAfaMv(point(q2,c2)+gRenderCameraTilePos, 1+(lr>9)+(lr>19)) )
+        fc = solidAfaMv(point(q2,c2)+gRenderCameraTilePos, lraddc)
       end if
     end if
     deepEffect = 0
@@ -1986,12 +2471,8 @@ on applyDarkSlime me, q, c, unused_nm --> PJB fix : redundant argument
     if (lr = 0)or(lr=10)or(lr=20)or(sld=0)then
       deepEffect = 1
     end if
-    --    if d < dmin then
-    --      member("layer"&string(d)).image.getPixel(pnt) = color(255,255,255)
-    --    else if d > dmax then
-    --      member("layer"&string(d)).image.getPixel(pnt) = color(255,255,255)
-    --    end if
-    repeat with cntr = 1 to gEEprops.effects[r].mtrx[q2][c2]*(0.2 + (0.8*deepEffect))*0.01*80*fc then
+    endofloop = effectR.mtrx[q2][c2]*(0.2 + (0.8*deepEffect))*0.01*80*fc
+    repeat with cntr = 1 to endofloop
       if deepEffect then
         pnt = (point(q-1, c-1)*20)+point(random(20), random(20))
       else
@@ -2001,39 +2482,27 @@ on applyDarkSlime me, q, c, unused_nm --> PJB fix : redundant argument
           pnt = (point(q-1, c-1)*20)+point(random(20), 1 + 19*(random(2)-1))
         end if
       end if
-      if (member("layer"&string(d)).image.getPixel(pnt) <> color(255,255,255)) and (d >= dmin) and (d <= dmax) then
+      layerd = member("layer"&string(d)).image
+      if (layerd.getPixel(pnt) <> DRWhite) and (d >= dmin) and (d <= dmax) then
         lgt = random(40)
-        if (member("layer"&string(d)).image.getPixel(pnt+point(0,lgt)) <> color(255,255,255))  and (d >= dmin) and (d <= dmax) then
+        if (layerd.getPixel(pnt+point(0,lgt)) <> DRWhite)  and (d >= dmin) and (d <= dmax) then
           clr = cls[random(3)]
-          member("layer"&string(lr)).image.copyPixels(member("pxl").image, rect(pnt, pnt+point(1, lgt)), rect(0,0,1,1), {#color:clr})
+          layerlr = member("layer"&string(lr)).image
+          layerlr.copyPixels(DRPxl, rect(pnt, pnt+point(1, lgt)), DRPxlRect, {#color:clr})
           if random(2)=1 then
-            member("layer"&string(lr)).image.copyPixels(member("pxl").image, rect(pnt, pnt+point(1, lgt))+rect(-1, 1, -1, -1), rect(0,0,1,1), {#color:clr})
+            layerlr.copyPixels(DRPxl, rect(pnt, pnt+point(1, lgt))+rect(-1, 1, -1, -1), DRPxlRect, {#color:clr})
           else
-            member("layer"&string(lr)).image.copyPixels(member("pxl").image, rect(pnt, pnt+point(1, lgt))+rect(1, 1, 1, -1), rect(0,0,1,1), {#color:clr})
+            layerlr.copyPixels(DRPxl, rect(pnt, pnt+point(1, lgt))+rect(1, 1, 1, -1), DRPxlRect, {#color:clr})
           end if
         end if
       end if
     end repeat
   end repeat
-  
-  
-  --  repeat with cnt = 1 to gEEprops.effects[r].mtrx[q][c] then
-  --    lr = random(30)-1
-  --    pnt = (point(q-1, c-1)*20)+point(random(20), random(20))
-  --    if member("layer"&string(lr)).image.getPixel(pnt) <> color(255,255,255) then
-  --      lgt = random(40)
-  --      if member("layer"&string(lr)).image.getPixel(pnt) <> color(255,255,255) then
-  --        member("layer"&string(lr)).image.copyPixels(member("pxl").image, rect(pnt, pnt+point(1, lgt)), rect(0,0,1,1), {#color:cls[random(3)]})
-  --      end if
-  --    end if
-  --  end repeat
 end
-
 
 on giveAnEffectPos me, q, c, d, sld
   pnt = point(0,0)
-  l = 1+(d>9)+(d>19)
-  if (d = 0)or(d=9)or(d=19)or(sld)then--solidMtrx[q][c][l]=0) then
+  if (d = 0)or(d=9)or(d=19)or(sld)then
     pnt = (point(q-1, c-1)*20)+point(random(20), random(20))
   else
     if random(2)=1 then
@@ -2361,6 +2830,8 @@ on applyStandardPlant me, q, c, eftc, tp
     "Seed Grass":
       amount = 5
     "Orb Plants":
+      amount = 5
+    "Lollipop Mold":
       amount = 5
   end case
   
@@ -2723,6 +3194,33 @@ on applyStandardPlant me, q, c, eftc, tp
               tpPnt = depthPnt(pnt, lr - 5) + degToVec(random(360)) * random(6)
               rct = rect(tpPnt, tpPnt) + rect(-20, -20, 20, 20) + rect(0, 0, -15, -15)
               copyPixelsToEffectColor(gdLayer, lr, rct, "softBrush1", member("softBrush1").image.rect, 0.5)
+            end if
+            
+          "Lollipop Mold":
+            if(random(300) > gEEprops.effects[r].mtrx[q2][c2])then
+              grafSz = point(20,20)
+              rnd = random(3)-1
+              if (gEEprops.effects[r].mtrx[q2][c2] > 60) then
+                rnd = random(5)-1
+              end if
+              
+              sz = 0.5+(random(gEEprops.effects[r].mtrx[q2][c2]*0.5)*0.01)
+              ang = random(31)-16.0 -- range: -15 to 15 inclusive
+              len = (random(8)+12) / 2.0
+              
+              -- stem
+              pnt = pnt - point(0, len)
+              rct = rotateToQuadFix(rect(pnt, pnt) + rect(-0.75, -len, 0.75, len), ang)
+              member("layer"&string(lr)).image.copyPixels(DRPxl, rct, rect(0,0,1,1), {#color:color(150,0,0), #ink:36}) -- stems forced as shaded color
+              
+              -- orb
+              pnt = pnt - (point(cos((ang+90) * PI / 180.0), sin((ang+90) * PI / 180.0)) * (len + (10*sz) - 2))
+              rct = rotateToQuadFix(rect(pnt, pnt) + (rect(-10,-10,10,10) * sz), ang)
+              member("layer"&string(lr)).image.copyPixels(member("lollipopMoldGraf").image, rct, rect(20*rnd, 1, 20*(rnd+1), 20), {#color:colr, #ink:36})
+              if (colr <> color(0,255,0)) then
+                copyPixelsToEffectColor(gdLayer, lr, rct, "lollipopMoldGraf", rect(20*rnd, 21, 20*(rnd+1), 39), 0.5, (random(20) + 80.0) / 100.0)
+              end if
+              
             end if
         end case
       end repeat
@@ -4453,7 +4951,7 @@ on applyHangRoots me, q, c, eftc
       dir = moveToPoint(pnt, lstPos, 1.0)
       crossDir = giveDirFor90degrToLine(-dir, dir)
       qd = [pnt-crossDir, pnt+crossDir, lstPos+crossDir, lstPos-crossDir]
-      member("layer"&string(d)).image.copyPixels(member("pxl").image, qd, member("pxl").image.rect, {#color:gLOProps.pals[gLOProps.pal].detCol})
+      member("layer"&string(d)).image.copyPixels(member("pxl").image, qd, member("pxl").image.rect, {#color:color(255, 0, 0)})
       
       if solidAfaMv(giveGridPos(lstPos) + gRenderCameraTilePos, lr) = 1 then
         exit repeat
@@ -4833,6 +5331,146 @@ on applyColoredHangRoots me, q, c, eftc
     
     
   end if
+end
+
+on applyMushroomStubs me, q, c, amount
+  q2 = q + gRenderCameraTilePos.locH
+  c2 = c + gRenderCameraTilePos.locV
+  
+  mdPnt = giveMiddleOfTile(point(q,c))
+  
+  case lrSup of
+    "All":
+      dmin = 1
+      dmax = 29
+    "1":
+      dmin = 1
+      dmax = 6
+    "2":
+      dmin = 10
+      dmax = 16
+    "3":
+      dmin = 20
+      dmax = 29
+    "1:st and 2:nd":
+      dmin = 1
+      dmax = 16
+    "2:nd and 3:rd":
+      dmin = 10
+      dmax = 29
+    otherwise:
+      dmin = 1
+      dmax = 29
+  end case
+  
+  fullamount = amount
+  
+  case mshrSz of
+    "S":
+      dij = 0
+      dj = 0
+    "M":
+      dij = 1
+      dj = 1
+    "R":
+      dij = 0
+      dj = 1
+      fullamount = amount/3
+    otherwise:
+      dij = 1
+      dj = 1
+  end case
+  
+  case mshrSzW of
+    "S":
+      wminscale = 0.2
+      wmaxscale = 0.5
+    "M":
+      wminscale = 0.5
+      wmaxscale = 1.0
+    "L":
+      wminscale = 1.0
+      wmaxscale = 1.3
+    "R":
+      wminscale = 0.5
+      wmaxscale = 1.0
+    otherwise:
+      wminscale = 0.5
+      wmaxscale = 1.0
+  end case
+  
+  repeat with di = dij to dj then
+    case di of
+      0:
+        mminsize = 10
+        mmaxsize = 20
+      1:
+        mminsize = 20
+        mmaxsize = 40
+      otherwise:
+        mminsize = 20
+        mmaxsize = 40
+    end case
+    
+    repeat with a = 1 to fullamount/(mmaxsize/10.0) then
+      dp = random(28)-1
+      if(dp > 3)then
+        dp = dp + 2
+      end if
+      
+      lr = 3
+      
+      rad = lerp(mminsize, mmaxsize, random(90)/120.0)
+      
+      radw = lerp(wminscale, wmaxscale, random(100)/100.0)
+      
+      if(dp < 10)then
+        lr = 1
+      else if (dp < 20) then
+        lr = 2
+      end if
+      
+      startPos = mdPnt+(point(-11+random(21), -11+random(21)))
+      
+      solid = 0
+      
+      if(solidAfaMv(point(q2,c2), lr) = 1)then
+        solid = 1
+      end if
+      
+      if(dp-1 >= 0) then
+        pixelColor = member("layer"&string(dp)).image.getPixel(startPos)
+        if pixelColor <> rgb(255, 255, 255) then
+          pixelColor = member("layer"&string(dp-1)).image.getPixel(startPos)
+          if pixelColor = rgb(255, 255, 255) then
+            solid = 0
+          end if
+        end if
+      end if
+      
+      if(solid = 1)then
+        repeat with d = 0 to 2 then
+          if(dp+d <= dmax) and (dp+d >= dmin) then
+            if(rad <= 10)then
+              member("layer"&string(dp+d)).image.copyPixels(member("mushroomStubsGraf").image, rect(startPos, startPos)+(rect(-rad,-rad,rad,rad) * rect(radw, 1, radw, 1)), rect(0, 1+d*20, 20, 1+(d+1)*20), {#color:colr, #ink:36})
+              if gdLayer <> "C" then
+                member("gradient"&gdLayer&string(dp+d)).image.copyPixels(member("mushroomStubsGrad").image, rect(startPos, startPos)+(rect(-rad,-rad,rad,rad) * rect(radw, 1, radw, 1)), rect(0, 1+d*20, 20, 1+(d+1)*20), {#ink:39})
+              end if
+            else
+              member("layer"&string(dp+d)).image.copyPixels(member("mushroomStubsGraf").image, rect(startPos, startPos)+(rect(-rad,-rad,rad,rad) * rect(radw, 1, radw, 1)), rect(20, 1+d*40, 60, 1+(d+1)*40), {#color:colr, #ink:36})
+              if gdLayer <> "C" then
+                member("gradient"&gdLayer&string(dp+d)).image.copyPixels(member("mushroomStubsGrad").image, rect(startPos, startPos)+(rect(-rad,-rad,rad,rad) * rect(radw, 1, radw, 1)), rect(20, 1+d*40, 60, 1+(d+1)*40), {#ink:39})
+              end if 
+            end if
+          else
+            exit repeat
+          end if
+        end repeat
+      end if
+
+    end repeat
+  end repeat
+  
 end
 
 
@@ -5905,41 +6543,37 @@ on applyFlowers me, q, c, amount
   end repeat
 end
 
-on applyWire me, q, c, eftc
+on applyWire(me, q, c, eftc)
   q2 = q + gRenderCameraTilePos.locH
   c2 = c + gRenderCameraTilePos.locV
-  
   global gCurrentRenderCamera
-  
   case lrSup of--["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]
     "All":
-      d = random(30)-1
+      d = random(30) - 1
     "1":
-      d = random(10)-1
+      d = random(10) - 1
     "2":
-      d = random(10)-1 + 10
+      d = random(10) - 1 + 10
     "3":
-      d = random(10)-1 + 20
+      d = random(10) - 1 + 20
     "1:st and 2:nd":
-      d = random(20)-1
+      d = random(20) - 1
     "2:nd and 3:rd":
-      d = random(20)-1 + 10
+      d = random(20) - 1 + 10
     otherwise:
-      d = random(30)-1
+      d = random(30) - 1
   end case
-  lr = 1+(d>9)+(d>19)
-  
-  if (gLEprops.matrix[q2][c2][lr][1]=0)then
-    member("wireImage").image = image(member("layer"&string(d)).image.width, member("layer"&string(d)).image.height, 1)
-    
-    mdPnt = giveMiddleOfTile(point(q,c))
-    startPos = mdPnt+point(-11+random(21), -11+random(21))
-    
-    myCamera = me.closestCamera(startPos+gRenderCameraTilePos*20)
-    if(myCamera = 0)then
+  lr = 1 + (d > 9) + (d > 19)
+  if (gLEprops.matrix[q2][c2][lr][1] = 0) then
+    layerd = member("layer" & string(d)).image
+    member("wireImage").image = image(layerd.width, layerd.height, 1)
+    wireImg = member("wireImage").image
+    mdPnt = giveMiddleOfTile(point(q, c))
+    startPos = mdPnt+point(-11 + random(21), -11 + random(21))
+    myCamera = me.closestCamera(startPos + gRenderCameraTilePos * 20)
+    if (myCamera = 0) then
       exit
     end if
-    
     fatness = 1
     case fatOp of
       "2px":
@@ -5949,60 +6583,43 @@ on applyWire me, q, c, eftc
       "random":
         fatness = random(3)
     end case
-    
-    a = 1.0+random(100)+random(random(random(900)))
+    a = 1.0 + random(100) + random(random(random(900)))
     keepItFromToForty = random(30)
-    a = ((a*keepItFromToForty)+40.0)/(keepItFromToForty+1.0)
-    
-    member("wireImage").image.copypixels(member("pxl").image, rect(startPos.locH, startPos.locV-1, startPos.locH+1, startPos.locV+1)+rect(-(fatness>1), -(fatness>1), (fatness=3), (fatness=3)), rect(0,0,1,1), {#color:color(0,0,0)})
-    -- member("layer"&string(d)).image.copypixels(member("pxl").image, rect(startPos.locH, startPos.locV-1, startPos.locH+1, startPos.locV+1)+rect(-(fatness>1), -(fatness>1), (fatness=3), (fatness=3)), rect(0,0,1,1), {#color:color(0,255,0)})
+    a = ((a * keepItFromToForty) + 40.0) / (keepItFromToForty + 1.0)
+    addNRct = rect(-(fatness > 1), -(fatness > 1), (fatness = 3), (fatness = 3))
+    wireImg.copypixels(DRPxl, rect(startPos.locH, startPos.locV - 1, startPos.locH + 1, startPos.locV + 1) + addNRct, rect(0, 0, 1, 1), {#color:color(0, 0, 0)})
     goodStops = 0
-    
-    repeat with dir = 0 to 1 then
+    repeat with dir = 0 to 1
       pnt = point(startPos.locH, startPos.locV)
       lastPnt = point(startPos.locH, startPos.locV)
-      repeat with rep = 1 to 1000 then
-        
-        pnt.locH = startPos.locH +(-1 + 2*dir)*rep
-        pnt.locV = startPos.locV + a - (power(2.71828183, rep/a)+power(2.71828183, -rep/a))*(a/2.0)
-        
+      repeat with rep = 1 to 1000
+        pnt.locH = startPos.locH + (-1 + 2 * dir) * rep
+        pnt.locV = startPos.locV + a - (power(2.71828183, rep / a) + power(2.71828183, -rep / a)) * (a / 2.0)
         dr = moveToPoint(lastPnt, pnt, fatness.float)
-        
-        member("wireImage").image.copypixels(member("pxl").image, rect(pnt.locH, pnt.locV, pnt.locH+1, lastPnt.locV+1)+rect(-(fatness>1), -(fatness>1), (fatness=3), (fatness=3)), rect(0,0,1,1), {#color:color(0,0,0)})
-        
-        -- member("layer"&string(d)).image.copypixels(member("pxl").image, rect(pnt.locH, pnt.locV, pnt.locH+1, lastPnt.locV+1)+rect(-(fatness>1), -(fatness>1), (fatness=3), (fatness=3)), rect(0,0,1,1), {#color:gLOProps.pals[gLOProps.pal].detCol})
-        
-        
+        wireImg.copypixels(DRPxl, rect(pnt.locH, pnt.locV, pnt.locH + 1, lastPnt.locV + 1) + addNRct, rect(0, 0, 1, 1), {#color:color(0, 0, 0)})
         lastPnt = point(pnt.locH, pnt.locV)
-        
-        
-        
-        
-        
         tlPos = giveGridPos(point(pnt.locH, pnt.locV)) + gRenderCameraTilePos
-        if tlPos.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)) = 0 then
+        if (tlPos.inside(rect(1, 1, gLOprops.size.loch + 1, gLOprops.size.locv + 1)) = 0) then
           exit repeat
         else 
           if(myCamera = gCurrentRenderCamera)and(me.seenByCamera(myCamera, pnt + gRenderCameraTilePos)=1) then
-            if gLEprops.matrix[tlPos.locH][tlPos.locV][lr][1] = 1 then
-              if member("layer"&string(d)).image.getPixel(pnt) <> color(255,255,255) then
+            if (gLEprops.matrix[tlPos.locH][tlPos.locV][lr][1] = 1) then
+              if (layerd.getPixel(pnt) <> DRWhite) then
                 goodStops = goodStops + 1
                 exit repeat
               end if
             end if
           else
-            if solidAfaMv(tlPos, lr) then
+            if (solidAfaMv(tlPos, lr)) then
               goodStops = goodStops + 1
               exit repeat
             end if
           end if
         end if
-        
       end repeat
     end repeat
-    
-    if goodStops = 2 then
-      member("layer"&string(d)).image.copyPixels(member("wireImage").image, member("wireImage").image.rect, member("wireImage").image.rect, {#color:gLOProps.pals[gLOProps.pal].detCol, #ink:36})
+    if (goodStops = 2) then
+      layerd.copyPixels(wireImg, wireImg.rect, wireImg.rect, {#color:color(255, 0, 0), #ink:36})
     end if
   end if
 end
@@ -6141,7 +6758,7 @@ on applyChain me, q, c, eftc
     
     
     if goodStops = 2 then
-      member("layer"&string(d)).image.copyPixels(member("wireImage").image, member("wireImage").image.rect, member("wireImage").image.rect, {#color:gLOProps.pals[gLOProps.pal].detCol, #ink:36})
+      member("layer"&string(d)).image.copyPixels(member("wireImage").image, member("wireImage").image.rect, member("wireImage").image.rect, {#color:color(255, 0, 0), #ink:36})
     end if
   end if
   --end repeat
@@ -6499,7 +7116,7 @@ on applyRingChains me, q, c, eftc
         member("layer"&string(d)).image.copyPixels(member("wireImage").image, member("wireImage").image.rect, member("wireImage").image.rect, {#color:colrInd, #ink:36})
         member("gradient"&gdIndLayer&string(d)).image.copyPixels(member("wireImage").image, member("wireImage").image.rect, member("wireImage").image.rect, {#ink:39})
       else
-        member("layer"&string(d)).image.copyPixels(member("wireImage").image, member("wireImage").image.rect, member("wireImage").image.rect, {#color:gLOProps.pals[gLOProps.pal].detCol, #ink:36})
+        member("layer"&string(d)).image.copyPixels(member("wireImage").image, member("wireImage").image.rect, member("wireImage").image.rect, {#color:color(255, 0, 0), #ink:36})
       end if
     end if
   end if
@@ -6796,7 +7413,7 @@ on applyAssortedTrash me, q, c
     if (afaMvLvlEdit(point(q2,c2), layer)=0) then
       
       rnd = gEffectProps.list[gEffectProps.listPos]
-      flp = random(2)-1
+      flp = random(2)-1 --unused but can't remove because it would change rng
       pnt = giveMiddleOfTile(point(q,c))+point(-10+random(20), 10)
       
       rct = rect(pnt, pnt) + rect(-25, -25, 25, 25)
@@ -6851,24 +7468,26 @@ on applyResRoots me, q, c
       lrmin = 1 
       lrmax = 3
   end case
-  
+  sourceRect = member("CloverRoot1").rect
   if (gdLayer = "C") then
     repeat with tr = lrmin to lrmax
       if (afaMvLvlEdit(point(q2,c2), tr)<>0) and (gEEprops.effects[r].mtrx[q2][c2] >= 50)then
-        pnt = giveMiddleOfTile(point(q,c))--+point(-10+random(20), 10)--+random(20)
+        pnt = giveMiddleOfTile(point(q,c))
         rct = rect(pnt, pnt)+ rect(-10, -10, 10, 10)
         rct2 = rect(pnt, pnt)+ [rect(-15, -15, 5, 5), rect(-5, -5, 15, 15)][random(2)]
         rct3 = rect(pnt, pnt)+ rect(-5, -5, 15, 15)
-        member("layer"&string((tr-1)*10)).image.copyPixels(member("CloverRoot" & string(random(6))).image, rct, member("CloverRoot1").rect, {#color:color(0,0,255), #ink:36})
-        member("layer"&string((tr-1)*10)).image.copyPixels(member("CloverRoot" & string(random(6))).image, rct2, member("CloverRoot1").rect, {#color:color(0,0,255), #ink:36})
-        member("layer"&string((tr-1)*10+5)).image.copyPixels(member("CloverRoot" & string(random(6))).image, rct, member("CloverRoot1").rect, {#color:color(0,0,255), #ink:36})
-        member("layer"&string((tr-1)*10+5)).image.copyPixels(member("CloverRoot" & string(random(6))).image, rct2, member("CloverRoot1").rect, {#color:color(0,0,255), #ink:36})
+        lay = member("layer"&string((tr-1)*10)).image
+        lay.copyPixels(member("CloverRoot" & string(random(6))).image, rct, sourceRect, {#color:color(0,0,255), #ink:36})
+        lay.copyPixels(member("CloverRoot" & string(random(6))).image, rct2, sourceRect, {#color:color(0,0,255), #ink:36})
+        lay = member("layer"&string((tr-1)*10+5)).image
+        lay.copyPixels(member("CloverRoot" & string(random(6))).image, rct, sourceRect, {#color:color(0,0,255), #ink:36})
+        lay.copyPixels(member("CloverRoot" & string(random(6))).image, rct2, sourceRect, {#color:color(0,0,255), #ink:36})
       end if
     end repeat
   else
     repeat with tr = lrmin to lrmax
       if (afaMvLvlEdit(point(q2,c2), tr)<>0) and (gEEprops.effects[r].mtrx[q2][c2] >= 15)then
-        pnt = giveMiddleOfTile(point(q,c))--+point(-10+random(20), 10)--+random(20)
+        pnt = giveMiddleOfTile(point(q,c))
         rct = rect(pnt, pnt)+ rect(-10, -10, 10, 10)
         rct2 = rect(pnt, pnt)+ [rect(-15, -15, 5, 5), rect(-5, -5, 15, 15)][random(2)]
         rct3 = rect(pnt, pnt)+ rect(-5, -5, 15, 15)
@@ -6876,14 +7495,20 @@ on applyResRoots me, q, c
         var2 = "CloverRoot" & string(random(6))
         var3 = "CloverRoot" & string(random(6))
         var4 = "CloverRoot" & string(random(6))
-        member("layer"&string((tr-1)*10)).image.copyPixels(member(var1).image, rct, member("CloverRoot1").rect, {#color:colr, #ink:36})
-        member("gradient"&gdLayer&string((tr-1)*10)).image.copyPixels(member(var1 & "G").image, rct, member("CloverRoot1").rect, {#ink:39})
-        member("layer"&string((tr-1)*10)).image.copyPixels(member(var2).image, rct2, member("CloverRoot1").rect, {#color:colr, #ink:36})
-        member("gradient"&gdLayer&string((tr-1)*10)).image.copyPixels(member(var2 & "G").image, rct2, member("CloverRoot1").rect, {#ink:39})
-        member("layer"&string((tr-1)*10+5)).image.copyPixels(member(var3).image, rct, member("CloverRoot1").rect, {#color:colr, #ink:36})
-        member("gradient"&gdLayer&string((tr-1)*10+5)).image.copyPixels(member(var3 & "G").image, rct, member("CloverRoot1").rect, {#ink:39})
-        member("layer"&string((tr-1)*10+5)).image.copyPixels(member(var4).image, rct2, member("CloverRoot1").rect, {#color:colr, #ink:36})
-        member("gradient"&gdLayer&string((tr-1)*10+5)).image.copyPixels(member(var4 & "G").image, rct2, member("CloverRoot1").rect, {#ink:39})
+        strtr = string((tr-1)*10)
+        lay = member("layer"&strtr).image
+        grd = member("gradient"&gdLayer&strtr).image
+        lay.copyPixels(member(var1).image, rct, sourceRect, {#color:colr, #ink:36})
+        grd.copyPixels(member(var1 & "G").image, rct, sourceRect, {#ink:39})
+        lay.copyPixels(member(var2).image, rct2, sourceRect, {#color:colr, #ink:36})
+        grd.copyPixels(member(var2 & "G").image, rct2, sourceRect, {#ink:39})
+        strtr = string((tr-1)*10 + 5)
+        lay = member("layer"&strtr).image
+        grd = member("gradient"&gdLayer&strtr).image
+        lay.copyPixels(member(var3).image, rct, sourceRect, {#color:colr, #ink:36})
+        grd.copyPixels(member(var3 & "G").image, rct, sourceRect, {#ink:39})
+        lay.copyPixels(member(var4).image, rct2, sourceRect, {#color:colr, #ink:36})
+        grd.copyPixels(member(var4 & "G").image, rct2, sourceRect, {#ink:39})
       end if
     end repeat
   end if
@@ -7744,10 +8369,10 @@ on reDrawPoles(pos, layer, q, c, drawLayer)
       case t of
         1:
           rct = rect((q-1)*20, (c-1)*20, q*20, c*20)+rect(0, 8, 0, -8)--rect(gRenderCameraTilePos,gRenderCameraTilePos)*20
-           member("layer" & drawLayer).image.copyPixels(member("pxl").image, rct, member("pxl").image.rect, {color:color(255, 0, 0)})
+          member("layer" & drawLayer).image.copyPixels(member("pxl").image, rct, member("pxl").image.rect, {color:color(255, 0, 0)})
         2:
           rct = rect((q-1)*20, (c-1)*20, q*20, c*20)+rect(8, 0, -8, 0)--rect(gRenderCameraTilePos,gRenderCameraTilePos)*20
-           member("layer" & drawLayer).image.copyPixels(member("pxl").image, rct, member("pxl").image.rect, {color:color(255, 0, 0)})
+          member("layer" & drawLayer).image.copyPixels(member("pxl").image, rct, member("pxl").image.rect, {color:color(255, 0, 0)})
       end case
     end repeat
   end if
@@ -7782,25 +8407,349 @@ on seenByCamera me, camNum, pos
   
 end
 
+on ApplyMosaicPlant me, q, c
+  global mosaicPlantStarts
+  
+  q2 = q + gRenderCameraTilePos.locH
+  c2 = c + gRenderCameraTilePos.locV
+  
+  -- Layers option is intentionally limited here
+  lr = lrSup
+  if (lrSup <> "1") and (lrSup <> "2") then
+    if solidMtrx[q2][c2][2] then lr = "1"
+    else lr = "2"
+  end if
+  
+  dmin = 9 + 10 * (lr <> "1")
+  dmax = 19 + 10 * (lr <> "1")
+  lr = (lr = "1") + 1
+  if solidMtrx[q2][c2][lr] then exit 
+  -- important comment, do not remove
 
+  case colrIntensity of
+    "H":
+      maxblnd = 0.8
+    "M":
+      maxblnd = 0.5
+    "L":
+      maxblnd = 0.2
+    "R":
+      maxblnd = random(3) * 0.3 - 0.1
+    "N":
+      maxblnd = 0
+    otherwise:
+      maxblnd = 0.5
+  end case
+  
+  -- Figure out if a plant spawns here
+  ind = 0
+  repeat with i = 1 to mosaicPlantStarts.count then
+    if mosaicPlantStarts[i].locH.integer = q2 and mosaicPlantStarts[i].locV.integer = c2 then
+      ind = i
+      exit repeat
+    end if
+  end repeat
+  
+  -- Ok now draw it if it does
+  if ind > 0 then
+    startPt = mosaicPlantStarts[ind]
+    
+    if solidMtrx[startPt.locH.integer][startPt.locV.integer][lr+1] = 0 then exit
+    
+    -- What is the closest other?
+    clsPt = point(-100000, -100000)
+    repeat with i = 1 to mosaicPlantStarts.count then
+      if (startPt <> mosaicPlantStarts[i]) then
+        if diag(startPt, clsPt) > diag(startPt, mosaicPlantStarts[i]) then clsPt = mosaicPlantStarts[i]
+      end if
+    end repeat
+    
+    -- Figure out leaf locations
+    leaves = []
+    maxIter = random(1500) + 500
+    ofst = random(360.0)
+    repeat with i = 1 to maxIter then
+      ds = sqrt(i) * 0.3
+      ang = i * PI * (3.0 - sqrt(5.0)) -- golden angle
+      pt = startPt + point(cos(ang + ofst) * ds, sin(ang + ofst) * ds)
+      
+      if (pt.locH < 1) or (pt.locH > gLOprops.size.locH) or (pt.locV < 1) or (pt.locV > gLOprops.size.locV) then next repeat
+      
+      str = gEEprops.effects[r].mtrx[pt.locH.integer][pt.locV.integer]
+      if ((str < 1.0 and i > 10 + random(6)) or solidMtrx[pt.locH.integer][pt.locV.integer][lr]) then exit repeat
+      if diag(startPt, pt) > diag(clsPt, pt) then
+        if random(4) = 1 then exit repeat
+        else next repeat
+      end if
+      
+      leaves.append(pt)
+    end repeat
+    
+    -- Filter out further out leaves
+    oldL = leaves.count
+    repeat with i = oldL down to 1 then
+      if random(oldL) < i - 8 then
+        leaves.deleteAt(i)
+      end if
+    end repeat
+    
+    -- FINALLY we get to draw the leaves :3
+    lr = dmin
+    grafSz = point(3, 6.5) -- mult by 2 to get actual size
+    
+    repeat with i = leaves.count down to 1 then -- reverse order for drawing reasons (outwards-in)
+      leafPt = leaves[i]
+      -- stem
+      tl = (startPt + leafPt) / 2.0 - gRenderCameraTilePos
+      tl = tl * 20.0 + point(10.0, 10.0)
+      sz = point(1, (diag(startPt, leafPt) * 20.0).integer) / 2.0
+      qd = rotateToQuadFix(rect(tl, tl) + rect(-sz, sz), lookAtPoint(leafPt, startPt))
+      member("layer"&string(lr)).image.copypixels(member("pxl").image, qd, rect(0,0,1,1), {#color:color(255,0,0), #ink:36})
+      -- leaf
+      tl = (leafPt - gRenderCameraTilePos) * 20.0 + point(10.0, 10.0)
+      qd = rotateToQuadFix(rect(tl, tl) + rect(-grafSz, grafSz), lookAtPoint(leafPt, startPt))
+      member("layer"&string(lr-1)).image.copypixels(member("mosaicLeafGraf").image, qd, rect(0,0,6,11), {#color:colr, #ink:36})
+      if colrIntensity <> "N" then
+        copyPixelsToEffectColor(gdLayer, lr-1, qd, "mosaicLeafGraf", rect(6, 0, 12, 11), 0.5, maxblnd * (1 - (i.float / leaves.count.float) * 0.5))
+      end if
+    end repeat
+    
+    -- Guess what: flowers
+    repeat with i = 1 to (leaves.count / 50.0).integer + 1 then
+      if hasFlowers and random(3) = 1 then
+        ds = random(diag(startPt, leaves[leaves.count])) * 0.45
+        ang = random(360) / PI
+        tl = startPt + point(cos(ang) * ds, sin(ang) * ds) - gRenderCameraTilePos
+        tl = (tl * 20.0) + point(10.0, 10.0)
+        
+        ang = random(360/PI)
+        amt = random(3) + 3
+        repeat with j = 1 to amt then
+          tl2 = tl + (point(cos(ang), sin(ang)) * 6.5)
+          qd = rotateToQuadFix(rect(tl2, tl2) + rect(-grafSz, grafSz), lookAtPoint(tl2, tl))
+          member("layer"&string(lr-2)).image.copypixels(member("mosaicLeafGraf").image, qd, rect(0,0,6,11), {#color:colrDetail, #ink:36})
+          copyPixelsToEffectColor(gdDetailLayer, lr-2, qd, "mosaicLeafGraf", rect(6, 0, 12, 11), 0.5, (random(10) + 90.0) / 100.0)
+          ang = ang + (2 * PI / amt)
+        end repeat
+      end if
+    end repeat
+  end if
+end
 
+on InitMosaicPlants me
+  global mosaicPlantStarts
+  mtrx = gEEprops.effects[r].mtrx
+  
+  savSeed = the randomSeed
+  the randomSeed = effectSeed
+  
+  -- Figure out where the local maximum values are
+  peakVals = []
+  counters = []
+  repeat with i = 1 to gLOprops.size.locH then
+    repeat with j = 1 to gLOprops.size.locV then
+      
+      if mtrx[i][j] > 0 then
+        test = 1
+        if i > 1 then
+          if mtrx[i - 1][j] > mtrx[i][j] then test = 0
+        end if
+        if i < gLOprops.size.locH then
+          if mtrx[i + 1][j] > mtrx[i][j] then test = 0
+        end if
+        if j > 1 then
+          if mtrx[i][j - 1] > mtrx[i][j] then test = 0
+        end if
+        if j < gLOprops.size.locV then
+          if mtrx[i][j + 1] > mtrx[i][j] then test = 0
+        end if
+        
+        if (test = 1) then
+          peakVals.append(point(i.float, j.float))
+          counters.append(1)
+        end if
+        
+      end if
+      
+    end repeat
+  end repeat
+  
+  -- Fiddle with the points (remove duplicates and randomize)
+  repeat with k = 1 to 3 then
+    
+    -- Remove duplicates
+    repeat with i = 1 to peakVals.count - 1 then
+      actv = peakVals[i]
+      repeat with j = i + 1 to peakVals.count then
+        curr = peakVals[j]
+        
+        if diag(actv, curr) < 5 then
+          actv = (actv * counters[i] + curr * counters[j]) / (counters[i] + counters[j])
+          peakVals[i] = actv
+          peakVals.deleteAt(j)
+          counters[i] = counters[i] + 1
+          counters.deleteAt(j)
+          j = j - 1 -- the next one to look at will be in the same place
+        end if
+        
+      end repeat
+    end repeat
+    
+    -- Randomize slightly
+    repeat with i = 1 to peakVals.count then
+      peakVals[i] = peakVals[i] + point(random(3.0) - 2.0, random(3.0) - 2.0)
+      peakVals[i] = point(max(1, min(gLOprops.size.locH, peakVals[i].locH)), max(1, min(gLOprops.size.locV, peakVals[i].locV)))
+    end repeat
+    
+  end repeat
+  
+  -- One more passthrough to randomly remove a few low ones
+  repeat with i = peakVals.count down to 1 then
+    temp = mtrx[peakVals[i].locH.integer][peakVals[i].locV.integer]
+    if power(random(100) / 100.0, 3) * 100.0 > temp then
+      peakVals.deleteAt(i)
+      counters.deleteAt(i) -- technically I don't need this but it's useful when debugging
+    end if
+  end repeat
+  
+  mosaicPlantStarts = peakVals
+  
+  -- Reset random
+  the randomSeed = savSeed
+end
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+on ApplyCobweb me, q, c
+  q2 = q + gRenderCameraTilePos.locH
+  c2 = c + gRenderCameraTilePos.locV
+  case lrSup of
+    "All":
+      d = random(29)
+    "1":
+      d = random(9)
+    "2":
+      d = random(10) - 1 + 10
+    "3":
+      d = random(10) - 1 + 20
+    "1:st and 2:nd":
+      d = random(19)
+    "2:nd and 3:rd":
+      d = random(20) - 1 + 10
+  end case
+  lr = 1 + (d > 9) + (d > 19)
+  
+  if solidMtrx[q2][c2][lr] = 1 then exit
+  
+  startPt = giveMiddleOfTile(point(q, c))+point(-11+random(21), -11+random(21)) + gRenderCameraTilePos * 20.0
+  
+  -- Find branching points
+  rot = random(360)
+  angs = []
+  repeat with i = 1 to 60 then
+    pt = startPt
+    repeat with j = 1 to 20 * 5 / 2 then -- 20 * max tile radius, moving two pixels at a time
+      pt = pt + point(cos(rot * PI / 180) * 2, sin(rot * PI / 180) * 2)
+      ipt = point(((pt.locH + 10) / 20).integer, ((pt.locV + 10) / 20).integer)
+      if ipt.locH < 1 or ipt.locH > gLOprops.size.locH or ipt.locV < 1 or ipt.locV > gLOprops.size.locV then exit repeat
+      if solidMtrx[ipt.locH][ipt.locV][lr] <> 0 then
+        angs.append([rot, pt])
+        exit repeat
+      end if
+    end repeat
+    
+    rot = (rot + 6) mod 360
+  end repeat
+  
+  if angs.count < 3 then exit -- we preferably want at least 3 points
+  
+  -- Pick our angles
+  picked = [angs[random(angs.count)]]
+  maxpts = random(min(8, angs.count - 2)) + 2
+  repeat with i = 2 to maxpts then
+    -- Weed out close angles (they will look bad)
+    repeat with j = angs.count down to 1 then
+      dif = abs(picked[picked.count][1] - angs[j][1])
+      if dif > 180 then dif = 360 - dif
+      if dif < 15 then angs.deleteAt(j)
+    end repeat
+    
+    -- Pick a random remaining angle
+    if angs.count < 1 and i <= 3 then exit
+    if angs.count < 1 then exit repeat
+    picked.append(angs[random(angs.count)])
+  end repeat
+  
+  picked.sort()
+  
+  -- Figure out colors
+  case gdIndLayer of
+    "A":
+      webcl = color(150,0,150)
+    "B":
+      webcl = color(0,150,150)
+    otherwise:
+      webcl = color(255,0,0)
+  end case
+  case colrIntensity of
+    "H":
+      webin = 0.8
+    "M":
+      webin = 0.5
+    "L":
+      webin = 0.2
+    "N":
+      webin = 0
+    otherwise:
+      webin = 0.5
+  end case
+  
+  -- Draw the base lines connecting to edges
+  mn = 9999
+  repeat with i = 1 to picked.count then
+    len = diag(startPt, picked[i][2])
+    mn = min(len, mn)
+    qd = (startPt + picked[i][2]) / 2.0 - gRenderCameraTilePos * 20.0
+    qd = rect(qd, qd) + rect(-0.5, -len/2.0, 0.5, len/2.0)
+    qd = rotateToQuad(qd, lookAtpoint(startPt, picked[i][2]))
+    member("layer"&string(d)).image.copypixels(member("pxl").image, qd, rect(0,0,1,1), {#color:webcl, #ink:36})
+    
+    if (gdIndLayer = "A" or gdIndLayer = "B") and (colrIntensity <> "N") then
+      copyPixelsToEffectColor(gdIndLayer, d, qd, "pxl", rect(0, 0, 1, 1), 0.5, webin)
+    end if
+  end repeat
+  
+  -- Draw inner spiral lines
+  pxlSpc = random(4) + 4.0 -- range: 5-8 (inclusive)
+  repeat with i = 1 to mn / pxlSpc then
+    repeat with j = 1 to picked.count then
+      -- Random chance to skip
+      if random(10) = 1 then next repeat
+      
+      -- Math to figure out what points we're at
+      cur = picked[j]
+      nxt = picked[1]
+      if j <> picked.count then nxt = picked[j+1]
+      
+      dif = nxt[1] - cur[1]
+      if nxt[1] < cur[1] then dif = 360 - cur[1] + nxt[1]
+      if dif >= 150 then next repeat
+      
+      clrp = (i + (j.float / picked.count)) * pxlSpc / diag(startPt, cur[2])
+      nlrp = (i + ((j.float + 1.0) / picked.count)) * pxlSpc / diag(startPt, nxt[2])
+      
+      cur = point(lerp(startPt.locH, cur[2].locH, clrp), lerp(startPt.locV, cur[2].locV, clrp)) - gRenderCameraTilePos * 20.0
+      nxt = point(lerp(startPt.locH, nxt[2].locH, nlrp), lerp(startPt.locV, nxt[2].locV, nlrp)) - gRenderCameraTilePos * 20.0
+      ang = lookAtpoint(cur, nxt)
+      
+      -- Draw the line
+      len = diag(cur, nxt)
+      qd = (cur + nxt) / 2.0
+      qd = rect(qd, qd) + rect(-0.5, -len/2.0, 0.5, len/2.0)
+      qd = rotateToQuad(qd, ang)
+      member("layer"&string(d)).image.copypixels(member("pxl").image, qd, rect(0,0,1,1), {#color:webcl, #ink:36})
+      
+      if (gdIndLayer = "A" or gdIndLayer = "B") and (colrIntensity <> "N") then
+        copyPixelsToEffectColor(gdIndLayer, d, qd, "pxl", rect(0, 0, 1, 1), 0.5, webin)
+      end if
+    end repeat
+  end repeat
+end

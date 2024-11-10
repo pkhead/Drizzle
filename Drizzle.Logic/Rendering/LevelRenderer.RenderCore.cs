@@ -283,6 +283,7 @@ public sealed partial class LevelRenderer
     private void RenderFinalize()
     {
         RenderStartFrame(RenderStage.Finalize);
+        _runtime.CreateScript<unify>().exitframe();
         _runtime.CreateScript<finalize>().exitframe();
     }
 

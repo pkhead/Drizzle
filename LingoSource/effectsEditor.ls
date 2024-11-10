@@ -1,4 +1,4 @@
-global gTEprops, gLEProps, gTiles, gEEProps, gEffects, lstSpace, gLOprops, gEnvEditorProps, gDirectionKeys, gPEProps, gProps, showControls
+global gTEprops, gLEProps, gTiles, gEEProps, gEffects, lstSpace, gLOprops, gEnvEditorProps, gDirectionKeys, gPEProps, gProps, showControls, gCustomEffects
 
 
 on exitFrame me
@@ -187,7 +187,7 @@ end
 
 
 
-on checkKey me, key: string
+on checkKey me, key
   type return: number
   rtrn: number = 0
   gEEprops.keys[symbol(key)] = _key.keyPressed(key) and _movie.window.sizeState <> #minimized
@@ -272,7 +272,8 @@ end
 
 
 on newEffect me
-  ef = [#nm:gEffects[gEEprops.emPos.locH].efs[gEEprops.emPos.locV].nm, #tp:"nn", #crossScreen:0, #mtrx:[], #options: [["Delete/Move", ["Delete", "Move Back", "Move Forth"], ""]] ]
+  origEf = gEffects[gEEprops.emPos.locH].efs[gEEprops.emPos.locV]
+  ef = [#nm:origEf.nm, #tp:"nn", #crossScreen:0, #mtrx:[], #options: [["Delete/Move", ["Delete", "Move Back", "Move Forth"], ""]] ]
   
   
   fillWith = 0
@@ -456,7 +457,7 @@ on newEffect me
       ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "1"])
       ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
       
-    "Root Grass", "Growers", "Cacti", "Rain Moss", "Dense Mold", "Seed Pods", "Dandelions", "Grass", "Arm Growers", "Horse Tails", "Circuit Plants", "Storm Plants", "Feather Plants", "Mini Growers", "Left Facing Kelp", "Right Facing Kelp", "Club Moss", "Moss Wall", "Mixed Facing Kelp", "Bubble Grower", "Seed Grass", "Hyacinths", "Orb Plants":
+    "Root Grass", "Growers", "Cacti", "Rain Moss", "Dense Mold", "Seed Pods", "Dandelions", "Grass", "Arm Growers", "Horse Tails", "Circuit Plants", "Storm Plants", "Feather Plants", "Mini Growers", "Left Facing Kelp", "Right Facing Kelp", "Club Moss", "Moss Wall", "Mixed Facing Kelp", "Bubble Grower", "Seed Grass", "Hyacinths", "Orb Plants", "Lollipop Mold":
       ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
       ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
       
@@ -467,6 +468,20 @@ on newEffect me
     "Rollers", "Thorn Growers", "Horror Growers", "Garbage Spirals", "Spinets", "Small Springs", "Fuzzy Growers", "Coral Growers", "Leaf Growers", "Meat Growers", "Thunder Growers", "Ice Growers", "Grass Growers", "Fancy Growers":
       ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
       ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
+      ef.crossScreen = 1
+      
+    "Mosaic Plants":
+      ef.options.add(["Layers", ["1", "2", "1:st and 2:nd"], "1"])
+      ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
+      ef.options.add(["Color Intensity", ["High", "Medium", "Low", "None", "Random"], "Medium"])
+      ef.options.add(["Flowers", ["Off", "On"], "Off"])
+      ef.options.add(["Detail Color", ["Color1", "Color2", "Dead"], "Color1"])
+      ef.crossScreen = 1
+      
+    "Cobwebs":
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "1"])
+      ef.options.add(["Effect Color", ["EffectColor1", "EffectColor2", "None"], "None"])
+      ef.options.add(["Color Intensity", ["High", "Medium", "Low", "None"], "Medium"])
       ef.crossScreen = 1
       
     "Wires":
@@ -490,6 +505,12 @@ on newEffect me
       ef.options.add(["Size", ["Small", "FAT"], "Small"])
       ef.options.add(["Effect Color", ["EffectColor1", "EffectColor2", "None"], "EffectColor2"])
       ef.crossScreen = 1
+      
+    "Mushroom Stubs":
+      ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      ef.options.add(["Mushroom Size", ["Small", "Medium", "Random"], "Medium"])
+      ef.options.add(["Mushroom Width", ["Small", "Medium", "Wide", "Random"], "Medium"])
       
     "BlackGoo":
       fillWith = 100
@@ -545,6 +566,33 @@ on newEffect me
       ef.options.add(["Color 1", ["EffectColor1", "EffectColor2", "None"], "EffectColor1"])
       ef.options.add(["Color 2", ["EffectColor1", "EffectColor2", "None"], "EffectColor2"])
       
+    otherwise:
+      if gCustomEffects.getPos(ef.nm) > 0 then
+        if origEf.tp = "individual" then
+          ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "1"])
+        else
+          ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+        end if
+        
+        if ["grower", "hanger", "clinger"].getPos(origEf.tp)>0 then ef.crossScreen = 1
+        
+        if origEf.findPos("pickColor") then
+          if origEf.pickColor = 1 then
+            ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
+          end if
+        end if
+        
+        if origEf.tp = "wall" and origEf.findPos("can3D") > 0 then
+          if origEf.can3D = 2 then 
+            ef.options.add(["3D", ["Off", "On"], "Off"])
+          end if
+        end if
+        
+        if origEf.tp = "clinger" then
+          ef.options.add(["Side", ["Left", "Right", "Random"], "Random"])
+        end if
+        
+      end if
   end case
   
   repeat with q = 1 to gLOprops.size.loch then
@@ -572,10 +620,30 @@ end
 
 on useBrush me, pnt, fac
   if  gEEprops.mode = "editEffect" then
+    cEff = VOID
+    efName = gEEprops.effects[gEEprops.editEffect].nm
+    if gCustomEffects.getPos(efName) > 0 then
+      repeat with i = 1 to gEffects.count
+        iefs = gEffects[i].efs
+        repeat with j = 1 to iefs.count
+          ijef = iefs[j]
+          if ijef.nm = efName then
+            cEff = ijef
+            exit repeat
+          end if
+        end repeat
+        if cEff <> VOID then exit repeat
+      end repeat
+    end if
     strength = 10 + (90* _key.keyPressed("T"))
-    if ["BlackGoo", "Fungi Flowers", "Lighthouse Flowers", "Colored Fungi Flowers", "Colored Lighthouse Flowers", "High Fern", "High Grass", "Fern", "Giant Mushroom", "Sprawlbush", "featherFern", "Fungus Tree", "Restore As Scaffolding", "Restore As Pipes", "Small Springs", "Super BlackGoo", "Stained Glass Properties"].getPos(gEEprops.effects[gEEprops.editEffect].nm)>0 then
+    if ["BlackGoo", "Fungi Flowers", "Lighthouse Flowers", "Colored Fungi Flowers", "Colored Lighthouse Flowers", "High Fern", "High Grass", "Fern", "Giant Mushroom", "Sprawlbush", "featherFern", "Fungus Tree", "Restore As Scaffolding", "Restore As Pipes", "Small Springs", "Super BlackGoo", "Stained Glass Properties", "Cobwebs"].getPos(efName)>0 then
       strength = 10000
-      if  (gEEprops.effects[gEEprops.editEffect].nm <> "BlackGoo") and (gEEprops.effects[gEEprops.editEffect].nm <> "Super BlackGoo") then
+      if (efName <> "BlackGoo") and (efName <> "Super BlackGoo") then
+        gEEprops.brushSize = 1
+      end if
+    else if cEff <> VOID then
+      if cEff.tp = "individual" then
+        strength = 10000
         gEEprops.brushSize = 1
       end if
     end if
@@ -602,20 +670,6 @@ end
 
 
 on drawEfMtrx me, l
-  --  if (gEEprops.effects.count > 0)and(l>0) then
-  --        repeat with q = rct.left to rct.right then
-  --          repeat with c = rct.top to rct.bottom then
-  --            if point(q,c).inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1))then
-  --              val = gEEprops.effects[l].mtrx[q][c]/100.0
-  --              member("effectsMatrix").image.setPixel(q-1, c-1, color(255-val*255, 255*val, 255-val*255))
-  --            end if
-  --          end repeat
-  --        end repeat
-  --  else
-  --    member("effectsMatrix").image.copyPixels(member("pxl").image, member("effectsMatrix").image.rect, member("pxl").image.rect)
-  --  end if
-  
-  
   if (gEEprops.effects.count > 0)and(l>0) then
     repeat with a = gLEProps.camPos.locH to gLEProps.camPos.locH + 52 then
       repeat with b = gLEProps.camPos.locV to gLEProps.camPos.locV + 40 then
@@ -758,7 +812,7 @@ on changeOption me
       
       
       
-    "Color", "Detail Color", "Fatness", "Size", "Layers", "3D", "Ceramic Color", "Effect Color", "Variation", "Color 1", "Color 2", "Affect Gradients and Decals", "Rotate", "Color Intensity", "Fruit Density":
+    "Color", "Detail Color", "Fatness", "Size", "Layers", "3D", "Ceramic Color", "Effect Color", "Variation", "Color 1", "Color 2", "Affect Gradients and Decals", "Rotate", "Color Intensity", "Fruit Density", "Mushroom Size", "Mushroom Width", "Flowers", "Side":
       gEEprops.effects[gEEprops.editEffect].options[gEEprops.emPos.locV][3] = gEEprops.effects[gEEprops.editEffect].options[gEEprops.emPos.locV][2][gEEprops.emPos.locH]
       
       

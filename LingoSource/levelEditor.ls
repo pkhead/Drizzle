@@ -10,7 +10,7 @@ on exitFrame me
     sprite(93).blend = 0
   end if
   
-  if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+  if checkMinimize() then
     _player.appMinimize()
     
   end if

@@ -1,34 +1,40 @@
-global gLOprops, gEEprops, gAnyDecals, gTEprops, gLEprops, gRenderCameraTilePos, DRLastMatImp, DRLastSlpImp, DRLastFlrImP, DRLastTexImp, DRCustomMatList, DRLastTL
+global gLOprops, gEEprops, gAnyDecals, gTEprops, gLEprops, gRenderCameraTilePos, DRLastMatImp, DRLastSlpImp, DRLastFlrImP, DRLastTexImp, DRCustomMatList, DRLastTL, DRLastTrshImp, DRLastPipeImp, DRPxl, DRPxlRect, DRWhite
 
 on LCheckIfATileIsSolidAndSameMaterial(tl, lr, matName)
   tl = point(restrict(tl.locH, 1, gLOprops.size.loch), restrict(tl.locV, 1, gLOprops.size.locv))
-  rtrn = 0
   if (gLEprops.matrix[tl.locH][tl.locV][lr][1] = 1) then
     matTile = gTEprops.tlMatrix[tl.locH][tl.locV][lr]
-    if (matTile.tp = "material") and (matTile.data = matName) then
-      rtrn = 1
-    else if (matTile.tp = "default") and (gTEprops.defaultMaterial = matName) then
-      rtrn = 1
+    if (matTile.tp = "material") then
+      if (matTile.data = matName) then
+        return 1
+      end if
+    else if (matTile.tp = "default") then
+      if (gTEprops.defaultMaterial = matName) then
+        return 1
+      end if
     end if 
   end if
-  return rtrn
+  return 0
 end
 
 on LIsMyTileSetOpenToThisTile(matName, tl, l)
-  rtrn = 0
   if (tl.inside(rect(1, 1, gLOprops.size.loch + 1, gLOprops.size.locv + 1))) then
-    if [1,2,3,4,5].getPos(gLEProps.matrix[tl.locH][tl.locV][l][1]) > 0 then
+    if ([1, 2, 3, 4, 5].getPos(gLEProps.matrix[tl.locH][tl.locV][l][1]) > 0) then
       tile = gTEprops.tlMatrix[tl.locH][tl.locV][l]
-      if (tile.tp = "material") and (tile.data = matName) then
-        rtrn = 1
-      else if (tile.tp = "default") and (gTEprops.defaultMaterial = matName) then
-        rtrn = 1
+      if (tile.tp = "material") then
+        if (tile.data = matName) then
+          return 1
+        end if
+      else if (tile.tp = "default") then
+        if (gTEprops.defaultMaterial = matName) then
+          return 1
+        end if
       end if
     end if
   else if (gTEprops.defaultMaterial = matName) then
-    rtrn = 1
+    return 1
   end if
-  return rtrn
+  return 0
 end
 
 on LDrawATileMaterial(q, c, l, nm) --frntImg,
@@ -101,7 +107,7 @@ on LDrawATileMaterial(q, c, l, nm) --frntImg,
                 end if
               end repeat
             end repeat
-          2,3,4,5:
+          2, 3, 4, 5:
             rct = rect((q - 1) * 20, (c - 1) * 20, q * 20, c * 20)
             case LEMatrixT of
               5:
@@ -114,9 +120,6 @@ on LDrawATileMaterial(q, c, l, nm) --frntImg,
                 rct = [point(rct.right, rct.bottom), point(rct.right, rct.bottom), point(rct.left, rct.top), point(rct.right, rct.top)]
             end case
             rct = rct - [gRenderCameraTilePos, gRenderCameraTilePos, gRenderCameraTilePos, gRenderCameraTilePos] * 20
-            pxlI = member("pxl").image
-            pxlR = rect(0, 0, 1, 1)
-            wh = color(255, 255, 255)
             d = -1
             repeat with ps = 1 to mText.repeatL.count
               gtRect = bsRect + rect(0, size.locV * 20 * (ps - 1), 0, size.locV * 20 * (ps - 1))
@@ -128,23 +131,23 @@ on LDrawATileMaterial(q, c, l, nm) --frntImg,
                   lstr = string(d + dp)
                   lri = member("layer" & lstr).image
                   lri.copyPixels(matImg, pstRect, gtRect, {#ink:36})
-                  lri.copyPixels(pxlI, rct, pxlR, {#color:wh})
+                  lri.copyPixels(DRPxl, rct, DRPxlRect, {#color:DRWhite})
                   if (colored) then
                     if (effectColorA = 0) and (effectColorB = 0) then
                       lri = member("layer" & lstr & "dc").image
                       lri.copyPixels(matImg, pstRect, gtRect + gradRect, {#ink:36})
-                      lri.copyPixels(pxlI, rct, pxlR, {#color:wh})
+                      lri.copyPixels(DRPxl, rct, DRPxlRect, {#color:DRWhite})
                     end if
                   end if
                   if (effectColorA) then
                     lri = member("gradientA" & lstr).image
                     lri.copyPixels(matImg, pstRect, gtRect + gradRect, {#ink:39})
-                    lri.copyPixels(pxlI, rct, pxlR, {#color:wh})
+                    lri.copyPixels(DRPxl, rct, DRPxlRect, {#color:DRWhite})
                   end if
                   if (effectColorB) then
                     lri = member("gradientB" & lstr).image
                     lri.copyPixels(matImg, pstRect, gtRect + gradRect, {#ink:39})
-                    lri.copyPixels(pxlI, rct, pxlR, {#color:wh})
+                    lri.copyPixels(DRPxl, rct, DRPxlRect, {#color:DRWhite})
                   end if
                 end if
               end repeat
@@ -152,9 +155,6 @@ on LDrawATileMaterial(q, c, l, nm) --frntImg,
           6:
             if (mText.tags.getPos("textureOnFloor") > 0) then
               rct = rect((q - 1) * 20, (c - 1) * 20 + 10, q * 20, c * 20) - rect(gRenderCameraTilePos, gRenderCameraTilePos) * 20
-              pxlI = member("pxl").image
-              pxlR = rect(0, 0, 1, 1)
-              wh = color(255, 255, 255)
               d = -1
               repeat with ps = 1 to mText.repeatL.count
                 gtRect = bsRect + rect(0, size.locV * 20 * (ps - 1), 0, size.locV * 20 * (ps - 1))
@@ -166,23 +166,23 @@ on LDrawATileMaterial(q, c, l, nm) --frntImg,
                     lstr = string(d + dp)
                     lri = member("layer" & lstr).image
                     lri.copyPixels(matImg, pstRect, gtRect, {#ink:36})
-                    lri.copyPixels(pxlI, rct, pxlR, {#color:wh})
+                    lri.copyPixels(DRPxl, rct, DRPxlRect, {#color:DRWhite})
                     if (colored) then
                       if (effectColorA = 0) and (effectColorB = 0) then
                         lri = member("layer" & lstr & "dc").image
                         lri.copyPixels(matImg, pstRect, gtRect + gradRect, {#ink:36})
-                        lri.copyPixels(pxlI, rct, pxlR, {#color:wh})
+                        lri.copyPixels(DRPxl, rct, DRPxlRect, {#color:DRWhite})
                       end if
                     end if
                     if (effectColorA) then
                       lri = member("gradientA" & lstr).image
                       lri.copyPixels(matImg, pstRect, gtRect + gradRect, {#ink:39})
-                      lri.copyPixels(pxlI, rct, pxlR, {#color:wh})
+                      lri.copyPixels(DRPxl, rct, DRPxlRect, {#color:DRWhite})
                     end if
                     if (effectColorB) then
                       lri = member("gradientB" & lstr).image
                       lri.copyPixels(matImg, pstRect, gtRect + gradRect, {#ink:39})
-                      lri.copyPixels(pxlI, rct, pxlR, {#color:wh})
+                      lri.copyPixels(DRPxl, rct, DRPxlRect, {#color:DRWhite})
                     end if
                   end if
                 end repeat
@@ -393,6 +393,150 @@ on LDrawATileMaterial(q, c, l, nm) --frntImg,
             end repeat
           end if
       end case
+      if (matTl.findPos(#pipelike) <> VOID) then
+        matPipes = matTl.pipelike
+        randCount = matPipes.rnd
+        if (matPipes.findPos(#depths) <> VOID) then
+          pipeDepths = matPipes.depths
+        else
+          pipeDepths = [2, 3, 6, 7]
+        end if
+        matFile = member("MatPipelikeImport")
+        if (DRLastPipeImp <> nm) then
+          member("MatPipelikeImport").importFileInto("Materials" & the dirSeparator & nm & "Pipes.png")
+          matFile.name = "MatPipelikeImport"
+          DRLastPipeImp = nm
+        end if
+        matImg = matFile.image
+        effectColorA = (matPipes.tags.getPos("effectColorA") > 0)
+        effectColorB = (matPipes.tags.getPos("effectColorB") > 0)
+        colored = (matPipes.tags.getPos("colored") > 0)
+        if (colored) then
+          gAnyDecals = 1
+        end if
+        savSeed = the randomSeed
+        the randomSeed = seedForTile(qcp, gLOprops.tileSeed + l)
+        gtPos = point(0, 0)
+        case LEMatrixT of
+          1:
+            nbrs = ""
+            repeat with dir in [point(-1, 0), point(0, -1), point(1, 0), point(0, 1)]
+              if (random(2) = 1) and (afaMvLvlEdit(qcp + dir, l) = 1) then
+                nbrs = nbrs & "1"
+              else
+                nbrs = nbrs & string(LIsMyTileSetOpenToThisTile(nm, qcp + dir, l))
+              end if
+            end repeat
+            case nbrs of
+              "0101":
+                gtPos = point(2, 2)
+              "1010":
+                gtPos = point(4, 2)
+              "1111":
+                gtPos = point(6, 2)
+              "0111":
+                gtPos = point(8, 2)
+              "1101":
+                gtPos = point(10, 2)
+              "1110":
+                gtPos = point(12, 2)
+              "1011":
+                gtPos = point(14, 2)
+              "0011":
+                gtPos = point(16, 2)
+              "1001":
+                gtPos = point(18, 2)
+              "1100":
+                gtPos = point(20, 2)
+              "0110":
+                gtPos = point(22, 2)
+              "1000":
+                gtPos = point(24, 2)
+              "0010":
+                gtPos = point(26, 2)
+              "0100":
+                gtPos = point(28, 2)
+              "0001":
+                gtPos = point(30, 2)
+              "0000":
+                gtPos = point(40, 2)
+            end case
+          3:
+            gtPos = point(32, 2)
+          2:
+            gtPos = point(34, 2)
+          4:
+            gtPos = point(36, 2)
+          5:
+            gtPos = point(38, 2)
+          6:
+            gtPos = point(42, 2)   
+        end case
+        lrm110 = (l - 1) * 10
+        gtPos.locV = random(randCount) * 2
+        repeat with d = lrm110 to lrm110 + 9
+          if (pipeDepths.getPos(d - lrm110) > 0) then
+            rct = rect((gtPos.locH - 1) * 20 - 10, (gtPos.locV - 1) * 20 - 9, gtPos.locH * 20 + 10, gtPos.locV * 20 + 11)
+            realRect = rect((q - 1 - gRenderCameraTilePos.locH) * 20 - 10, (c - 1 - gRenderCameraTilePos.locV) * 20 - 10, (q - gRenderCameraTilePos.locH) * 20 + 10, (c - gRenderCameraTilePos.locV) * 20 + 10)
+            member("layer" & string(d)).image.copyPixels(matImg, realRect, rct, {#ink:36})
+            if (effectColorA) then
+              member("gradientA" & string(d)).image.copyPixels(matImg, realRect, rct + rect(840, 0, 840, 0), {#ink:39})
+            end if
+            if (effectColorB) then
+              member("gradientB" & string(d)).image.copyPixels(matImg, realRect, rct + rect(840, 0, 840, 0), {#ink:39})
+            end if
+            if (colored) then
+              if (effectColorA = FALSE) then
+                if (effectColorB = FALSE) then
+                  member("layer" & string(d) & "dc").image.copyPixels(matImg, realRect, rct + rect(840, 0, 840, 0), {#ink:36})
+                end if 
+              end if
+            end if
+          else
+            gtPos.locV = random(randCount) * 2
+          end if
+        end repeat
+        the randomSeed = savSeed
+      end if
+      if (matTl.findPos(#trash) <> VOID) then
+        matTrash = matTl.trash
+        trashRnd = matTrash.rnd
+        trashSz = matTrash.pixelSize
+        if (matTrash.findPos(#density) <> VOID) then
+          trashDensity = matTrash.density
+        else
+          trashDensity = 1
+        end if
+        if (matTrash.findPos(#depths) <> VOID) then
+          trashDepths = matTrash.depths
+        else
+          trashDepths = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        end if
+        matFile = member("MatTrshImport")
+        if (DRLastTrshImp <> nm) then
+          member("MatTrshImport").importFileInto("Materials" & the dirSeparator & nm & "Trash.png")
+          matFile.name = "MatTrshImport"
+          DRLastTrshImp = nm
+        end if
+        matTexImg = matFile.image
+        if (trashRnd > 0) then
+          savSeed = the randomSeed
+          the randomSeed = gLOprops.tileSeed + l + q + c * gLEprops.matrix.count
+          clrs = [color(255, 0, 0), color(0, 255, 0), color(0, 0, 255)]
+          trashLr = [0, 10, 20][l]
+          midTlTr = giveMiddleOfTile(qcp - gRenderCameraTilePos)
+          repeat with q = 1 to (2 + (random(trashDensity * 2) - 1) + trashDensity)
+            layerOfTrash = random(10) - 1
+            if (trashDepths.getPos(layerOfTrash) > 0) then
+              gtR = random(trashRnd)
+              pntRct = midTlTr - point(11, 11) + point(random(21), random(21))
+              trashSzDiv2 = trashSz / 2.0
+              member("layer" & string(trashLr + layerOfTrash)).image.copyPixels(matTexImg, rotateToQuadLB(rect(pntRct - trashSzDiv2, pntRct + trashSzDiv2), degToVec(random(360))),  rect(trashSz.locH * (gtR - 1), 1, trashSz.locH * gtR, trashSz.locV + 1), {#color:clrs[random(3)], #ink:36})
+            end if
+          end repeat
+          the randomSeed = savSeed
+        end if
+      end if
     end if
   end if
   --return frntImg

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Numerics;
@@ -71,6 +71,9 @@ public readonly struct LingoNumber : IEquatable<LingoNumber>, IComparable<LingoN
     // Pow is always float
     public static LingoNumber Pow(LingoNumber @base, LingoNumber exp) =>
         new(Math.Pow(@base.DecimalValue, exp.DecimalValue));
+
+    public static LingoNumber Max(LingoNumber a, LingoNumber b) => new(Math.Max(a.DecimalValue, b.DecimalValue));
+    public static LingoNumber Min(LingoNumber a, LingoNumber b) => new(Math.Min(a.DecimalValue, b.DecimalValue));
 
     public override string ToString() => IsDecimal ? DecimalValue.ToString("F4", CultureInfo.InvariantCulture) : IntValue.ToString(CultureInfo.InvariantCulture);
 

@@ -48,6 +48,7 @@ New-Item -ItemType Directory $(Join-Path $releaseBuildPath "Data" "Levels") | Ou
 New-Item -ItemType File $(Join-Path $releaseBuildPath "Data" "rendered_levels_go_here.txt") | Out-Null
 
 # Copy data files
+Copy-Item -Recurse $(Join-Path $baseDataDir "Effects") $releaseDataDir
 Copy-Item -Recurse $(Join-Path $baseDataDir "Graphics") $releaseDataDir
 Copy-Item -Recurse $(Join-Path $baseDataDir "Props") $releaseDataDir
 Copy-Item -Recurse $(Join-Path $baseDataDir "Cast") $releaseDataDir

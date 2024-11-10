@@ -1,15 +1,15 @@
-global c, gSkyColor, lightRects, gLevel, gImgXtra, gLoadedName, gCurrentRenderCamera, lvlPropOutput, DRFinalImage, DRFogImage, DRDpImage, DRShadowImage, DRRainbowMask, DRFlattenedGradientA, DRFlattenedGradientB, DRFinalDecalImage, DRPxl
+global c, lightRects, gLevel, gImgXtra, gLoadedName, gCurrentRenderCamera, lvlPropOutput, DRFinalImage, DRFogImage, DRDpImage, DRShadowImage, DRRainbowMask, DRFlattenedGradientA, DRFlattenedGradientB, DRFinalDecalImage, DRPxl
 
 on exitFrame me
-  if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
-    _player.appMinimize()
-  end if
-  if checkExit() then
-    _player.quit()
-  end if
-  if checkExitRender() then
-    _movie.go(9)
-  end if
+  --  if checkMinimize() then
+  --    _player.appMinimize()
+  --  end if
+  --  if checkExit() then
+  --    _player.quit()
+  --  end if
+  --  if checkExitRender() then
+  --    _movie.go(9)
+  --  end if
   DRFinalImage = member("finalImage").image
   DRFogImage = member("fogImage").image
   DRDpImage = member("dpImage").image

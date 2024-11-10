@@ -1,8 +1,7 @@
-global c, pal, pal2, dptsL, fogDptsL, gPalette, gEffectPaletteA, gEffectPaletteB, gFogColor, gBlurOptions, gSkyColor, gLOprops, gViewRender, keepLooping, gCustomColor, DRFinalImage, DRFogImage, DRDpImage, DRShadowImage, DRRainbowMask, DRFlattenedGradientA, DRFlattenedGradientB, DRFinalDecalImage
-global gAnyDecals, gDecalColors, gPEcolors, grimeActive, grimeOnGradients, bkgFix
+global c, dptsL, fogDptsL, gLOprops, gViewRender, keepLooping, gCustomColor, DRFinalImage, DRFogImage, DRDpImage, DRShadowImage, DRRainbowMask, DRFlattenedGradientA, DRFlattenedGradientB, DRFinalDecalImage, gAnyDecals, gDecalColors, gPEcolors, grimeActive, grimeOnGradients, bkgFix
 
 on exitFrame me
-  if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+  if checkMinimize() then
     _player.appMinimize()
     
   end if
@@ -43,24 +42,10 @@ on newFrame me
       else
         
         if (getColor = color(255, 255, 255)) then
-          --        layer = 2
-          --        paletteColor = member("finalImage").image.getPixel(q-1, c-1)
-          --        
-          --        if paletteColor = color(255, 255, 255) then
           layer = 0
-          --     end if
         end if
-        
-        --      if (getColor = color(0, 0, 0)) then
-        --        layer = 0
-        --      end if
-        
         lowResDepth = dptsL.getPos(DRDpImage.getPixel(q-1, c-1))
         fgDp = fogDptsL.getPos(DRFogImage.getPixel(q-1, c-1))
-        --  whiteness = 0
-        
-        
-        
         fogFac = (255-DRFogImage.getPixel(q-1, c-1).red)/255.0
         fogFac = (fogFac - 0.0275)*(1.0/0.9411)
         rainBowFac = 0
@@ -233,7 +218,8 @@ on newFrame me
   end if
 end 
 
-on rainbowifypixel me, pxl: point
+on rainbowifypixel me, pxl
+  type return: number
   if(pxl.locH < 2)or(pxl.locV < 2)then
     return
   end if
@@ -256,20 +242,19 @@ on rainbowifypixel me, pxl: point
   --end if
 end
 
-on IsPixelInFinalImageRainbowed(pxl: point)
-type return: number
-if(pxl.loch < 1)or(pxl.locv < 1)then
-return 0
-else if(DRFinalImage.getPixel(pxl.locH-1, pxl.locV-1) = color(255, 255, 255))then
-return 0
-else
-grn: number = DRFinalImage.getPixel(pxl.locH-1, pxl.locV-1).green
-return doesGreenValueMeanRainbow(grn)
-end if
-
+on IsPixelInFinalImageRainbowed(pxl)
+  if(pxl.loch < 1)or(pxl.locv < 1)then
+    return 0
+  else if(DRFinalImage.getPixel(pxl.locH-1, pxl.locV-1) = color(255, 255, 255))then
+    return 0
+  else
+    grn = DRFinalImage.getPixel(pxl.locH-1, pxl.locV-1).green
+    return doesGreenValueMeanRainbow(grn)
+  end if
+  
 end
 
-on doesGreenValueMeanRainbow(grn: number)
+on doesGreenValueMeanRainbow(grn)
   type return: number
   if (grn > 3)and(grn < 8)then
     return 1

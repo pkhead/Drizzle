@@ -1,40 +1,14 @@
 global gLEProps, levelName, gLEVEL, lightRects, gLOprops, gCurrentRenderCamera, gImgXtra, gLoadedName, gCameraProps, gPrioCam
 
 on exitFrame me
-  if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+  if checkMinimize() then
     _player.appMinimize()
     
   end if
   if checkExit() then
     _player.quit()
   end if
-  
-  
-  
-  --  repeat with q = 1 to 1040 then
-  --    repeat with c = 1 to 800 then
-  --      if member("finalfg").image.getPixel(q-1, c-1) <> color( 255, 255, 255 ) then
-  --        member("finalbg").image.setPixel(q-1, c-1, color( 0, 0, 0 ))
-  --      end if
-  --    end repeat
-  --  end repeat
-  
-  --put string(gLEVEL)
-  
-  -- member("saveImg").image = image(52*20, 40*20, 32)--3200+dataImg.height, 32)
-  
-  
-  
-  
-  -- member("saveImg").image.copyPixels(member("finalbg").image, rect(0,0,1040,800), rect(0,0,1040,800))
-  --member("saveImg").image.copyPixels(member("finalfg").image, rect(0,0,1040,800), rect(0,0,1040,800), {#ink:36})
-  
-  -- -- member("saveImg").image.copyPixels(member("pxl").image, rect(0,0,2,2), rect(0,0,1,1))
-  -- member("saveImg").image.copyPixels(member("finalbg").image, rect(0,800,1040,1600), rect(0,0,1040,800))
-  --  member("saveImg").image.copyPixels(member("finalfgLight").image, rect(0,1600,1040,2400), rect(0,0,1040,800))
-  --  member("saveImg").image.copyPixels(member("finalbgLight").image, rect(0,2400,1040,3200), rect(0,0,1040,800))
-  -- member("saveImg").image.copyPixels(dataImg, rect(0,3200,1040,3200+dataImg.height), dataImg.rect)
-  
+
   props = ["image": member("finalImage").image, "filename":_movie.path&"Levels/"&gLoadedName & "_" & gCurrentRenderCamera & ".png"]
   ok = gImgXtra.ix_saveImage(props)
   if (gCurrentRenderCamera < gCameraProps.cameras.count) then
@@ -43,9 +17,7 @@ on exitFrame me
   else
     newMakeLevel(gLoadedName)
   end if
-  -- exportAnImage( member("saveImg").image, "\levels\"&levelName)
-  -- member("saveImg").image = image(52*20, (40*40)+dataImg.height, 32)
-  -- put "SAVED"
+
 end
 
 
@@ -56,7 +28,6 @@ on changeToPlayMatrix()
     l = []
     repeat with c = 1 to gLOprops.size.locv then
       cell = [gLEProps.matrix[q][c][1].duplicate(), [([1,9].getPos(gLEProps.matrix[q][c][2][1])>0)*(gLEProps.matrix[q][c][2][2].getPos(11)=0), []] ]
-      -- cell.add((gLEProps.matrix[q][c][2]=1))
       if cell[1][1]=9 then
         cell[1][1] = 1
         cell[1][2].add(8)
@@ -74,7 +45,6 @@ on changeToPlayMatrix()
             cell[1][1] = 6
           end if
         end if
-       -- put "CRACK:" && cell[1][1]
       end if
       l.add(cell)
     end repeat

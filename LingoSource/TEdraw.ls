@@ -8,7 +8,7 @@ on TEdraw(drwRect, layer, drawAll)
   --global gLEProps
   
   global gLEProps, gLoprops
-  
+  moreprevws = getBoolConfig("More tile previews")
   repeat with q = drwRect.left to drwRect.right then
     repeat with c = drwRect.top to drwRect.bottom then
       drawQ = q - gLEProps.camPos.locH
@@ -88,7 +88,7 @@ on TEdraw(drwRect, layer, drawAll)
                       
                       if(drw)then
                         rct2 = rect((g-1)*16, (h-1)*16, g*16, h*16)
-                        if (tl.ptPos > 60000) and (getBoolConfig("More tile previews")) then
+                        if (tl.ptPos > 60000) and (moreprevws) then
                           drps = tl.ptPos - 60000
                           member("TEimg"&string(layer+1)).image.copyPixels(member("previewTilesDR").image, rct2, rct2+rect(drps+16, 0+16, drps+16, 0+16) - rect(strt.locH*16, strt.locV*16, strt.locH*16, strt.locV*16), {#color:clr*0.5})
                         else
@@ -115,7 +115,7 @@ on TEdraw(drwRect, layer, drawAll)
                     
                     if(drw)then
                       rct2 = rect((g-1)*16, (h-1)*16, g*16, h*16)  
-                      if (tl.ptPos > 60000) and (getBoolConfig("More tile previews")) then
+                      if (tl.ptPos > 60000) and (moreprevws) then
                         drps2 = tl.ptPos - 60000
                         member("TEimg"&string(layer)).image.copyPixels(member("previewTilesDR").image, rct2, rct2+rect(drps2+16, 0+16, drps2+16, 0+16) - rect(strt.locH*16, strt.locV*16, strt.locH*16, strt.locV*16), {#color:clr})
                       else
