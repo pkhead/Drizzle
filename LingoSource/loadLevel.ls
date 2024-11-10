@@ -471,7 +471,7 @@ on versionFix me
     if (ef.findPos(#crossScreen) = VOID) then
       ef.addProp(#crossScreen, 0)
     end if
-    if (["Arm Growers", "Growers", "Mini Growers", "Rollers", "Thorn Growers", "Garbage Spirals", "Fuzzy Growers", "Spinets", "Small Springs", "Wires", "Chains", "Colored Wires", "Colored Chains", "Hang Roots", "Thick Roots", "Shadow Plants", "Colored Hang Roots", "Colored Thick Roots", "Colored Shadow Plants", "Root Plants", "Coral Growers", "Leaf Growers", "Meat Growers", "Horror Growers", "Thunder Growers", "Ice Growers", "Grass Growers", "Fancy Growers", "Mosaic Plants"].getPos(ef.nm) > 0) then
+    if (["Arm Growers", "Growers", "Mini Growers", "Rollers", "Thorn Growers", "Garbage Spirals", "Fuzzy Growers", "Spinets", "Small Springs", "Wires", "Chains", "Colored Wires", "Colored Chains", "Hang Roots", "Thick Roots", "Shadow Plants", "Colored Hang Roots", "Colored Thick Roots", "Colored Shadow Plants", "Root Plants", "Coral Growers", "Leaf Growers", "Meat Growers", "Horror Growers", "Thunder Growers", "Ice Growers", "Grass Growers", "Fancy Growers", "Mosaic Plants", "Grape Roots", "Hand Growers"].getPos(ef.nm) > 0) then
       ef.crossScreen = 1
     end if
     if (["Slime", "Fat Slime", "Scales", "SlimeX3", "DecalsOnlySlime", "Melt", "Rust", "Barnacles", "Colored Barnacles", "Clovers", "Erode", "Sand", "Super Erode", "Ultra Super Erode", "Roughen", "Impacts", "Super Melt", "Destructive Melt"].getPos(ef.nm) > 0) then

@@ -3,8 +3,8 @@ global gLoadedName, INT_EXIT, INT_EXRD, DRInternalList, DRFirstTileCat, DRLastMa
 on clearLogs()
   --type fl: dynamic
   --type return: void
-  member("logText").text = "Rain World Community Editor; V.0.4.51; Editor exception log"
-  member("DEBUGTR").text = "Rain World Community Editor; V.0.4.51; Large trash log"
+  member("logText").text = "Rain World Community Editor; V.0.4.52; Editor exception log"
+  member("DEBUGTR").text = "Rain World Community Editor; V.0.4.52; Large trash log"
   fl = new xtra("fileio")
   fl.openFile(the moviePath & "editorExceptionLog.txt", 0)
   fl.delete()
