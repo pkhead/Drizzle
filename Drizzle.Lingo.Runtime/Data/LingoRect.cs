@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Drizzle.Lingo.Runtime;
 
@@ -14,14 +14,36 @@ public struct LingoRect : IEquatable<LingoRect>, ILingoVector
 
     int ILingoVector.CountElems => 4;
 
-    object ILingoVector.this[int index] => index switch
+    public LingoNumber this[int index]
     {
-        0 => left,
-        1 => top,
-        2 => right,
-        3 => bottom,
-        _ => throw new ArgumentOutOfRangeException()
-    };
+        get => index switch
+        {
+            1 => left,
+            2 => top,
+            3 => right,
+            4 => bottom,
+            _ => throw new IndexOutOfRangeException()
+        };
+        set
+        {
+            switch(index)
+            {
+                case 1: left = value; break;
+                case 2: top = value; break;
+                case 3: right = value; break;
+                case 4: bottom = value; break;
+                default: throw new IndexOutOfRangeException();
+            }
+        }
+    }
+
+    public LingoNumber this[LingoNumber index]
+    {
+        get => this[(int)index];
+        set => this[(int)index] = value;
+    }
+
+    object ILingoVector.this[int index] => this[index];
 
     private LingoRect(LingoNumber all) : this(all, all, all, all)
     {
