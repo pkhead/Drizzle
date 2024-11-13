@@ -1,4 +1,4 @@
-global gSaveProps, gTEprops, gTiles, gLEProps, gFullRender, gEEprops, gEffects, gLightEProps, gBlurOptions, lvlPropOutput, gLEVEL, gLOprops, gLoadedName, gSEProps, gViewRender, gMassRenderL, gCameraProps, gImgXtra, gEnvEditorProps, gPEprops, altGrafLG, gMegaTrash, showControls, gProps, gLOADPATH, gTrashPropOptions, solidMtrx, INT_EXIT, INT_EXRD, DRCustomMatList, DRLastTL, gCustomEffects
+global gSaveProps, gTEprops, gTiles, gLEProps, gFullRender, gEEprops, gEffects, gLightEProps, lvlPropOutput, gLEVEL, gLOprops, gLoadedName, gViewRender, gMassRenderL, gCameraProps, gImgXtra, gEnvEditorProps, gPEprops, altGrafLG, gMegaTrash, showControls, gProps, gLOADPATH, gTrashPropOptions, solidMtrx, INT_EXIT, INT_EXRD, DRCustomMatList, DRLastTL, gCustomEffects
 
 on exitFrame me
   --  clearAsObjects()
@@ -325,8 +325,8 @@ on exitFrame me
     end if
   end repeat
   
-  gPageCount: number = 0
-  gPageTick: number = 0
+  gPageCount = 0
+  gPageTick = 0
   
   --CAT CHANGE
   rndDisF = getBoolConfig("voxelStructRandomDisplace for tiles as props")
@@ -759,6 +759,11 @@ on exitFrame me
     gEffects[gEffects.count].efs.add([#nm:"Mosaic Plants"])
     gEffects[gEffects.count].efs.add([#nm:"Lollipop Mold"])
     gEffects[gEffects.count].efs.add([#nm:"Cobwebs"])
+        
+    gEffects.add([#nm:"April Plants", #efs:[]])
+    gEffects[gEffects.count].efs.add([#nm:"Grape Roots"])
+    gEffects[gEffects.count].efs.add([#nm:"Og Grass"])
+    gEffects[gEffects.count].efs.add([#nm:"Hand Growers"])
   end if
   
   -- Custom effects
@@ -774,13 +779,13 @@ on exitFrame me
     if (savTextLine <> "") then
       if (savTextLine.char[1] = "-") then
         didNewHeading = 1
-        vl: list = value(savTextLine.char[2..savTextLine.length])
+        vl: list = savTextLine.char[2..savTextLine.length]
         gEffects.add([#nm:vl, #efs:[]])
       else if (value(savTextLine) = VOID) then
         writeException("Effects Init Error", "Line " && q && " is malformed in the Init.txt file from your Effects folder.")
       else
         ad = value(savTextLine)
-
+        if ad.findPos("nm") > 0 and ad.findPos("tp") > 0 then
         -- New heading if needed
         if didNewHeading = 0 then
           gEffects.add([#nm:"Custom Effects", #efs:[]])
@@ -791,7 +796,9 @@ on exitFrame me
         -- Ok add the effect
         gEffects[gEffects.count].efs.add(ad)
         gCustomEffects.append(ad.nm)
-
+        else
+          writeException("Effects Init Error", "Line " && q && " is missing #nm or #tp in the Init.txt file from your Effects folder.")
+        end if
       end if
     end if
   end repeat
