@@ -99,12 +99,7 @@ on ShouldThisPropRender(prop, qd: list, settings)
       dig = Diag(mdPoint, qd[q])
     end if
   end repeat
-
-  if (diag(mdPoint, closestPntInRect(rect(-50, -100, 2050, 1100), mdPoint)) > dig) then
-    return false
-  end if
-
-  return true
+  return diag(mdPoint, closestPntInRect(rect(-50, -100, 2050, 1100), mdPoint)) <= dig
 end
 
 on updateText(me)

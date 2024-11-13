@@ -78,7 +78,7 @@ on effectOnTile me, q, c, q2, c2, effectr
     case efname of
       "Slime", "Rust", "Barnacles", "Erode", "Melt", "Roughen", "SlimeX3", "Destructive Melt", "Super Melt", "Super Erode", "DecalsOnlySlime", "Ultra Super Erode", "Colored Barnacles", "Sand", "Impacts", "Fat Slime":
         me.applyStandardErosion(q,c,0, efname, effectr)
-      "Root Grass", "Cacti", "Rubble", "Rain Moss", "Dandelions", "Seed Pods", "Grass", "Horse Tails", "Circuit Plants", "Feather Plants", "Storm Plants", "Colored Rubble", "Reeds", "Lavenders", "Seed Grass", "Hyacinths", "Orb Plants", "Lollipop Mold":
+      "Root Grass", "Cacti", "Rubble", "Rain Moss", "Dandelions", "Seed Pods", "Grass", "Horse Tails", "Circuit Plants", "Feather Plants", "Storm Plants", "Colored Rubble", "Reeds", "Lavenders", "Seed Grass", "Hyacinths", "Orb Plants", "Lollipop Mold", "Og Grass":
         me.applyStandardPlant(q,c,0, efname)
       "LSlime":
         DRFSlimeApply(q, c, effectr)
@@ -348,6 +348,14 @@ on effectOnTile me, q, c, q2, c2, effectr
         me.ApplyMosaicPlant(q, c)
       "Cobwebs":
         me.ApplyCobweb(q, c)
+      "Grape Roots":
+        repeat with r2 = 1 to 3
+          if (random(100) < effectr.mtrx[q2][c2]) then
+            me.applyGrapeRoots(q, c, 0)
+          end if
+        end repeat
+      "Hand Growers":
+        me.applyHandGrowers(q, c, 0)
       otherwise:
         if (gCustomEffects.getPos(efname) > 0) then
           me.ApplyCustomEffect(q, c, effectr, efname)
@@ -2833,6 +2841,8 @@ on applyStandardPlant me, q, c, eftc, tp
       amount = 5
     "Lollipop Mold":
       amount = 5
+    "Og Grass":
+      amount = 7
   end case
   
   
@@ -3220,8 +3230,36 @@ on applyStandardPlant me, q, c, eftc, tp
               if (colr <> color(0,255,0)) then
                 copyPixelsToEffectColor(gdLayer, lr, rct, "lollipopMoldGraf", rect(20*rnd, 21, 20*(rnd+1), 39), 0.5, (random(20) + 80.0) / 100.0)
               end if
-              
             end if
+              
+          "Og Grass":
+            freeSides = 0
+            if (solidAfaMv(point(q2-1,c2+1), layer)=0)then
+              freeSides = freeSides + 1
+            end if
+            if (solidAfaMv(point(q2+1,c2+1), layer)=0)then
+              freeSides = freeSides + 1
+            end if
+            rand = random (3)
+            rct = rect(pnt, pnt) + rect(-5*rand,-17*rand,5*rand, 3*rand)
+            if (freeSides > 0) or (amount<0.5) then
+              rnd = 10+random(5)
+            else
+              rnd = random(15)
+            end if
+            flp = random(2)-1
+            if flp then
+              rct = vertFlipRect(rct)
+            end if
+            gtRect = rect((rnd-1)*20, 0, rnd*19, 50)+rect(1,0,1,0)
+            member("layer"&string(lr)).image.copyPixels(member("grassoggraf").image, rct, gtRect, {#color:colr, #ink:36})
+            if colr <> color(0,255,0) then
+              rct = rect(pnt, pnt) + rect(-5*rand,-17*rand,5*rand, 3*rand)
+              if flp then
+                rct = vertFlipRect(rct)
+              end if
+              copyPixelsToEffectColor(gdLayer, lr, rct, "RootGrassGrad", gtRect, 0.5)
+            end if 
         end case
       end repeat
     end if
@@ -6016,7 +6054,7 @@ on applyDaddyCorruption me, q, c, amount
     
     if(solid = 0)and(dp < 27)and(rad > 1.2)then
       repeat with dr in [point(0,0), point(-1,0), point(0,-1), point(0,1), point(1,0)]then
-        if( member("layer"&string(dp+2)).getPixel(startPos.locH + dr.locH*rad*0.5, startPos.locV + dr.locV*rad*0.5) <> color(255, 255, 255))then
+        if( member("layer"&string(dp+2)).getPixel(startPos.locH + dr.locH*rad*0.5, startPos.locV + dr.locV*rad*0.5) <> -1)then --compare it to -1 here, not to white
           rad = rad / 2
           solid = 1
           exit repeat
@@ -6116,7 +6154,7 @@ on applyCorruptionNoEye me, q, c, amount
     
     if(solid = 0)and(dp < 27)and(rad > 1.2)then
       repeat with dr in [point(0,0), point(-1,0), point(0,-1), point(0,1), point(1,0)]then
-        if( member("layer"&string(dp+2)).getPixel(startPos.locH + dr.locH*rad*0.5, startPos.locV + dr.locV*rad*0.5) <> color(255, 255, 255))then
+        if( member("layer"&string(dp+2)).getPixel(startPos.locH + dr.locH*rad*0.5, startPos.locV + dr.locV*rad*0.5) <> -1)then --compare it to -1 here, not to white
           rad = rad / 2
           solid = 1
           exit repeat
@@ -6211,7 +6249,7 @@ on applyWastewaterMold me, q, c, amount
     
     if(solid = 0)and(dp < 27)and(rad > 1.2)then
       repeat with dr in [point(0,0), point(-1,0), point(0,-1), point(0,1), point(1,0)]then
-        if( member("layer"&string(dp+2)).getPixel(startPos.locH + dr.locH*rad*0.5, startPos.locV + dr.locV*rad*0.5) <> color(255, 255, 255)) then
+        if( member("layer"&string(dp+2)).getPixel(startPos.locH + dr.locH*rad*0.5, startPos.locV + dr.locV*rad*0.5) <> -1) then --compare it to -1 here, not to white
           rad = rad / 2
           solid = 1
           exit repeat
@@ -6312,7 +6350,7 @@ on applyClubMoss me, q, c, amount
     
     if(solid = 0)and(dp < 27)and(rad > 1.2)then
       repeat with dr in [point(0,0), point(-1,0), point(0,-1), point(0,1), point(1,0)]then
-        if( member("layer"&string(dp+2)).getPixel(startPos.locH + dr.locH*rad*0.5, startPos.locV + dr.locV*rad*0.5) <> color(255, 255, 255))then
+        if( member("layer"&string(dp+2)).getPixel(startPos.locH + dr.locH*rad*0.5, startPos.locV + dr.locV*rad*0.5) <> -1)then --compare it to -1 here, not to white
           rad = rad / 2
           solid = 1
           exit repeat
@@ -6405,7 +6443,7 @@ on applyMossWall me, q, c, amount
     
     if(solid = 0)and(dp < 27)and(rad > 1.2)then
       repeat with dr in [point(0,0), point(-1,0), point(0,-1), point(0,1), point(1,0)]then
-        if( member("layer"&string(dp+2)).getPixel(startPos.locH + dr.locH*rad*0.5, startPos.locV + dr.locV*rad*0.5) <> color(255, 255, 255))then
+        if( member("layer"&string(dp+2)).getPixel(startPos.locH + dr.locH*rad*0.5, startPos.locV + dr.locV*rad*0.5) <> -1)then --compare it to -1 here, not to white
           rad = rad / 2
           solid = 1
           exit repeat
@@ -6500,7 +6538,7 @@ on applyFlowers me, q, c, amount
     
     if(solid = 0)and(dp < 27)and(rad > 1.2)then
       repeat with dr in [point(0,0), point(-1,0), point(0,-1), point(0,1), point(1,0)]then
-        if( member("layer"&string(dp+2)).getPixel(startPos.locH + dr.locH*rad*0.5, startPos.locV + dr.locV*rad*0.5) <> color(255, 255, 255))then
+        if( member("layer"&string(dp+2)).getPixel(startPos.locH + dr.locH*rad*0.5, startPos.locV + dr.locV*rad*0.5) <> -1)then --compare it to -1 here, not to white
           rad = rad / 2
           solid = 1
           exit repeat
@@ -8420,11 +8458,23 @@ on ApplyMosaicPlant me, q, c
     else lr = "2"
   end if
   
-  dmin = 9 + 10 * (lr <> "1")
-  dmax = 19 + 10 * (lr <> "1")
-  lr = (lr = "1") + 1
-  if solidMtrx[q2][c2][lr] then exit 
-  -- important comment, do not remove
+  if lr = "1" then
+    dmin = 9
+    dmax = 19
+    lr = 1
+    if solidMtrx[q2][c2][1] then
+      return
+    end if
+    -- important comment, do not remove
+  else
+    dmin = 19
+    dmax = 29
+    lr = 2
+    if solidMtrx[q2][c2][2] then
+      return
+    end if
+    -- important comment, do not remove
+  end if
 
   case colrIntensity of
     "H":
@@ -8752,4 +8802,203 @@ on ApplyCobweb me, q, c
       end if
     end repeat
   end repeat
+end
+
+on applyGrapeRoots me, q, c, eftc
+  q2 = q + gRenderCameraTilePos.locH
+  c2 = c + gRenderCameraTilePos.locV
+  case lrSup of--["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]
+    "All":
+      d = random(30)-1
+    "1":
+      d = random(10)-1
+    "2":
+      d = random(10)-1 + 10
+    "3":
+      d = random(10)-1 + 20
+    "1:st and 2:nd":
+      d = random(20)-1
+    "2:nd and 3:rd":
+      d = random(20)-1 + 10
+    otherwise:
+      d = random(30)-1
+  end case
+  lr = 1+(d>9)+(d>19)
+  if (gLEprops.matrix[q2][c2][lr][1]=0)then
+    mdPnt = giveMiddleOfTile(point(q,c))
+    headPos = mdPnt+point(-11+random(21), -11+random(21))
+    pnt = point(headPos.locH, headPos.locV)
+    lftBorder = mdPnt.locH-10
+    rgthBorder =  mdPnt.locH+10
+    grape=[]
+    layerd = member("layer"&string(d)).image
+    repeat while pnt.locV+gRenderCameraTilePos.locV*20 > -100
+      lstPos = pnt
+      pnt = pnt + degToVec(-45+random(90))*(2+random(6))
+      pnt.locH = restrict(pnt.locH, lftBorder, rgthBorder)
+      dir = moveToPoint(pnt, lstPos, 1.0)
+      crossDir = giveDirFor90degrToLine(-dir, dir)
+      qd = [pnt-crossDir, pnt+crossDir, lstPos+crossDir, lstPos-crossDir]
+      layerd.copyPixels(DRPxl, qd, DRPxlRect, {#color:gLOProps.pals[gLOProps.pal].detCol})
+      if solidAfaMv(giveGridPos(lstPos) + gRenderCameraTilePos, lr) = 1 then
+        exit repeat
+      end if
+      if random (10 ) =1 then grape.append (pnt)
+    end repeat
+    grapegraf = member("grapegraf").image
+    repeat with i=1 to grape.count then 
+      pt=grape[i]
+      rand = random (4) 
+      if random (2) = 1 then 
+        pt=pt-point(6-rand,0)
+      else
+        pt=pt-point(-6+rand,0)
+      end if
+      qd= rect(pt,pt) +rect(-6,-6,6,6)
+      grapeSprite=rect(12*(rand-1),0,12*rand-1,11)
+      layerd.copyPixels(grapegraf, qd, grapeSprite, {#color:colr,#ink:36})
+      if i > grape.count-3 then
+        copyPixelsToEffectColor (gdLayer, d, qd, "grapegrad", grapeSprite, 0.5, 0.1)
+      else 
+        copyPixelsToEffectColor (gdLayer, d, qd, "grapegrad", grapeSprite, 0.5, 1-i/grape.count.float)
+      end if
+    end  repeat
+  end if
+end
+
+on applyHandGrowers me, q, c, eftc
+  q2 = q + gRenderCameraTilePos.locH
+  c2 = c + gRenderCameraTilePos.locV
+  case lrSup of--["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]
+    "All":
+      d = random(30)-1
+    "1":
+      d = random(10)-1
+    "2":
+      d = random(10)-1 + 10
+    "3":
+      d = random(10)-1 + 20
+    "1:st and 2:nd":
+      d = random(20)-1
+    "2:nd and 3:rd":
+      d = random(20)-1 + 10
+    otherwise:
+      d = random(30)-1
+  end case
+  lr = 1+(d>9)+(d>19)
+  if (gLEprops.matrix[q2][c2][lr][1]=0)then
+    layerd = member("layer"&string(d)).image
+    mdPnt = giveMiddleOfTile(point(q,c))
+    headPos = mdPnt+point(-11+random(21), -11+random(21))
+    pnt = point(headPos.locH, headPos.locV)
+    layerd.copyPixels(member("flowerhead").image, rect(pnt.locH-3, pnt.locV-3, pnt.locH+3, mdPnt.locV+3), member("flowerhead").image.rect, {#color:colr, #ink:36})
+    t=0.0
+    h = pnt.locV
+    mog=0
+    mog2=0
+    hwide=10+(mog2/25)
+    endH=0
+    repeat while h<30000
+      h=h+1
+      mog2= mog2+1
+      endH=h
+      tlPos = giveGridPos(point(pnt.locH, h)) + gRenderCameraTilePos
+      if tlPos.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)) = 0 then
+        endH=h-300
+        exit repeat
+      else if solidAfaMv(tlPos, lr) = 1 then
+        endH=h-300
+        stumpWidth=mog2/25
+        exit repeat
+      end if
+    end repeat
+    h = pnt.locV
+    stumpPnt=0
+    endOfNeck=0
+    repeat while h < 30000
+      h = h + 1
+      mog= mog+1
+      pnt.locH = pnt.locH -2 + random(3)
+      --generate neck
+      if mog<100 and (mog mod 2) =1 then
+        layerd.copyPixels(DRPxl, rect(pnt.locH-hwide-(mog2/25), h-(mog2/25), pnt.locH+hwide+(mog2/25), h), DRPxlRect, {#color:colr})
+        if random (3) =1 then
+          hwide=hwide-1
+        end if
+        endOfNeck=h
+      end if
+      layerd.copyPixels(DRPxl, rect(pnt.locH-(mog2/25), h, pnt.locH+(mog2/25), h+3), DRPxlRect, {#color:colr})
+      tlPos = giveGridPos(point(pnt.locH, h)) + gRenderCameraTilePos
+      if tlPos.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)) = 0 then
+        exit repeat
+      else if solidAfaMv(tlPos, lr) = 1 then
+        exit repeat
+      end if
+    end repeat
+    copyPixelsToEffectColor(gdLayer, d, rect(pnt.locH-37-(mog2/25),headPos.locV-(mog2/25), headPos.locH+37+(mog2/25), h+60), "ogMask", member("ogMask").image.rect, 0.8)
+    --generate lump
+    i=1
+    if i = random(2) then
+      lumpPoint=random(h-pnt.locV)+pnt.locV
+      rand= random(6)
+      lumpSprite=rect(30*(rand-1),0,30*rand-1,29)
+      layerd.copyPixels(member("oglumpgraf").image, rect(pnt.locH-(mog2/10), lumpPoint-(mog2/10), pnt.locH+(mog2/10), lumpPoint+(mog2/10)), lumpSprite, {#color:colr,#ink:36})
+      copyPixelsToEffectColor(gdLayer, d, rect(pnt.locH-(mog2/10), lumpPoint-(mog2/10), pnt.locH+(mog2/10), lumpPoint+(mog2/10)), "oglumpgrad", lumpSprite, 0.8)
+    end if
+    --generate the crown
+    i=1
+    v=300
+    --mog mog :))
+    mog=mog/2
+    startPnt = point(headPos.locH, headPos.locV)
+    repeat with i = 1 to 5
+      endPnt = point(mog, 0)
+      ang=((i+1)*pi)/8.0
+      ang=ang+pi
+      tempEndX = endPnt.locH
+      tempEndY = endPnt.locV
+      endPnt.locH = (tempEndX)*cos(ang) - (tempEndY)*sin(ang)
+      endPnt.locV = (tempEndY)*cos(ang) + (tempEndX)*sin(ang)
+      endPnt=endPnt + startPnt
+      midPnt=lerpVector(startPnt, endPnt, 0.5)
+      widthPnt=gEEprops.effects[r].mtrx[q2][c2]/2.0 
+      ctrl= point(midPnt.locH+(widthPnt*cos(ang)),midPnt.locV)
+      prevPnt=point(0,0)
+      endPnt.locV=endPnt.locV
+      endPnt.locH=endPnt.locH+(((-mog/2.0)+random(mog))/2.0)
+      t=0.0
+      offsetArm=0
+      repeat while t<v
+        timePercent=t/v
+        t=t+1
+        currentPnt=me.Bezpoint(startPnt, endPnt, ctrl, timePercent)
+        randCnt =4- random(8)
+        currentPnt=currentPnt+point(-3+randCnt, -3+randCnt)
+        if t <> 0  then
+          ang2= lookAtpoint(prevPnt, currentPnt)
+          pxlSize=((mog/25)+(timePercent))+2
+          alongBez = rect(currentPnt.locH - pxlSize/2.0, currentPnt.locV - pxlSize/2.0, currentPnt.locH + pxlSize/2.0, prevPnt.locV + pxlSize/2.0)
+          alongBez = rotateToQuad(alongBez, ang2)
+          alongBez = (prevPnt+currentPnt)/2.0
+          alongBez = rect(alongBez,alongBez) + rect(-pxlSize/2.0, -pxlSize/2.0, pxlSize/2.0, pxlSize/2.0)
+          offsetArm=-1 + random(2)
+          alongBez[1]=alongBez[1]+offsetArm
+          if t<0 or t>1 then
+            layerd.copyPixels(DRPxl, alongBez, DRPxlRect, {#color:colr})
+            copyPixelsToEffectColor(gdLayer, d, alongbez, "pxl", DRPxlRect, 0.8)
+          end if
+        end if
+        prevPnt=currentPnt
+      end repeat
+    end repeat
+  end if
+end
+
+--determines current point along bezier at time T
+--for hand grower, rendereffect grows longer by the day :JEEPERS:, also thank you cactus for helping me with this
+on BezPoint me, startPT, endPT, ctrlPT, T
+  xVal = (1-T) * ((1-T) * startPT.locH + t * ctrlPT.locH) + T * ((1-T) * ctrlPT.locH + T * endPT.locH)
+  yVal = (1-T) * ((1-T) * startPT.locV + t * ctrlPT.locV) + T * ((1-T) * ctrlPT.locV + T * endPT.locV)
+  output = point(xVal, yVal)
+  return output
 end
