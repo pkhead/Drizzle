@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 using System.Text;
@@ -8,28 +10,25 @@ namespace Drizzle.Lingo.Runtime;
 
 public class LingoPropertyList : DynamicObject, ILingoListDuplicate
 {
+    private static KeyComparer keyComparer = new();
+
     public Dictionary<object, dynamic?> Dict { get; }
 
     public LingoNumber length => Dict.Count;
 
-    public LingoPropertyList(Dictionary<object, dynamic?> dict)
-    {
-        Dict = dict;
-    }
-
     public LingoPropertyList()
     {
-        Dict = new Dictionary<object, dynamic?>();
+        Dict = new Dictionary<object, dynamic?>(keyComparer);
     }
 
     public LingoPropertyList(int capacity)
     {
-        Dict = new Dictionary<object, dynamic?>(capacity);
+        Dict = new Dictionary<object, dynamic?>(capacity, keyComparer);
     }
 
     public LingoPropertyList(IEnumerable<KeyValuePair<object, dynamic?>> source)
     {
-        Dict = new Dictionary<object, dynamic?>(source);
+        Dict = new Dictionary<object, dynamic?>(source, keyComparer);
     }
 
     public dynamic? this[object index]
@@ -59,18 +58,15 @@ public class LingoPropertyList : DynamicObject, ILingoListDuplicate
         Dict[key!] = value;
     }
 
-    private static readonly object FindPosTrueResult = new();
-
-    public object? findpos(object key)
+    public LingoNumber findpos(object key)
     {
         // findpos is only used as a "does it exist in the list" check so this is fine.
-        return Dict.ContainsKey(key) ? FindPosTrueResult : null;
+        return Dict.ContainsKey(key) ? 1 : 0;
     }
 
     public override bool TryGetMember(GetMemberBinder binder, out object? result)
     {
-        if (Dict.TryGetValue(binder.Name, out result) ||
-            Dict.TryGetValue(new LingoSymbol(binder.Name), out result)) return true;
+        if (Dict.TryGetValue(binder.Name, out result)) return true;
 
         result = null;
         return true;
@@ -102,5 +98,37 @@ public class LingoPropertyList : DynamicObject, ILingoListDuplicate
 
         sb.Append(']');
         return sb.ToString();
+    }
+
+    private class KeyComparer : IEqualityComparer<object>
+    {
+        private static readonly StringComparer stringKeyComparer = StringComparer.OrdinalIgnoreCase;
+
+        public new bool Equals(object? x, object? y)
+        {
+            string? xStr = x as string ?? (x as LingoSymbol?)?.Value;
+            string? yStr = y as string ?? (y as LingoSymbol?)?.Value;
+            if (xStr != null && yStr != null)
+            {
+                return stringKeyComparer.Equals(xStr, yStr);
+            }
+            else
+            {
+                return x == y;
+            }
+        }
+
+        public int GetHashCode([DisallowNull] object obj)
+        {
+            string? objStr = obj as string ?? (obj as LingoSymbol?)?.Value;
+            if (objStr != null)
+            {
+                return stringKeyComparer.GetHashCode(objStr);
+            }
+            else
+            {
+                return obj.GetHashCode();
+            }
+        }
     }
 }

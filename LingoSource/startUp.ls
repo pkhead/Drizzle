@@ -779,8 +779,8 @@ on exitFrame me
     if (savTextLine <> "") then
       if (savTextLine.char[1] = "-") then
         didNewHeading = 1
-        vl: list = savTextLine.char[2..savTextLine.length]
-        gEffects.add([#nm:vl, #efs:[]])
+        vlStr: string = savTextLine.char[2..savTextLine.length]
+        gEffects.add([#nm:vlStr, #efs:[]])
       else if (value(savTextLine) = VOID) then
         writeException("Effects Init Error", "Line " && q && " is malformed in the Init.txt file from your Effects folder.")
       else

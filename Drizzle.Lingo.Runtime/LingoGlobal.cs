@@ -441,12 +441,12 @@ public sealed partial class LingoGlobal
 
     public static LingoNumber op_lt(dynamic? a, dynamic? b) => a < b ? 1 : 0;
     public static LingoNumber op_lt(LingoNumber a, LingoNumber b) => a < b ? 1 : 0;
-    public static LingoNumber op_le(dynamic? a, dynamic? b) => a >= b ? 1 : 0;
-    public static LingoNumber op_le(LingoNumber a, LingoNumber b) => a >= b ? 1 : 0;
+    public static LingoNumber op_le(dynamic? a, dynamic? b) => a <= b ? 1 : 0;
+    public static LingoNumber op_le(LingoNumber a, LingoNumber b) => a <= b ? 1 : 0;
     public static LingoNumber op_gt(dynamic? a, dynamic? b) => a > b ? 1 : 0;
     public static LingoNumber op_gt(LingoNumber a, LingoNumber b) => a > b ? 1 : 0;
-    public static LingoNumber op_ge(dynamic? a, dynamic? b) => a <= b ? 1 : 0;
-    public static LingoNumber op_ge(LingoNumber a, LingoNumber b) => a <= b ? 1 : 0;
+    public static LingoNumber op_ge(dynamic? a, dynamic? b) => a >= b ? 1 : 0;
+    public static LingoNumber op_ge(LingoNumber a, LingoNumber b) => a >= b ? 1 : 0;
 
     public static LingoNumber op_and(object? a, object? b)
     {
