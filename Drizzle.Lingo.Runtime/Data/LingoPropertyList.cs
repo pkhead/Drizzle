@@ -10,7 +10,7 @@ namespace Drizzle.Lingo.Runtime;
 
 public class LingoPropertyList : DynamicObject, ILingoListDuplicate
 {
-    private static KeyComparer keyComparer = new();
+    private static readonly KeyComparer keyComparer = new();
 
     public Dictionary<object, dynamic?> Dict { get; }
 
@@ -106,6 +106,9 @@ public class LingoPropertyList : DynamicObject, ILingoListDuplicate
 
         public new bool Equals(object? x, object? y)
         {
+            if (x == y) return true;
+            else if (x == null || y == null) return false;
+
             string? xStr = x as string ?? (x as LingoSymbol?)?.Value;
             string? yStr = y as string ?? (y as LingoSymbol?)?.Value;
             if (xStr != null && yStr != null)
@@ -114,7 +117,7 @@ public class LingoPropertyList : DynamicObject, ILingoListDuplicate
             }
             else
             {
-                return x == y;
+                return x.Equals(y);
             }
         }
 
