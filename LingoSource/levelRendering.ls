@@ -207,6 +207,9 @@ on setUpLayer(layer)
         "tiles":
           frntImg = renderTileMaterial(layer, drawMaterials[q][1], frntImg)
           
+        "customAutofit":
+          frntImg = LRenderTileMaterial(layer, drawMaterials[q][1], frntImg)
+          
         "pipeType":
           repeat with tl in drawMaterials[q][2] then
             -- frntImg = drawATileMaterial(tl[2], tl[3], layer, pltt, drawTiles[q][1], frntImg)
@@ -377,10 +380,10 @@ on setUpLayer(layer)
   --  end repeat
   
   repeat with q = 0 to cols then
-    drawVerticalSurface(q, dpt)
+    drawVerticalSurface(q, dpt, tl)
   end repeat
   repeat with q = 0 to rows then
-    drawHorizontalSurface(q, dpt)
+    drawHorizontalSurface(q, dpt, tl)
   end repeat
   
   
@@ -4941,6 +4944,91 @@ on renderTileMaterial(layer, material, frntImg)
             tls.deleteAt(cnt + 1 - q)
         end case
       end repeat
+      
+    "Chaotic Greeble":
+      -- Cursed material by Alduris
+      savSeed = the randomSeed
+      the randomSeed = gLOprops.tileSeed + layer
+      
+      -- Collect tiles that aren't completely air
+      allTiles: list = []
+      repeat with tlGrp in gTiles then
+        repeat with tl in tlGrp.tls then
+          if tl.tags.findPos("notChaos") then next repeat -- if you want to force it to skip
+          
+          repeat with spec in tl.specs then
+            if spec > 0 then
+              allTiles.add(tl)
+              exit repeat
+            end if
+          end repeat
+        end repeat
+      end repeat
+      
+      -- Do things!!
+      cnt = tls.count
+      repeat with q = 1 to cnt then
+        if (tls.count = 0) then exit repeat
+        tl = tls[random(tls.count)]
+        
+        -- Shuffle tiles
+        randomTiles = []
+        repeat with thisTl in allTiles then
+          randomTiles.append([random(10000), thisTl])
+        end repeat
+        randomTiles.sort()
+        
+        -- Find a tile to place
+        repeat with t = 1 to randomTiles.count then
+          testTile = randomTiles[t][2]
+          
+          -- Determine legality of placement
+          legalToPlace: number = true
+          repeat with a = 0 to testTile.sz.locH-1 then
+            repeat with b = 0 to testTile.sz.locV-1 then
+              testPoint: point = tl + point(a,b)
+              spec: number = testTile.specs[(b+1) + (a*testTile.sz.locV)]
+              
+              if spec <= 0 then next repeat -- ignore air and buffer
+              
+              if (tls.findPos(testPoint) = void) then -- areas where material is not placed
+                legalToPlace = false
+                exit repeat
+              end if
+              
+              geoSpec = afaMvLvlEdit(testPoint, layer)
+              if (geoSpec <> spec) and (geoSpec <> 1) and (geoSpec <> 7)then
+                -- spec does not match on non-solid tile
+                legalToPlace = false
+                exit repeat
+              end if
+            end repeat
+            if (not legalToPlace) then exit repeat
+          end repeat
+          
+          if legalToPlace then
+            -- Place tile
+            rootPos: point = tl + point(((testTile.sz.locH.float/2.0) + 0.4999).integer-1, ((testTile.sz.locV.float/2.0) + 0.4999).integer-1)
+            if(rootPos.inside(rect(gRenderCameraTilePos, gRenderCameraTilePos+point(100, 60))))then
+              frntImg = drawATileTile(rootPos.loch,rootPos.locV,layer,testTile, frntImg, [])
+            end if
+            
+            -- Remove tile ref
+            repeat with a = 0 to testTile.sz.locH-1 then
+              repeat with b = 0 to testTile.sz.locV-1 then
+                testPoint = tl + point(a,b)
+                spec = testTile.specs[(b+1) + (a*testTile.sz.locV)]
+                if spec > 0 then
+                  tls.deleteAt(tls.findPos(testPoint))
+                end if
+              end repeat
+            end repeat
+            exit repeat
+          end if
+        end repeat
+      end repeat
+      
+      the randomSeed = savSeed
   end case
   
   return frntImg

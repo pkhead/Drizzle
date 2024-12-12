@@ -1,4 +1,4 @@
-global vertRepeater, r, gEEprops, solidMtrx, gLEprops, colr, colrDetail, colrInd, gdLayer, gdDetailLayer, gdIndLayer, gLOProps, gLevel, gEffectProps, gViewRender, keepLooping, gRenderCameraTilePos, effectSeed, lrSup, chOp, fatOp, gradAf, effectIn3D, gAnyDecals, gRotOp, slimeFxt, DRDarkSlimeFix, DRWhite, DRPxl, DRPxlRect, colrIntensity, fruitDensity, leafDensity, mshrSzW, mshrSz, hasFlowers, effSide, gCustomEffects, gEffects, gLastImported
+global vertRepeater, r, gEEprops, solidMtrx, gLEprops, colr, colrDetail, colrInd, gdLayer, gdDetailLayer, gdIndLayer, gLOProps, gLevel, gEffectProps, gViewRender, keepLooping, gRenderCameraTilePos, effectSeed, lrSup, chOp, fatOp, gradAf, effectIn3D, gAnyDecals, gRotOp, slimeFxt, DRDarkSlimeFix, DRWhite, DRPxl, DRPxlRect, colrIntensity, fruitDensity, leafDensity, mshrSzW, mshrSz, hasFlowers, effSide, fingerLen, fingerSz, gCustomEffects, gEffects, gLastImported
 
 on exitFrame(me)
   if (checkMinimize()) then
@@ -348,6 +348,8 @@ on effectOnTile me, q, c, q2, c2, effectr
         me.ApplyMosaicPlant(q, c)
       "Cobwebs":
         me.ApplyCobweb(q, c)
+      "Fingers":
+        me.ApplyFingers(q, c)
       "Grape Roots":
         repeat with r2 = 1 to 3
           if (random(100) < effectr.mtrx[q2][c2]) then
@@ -417,7 +419,11 @@ on initEffect me
       "Flowers":
         hasFlowers = (op[3] = "On")
       "Side":
-        effSide = ["?", "L", "R", "T", "B"][["Left", "Right", "Top", "Bottom"].getPos(op[3]) + 1] -- anti-error I think
+        effSide = ["?", "L", "R", "T", "B"][["Left", "Right", "Top", "Bottom"].getPos(op[3]) + 1]
+      "Finger Thickness":
+        fingerSz = ["?", "S", "M", "L"][["Small", "Medium", "FAT"].getPos(op[3]) + 1]
+      "Finger Length":
+        fingerLen = ["?", "S", "M", "L"][["Short", "Medium", "Tall"].getPos(op[3]) + 1]
     end case
   end repeat
   
@@ -808,7 +814,9 @@ on ApplyCustomEffect(me, q, c, effectr, efname)
               
               sz = (random(41) + 79) / 100.0 -- default range: 0.8 to 1.2 (inclusive)
               if cEff.findPos("szVar") then
-                if cEff.findPos("strengthAffectSize") then
+                if cEff.szVar[1] = cEff.szVar[2] then
+                  sz = cEff.szVar[1]
+                else if cEff.findPos("strengthAffectSize") then
                   sz = cEff.szVar[1] * (1.0 - power(mtrx[q2][c2] / 100.0, 0.85)) + cEff.szVar[2] * power(mtrx[q2][c2] / 100.0, 0.85)
                 else
                   sz = (random((cEff.szVar[2] * 1000.0 - cEff.szVar[1] * 1000.0)) / 1000.0) + cEff.szVar[1]
@@ -909,6 +917,12 @@ on ApplyCustomEffect(me, q, c, effectr, efname)
           sz = 1.0
           blnd = 1.0
           blnd2 = 1.0
+          varBias = 0
+          if cEff.findPos("heightAffectVar") > 0 then
+            if cEff.heightAffectVar < 0 then
+              varBias = 1
+            end if
+          end if
           mdPnt = giveMiddleOfTile(point(q,c))
           pnt = mdPnt + point(random(21)-11, random(21)-11)
           lastDir = growDir + random(cEff.initRotVar * 2 + 1) - cEff.initRotVar
@@ -949,6 +963,10 @@ on ApplyCustomEffect(me, q, c, effectr, efname)
             
             -- Figure out variation and effect color
             var = random(vars)
+            if cEff.findPos("heightAffectVar") and (doingTip <> 1) then
+              varBias = restrict(varBias + cEff.heightAffectVar, 0, 1)
+              var = random(restrict((cEff.vars*varBias).integer, 1, cEff.vars))
+            end if
             grab = rect(pxlSz.locH*(var-1), 1, pxlSz.locH*var, 1+pxlSz.locV)
             
             useEffCol = 0
@@ -990,7 +1008,7 @@ on ApplyCustomEffect(me, q, c, effectr, efname)
             
             if cEff.findPos("effectFadeOut2") then blnd2 = max(0.0, blnd2 - cEff.effectFadeOut2)
             
-            if cEff.findPos("segmentSz") then
+            if cEff.findPos("szChange") then
               sz = restrict(sz + random(1000)/1000.0 * cEff.szChange[3], min(cEff.szChange[1], cEff.szChange[2]), max(cEff.szChange[1], cEff.szChange[2]))
             end if
             
@@ -1042,7 +1060,11 @@ on ApplyCustomEffect(me, q, c, effectr, efname)
           
           sz = (random(41) + 79) / 100.0 -- default range: 0.8 to 1.2 (inclusive)
           if cEff.findPos("szVar") then
-            sz = (random((cEff.szVar[2] * 1000.0 - cEff.szVar[1] * 1000.0)) / 1000.0) + cEff.szVar[1]
+            if cEff.szVar[1] = cEff.szVar[2] then
+              sz = cEff.szVar[1]
+            else 
+              sz = (random((cEff.szVar[2] * 1000.0 - cEff.szVar[1] * 1000.0)) / 1000.0) + cEff.szVar[1]
+            end if
           end if
           
           rot = 0
@@ -1125,7 +1147,9 @@ on ApplyCustomEffect(me, q, c, effectr, efname)
           
           sz = (random(41) + 79) / 100.0 -- default range: 0.8 to 1.2 (inclusive)
           if cEff.findPos("szVar") then
-            if cEff.findPos("strengthAffectSize") then
+            if cEff.szVar[1] = cEff.szVar[2] then
+              sz = cEff.szVar[1]
+            else if cEff.findPos("strengthAffectSize") then
               x = restrict(mtrx[q2][c2]-11+random(21),1,100)
               sz = cEff.szVar[1] * (1.0 - power(x / 100.0, 0.85)) + cEff.szVar[2] * power(x / 100.0, 0.85)
             else
@@ -1222,7 +1246,156 @@ on ApplyCustomEffect(me, q, c, effectr, efname)
               end if
             end if
           end if
-        end repeat 
+        end repeat
+        
+      "texture": --things that add textures to the wall
+        case lrSup of
+          "All":
+            dmin = 0
+            dmax = 29
+          "1":
+            dmin = 0
+            dmax = 9
+          "2":
+            dmin = 10
+            dmax = 19
+          "3":
+            dmin = 20
+            dmax = 29
+          "1:st and 2:nd":
+            dmin = 0
+            dmax = 19
+          "2:nd and 3:rd":
+            dmin = 10
+            dmax = 29
+          otherwise:
+            dmin = 0
+            dmax = 29
+        end case
+        
+        clrMask = 2
+        
+        if (cEff.findPos("clrMask")) then -- masking to specific colours, ie 'only apply this to green pixels'
+          clrMask = cEff.clrMask
+        end if
+        
+        maskRed = (bitAnd(clrMask, 1) = 1)
+        maskGreen = (bitAnd(clrMask, 2) = 2)
+        maskBlue = (bitAnd(clrMask, 4) = 4)
+        maskEffA = (bitAnd(clrMask, 8) = 8)
+        maskEffB = (bitAnd(clrMask, 16) = 16)
+        
+        bleed = 0
+        
+        useEffCol = 0
+        if cEff.findPos("pickColor") then
+          if cEff.pickColor then useEffCol = 1
+        end if
+        
+        if (cEff.findPos("bleed")) then -- 'bleed' being if the texture can apply through layers
+          bleed = cEff.bleed
+        end if
+        
+        placeAmt = 20
+        if (cEff.findPos("placeAmt")) then
+          placeAmt = cEff.placeAmt
+        end if
+        
+        affop = 0.05
+        if (cEff.findPos("affectOpenAreas")) then
+          affop = cEff.affectOpenAreas
+        end if
+        
+        requireSolid = 0
+        if (cEff.findPos("requireSolid")) then
+          requireSolid = cEff.requireSolid
+        end if
+        
+        fc = affop + (1.0-affop)* (1-((1-solidAfaMv(point(q2,c2), 3)) * requireSolid))
+        
+        repeat with d = 1 to 30
+          lr = 30-d
+          
+          if (lr = 9) or (lr = 19) then
+            lraddc = 1+(d>9)+(d>19)
+            sld = (1-((1-solidMtrx[q2][c2][lraddc]) * requireSolid))
+            fc = affop + (1.0 - affop) * (1-((1-solidAfaMv(point(q2,c2), lraddc)) * requireSolid))
+          end if
+          
+          deepEffect = 0
+          if (lr = 0) or (lr = 10) or (lr = 20) or (sld = 0) then
+            deepEffect = 1
+          end if
+          
+          effSt = mtrx[q2][c2]
+          
+          placeCount = effSt * (0.2 + (0.8 * deepEffect)) * 0.01 * placeAmt * fc
+          
+          if (lr >= dmin) and (lr <= dmax) then
+            repeat with placed = 1 to placeCount then
+              pnt = giveMiddleOfTile(point(q,c)) + point(random(21)-11, random(21)-11)
+              
+              if deepEffect then
+                pnt = (point(q-1, c-1)*20)+point(random(20), random(20))
+              else
+                if random(2)=1 then
+                  pnt = (point(q-1, c-1)*20)+point(1 + 19*(random(2)-1), random(20))
+                else 
+                  pnt = (point(q-1, c-1)*20)+point(random(20), 1 + 19*(random(2)-1))
+                end if
+              end if
+              
+              var = random(cEff.vars)
+          
+              if (cEff.findPos("strengthAffectVar")) then
+                if cEff.strengthAffectVar then
+                  var = random(restrict((cEff.vars*(effSt-11+random(21))*0.01).integer, 1, cEff.vars))
+                end if
+              end if
+              
+              repeat with lr2 = lr to restrict(lr + bleed, dmin, 29) then
+                
+                layerlr = member("layer"&string(lr2)).image
+                
+                repeat with lch = 0 to (cEff.pxlSz.locH - 1) then
+                  repeat with lcv = 0 to (cEff.pxlSz.locV - 1) then
+                    lrClr = layerlr.getPixel(pnt.locH - (cEff.pxlSz.locH / 2) + lch, pnt.locV - (cEff.pxlSz.locV / 2) + lcv)
+                    
+                    if doesColorFitMask(lrClr, maskRed, maskGreen, maskBlue, maskEffA, maskEffB) then
+                      gtCl = effGraf.getPixel(lch + (var - 1) * cEff.pxlSz.locH, lcv + 1)
+                      if (gtCl <> DRWhite) then
+                        --layerlr.setPixel(pnt.locH - (cEff.pxlSz.locH / 2) + lch, pnt.locV - (cEff.pxlSz.locV / 2) + lcv, gtCl)
+                        
+                        
+                        if useEffCol then
+                          layerlr.setPixel(pnt.locH - (cEff.pxlSz.locH / 2) + lch, pnt.locV - (cEff.pxlSz.locV / 2) + lcv, colr)
+                          if (cEff.findPos("hasGrad")) then
+                            if cEff.hasGrad then
+                              gradClr = effGraf.getPixel(lch + (var - 1) * cEff.pxlSz.locH, lcv + 1 + cEff.pxlSz.locV)
+                              if (gdLayer <> "C") then
+                                member("gradient"&gdLayer&string(lr2)).image.setPixel(pnt.locH - (cEff.pxlSz.locH / 2) + lch, pnt.locV - (cEff.pxlSz.locV / 2) + lcv, gradClr)
+                              end if
+                            end if
+                          end if
+                        else
+                          layerlr.setPixel(pnt.locH - (cEff.pxlSz.locH / 2) + lch, pnt.locV - (cEff.pxlSz.locV / 2) + lcv, gtCl)
+                          
+                          if (cEff.findPos("forceGrad")) then
+                            if (cEff.forceGrad) then
+                              gradClr = effGraf.getPixel(lch + (var - 1) * cEff.pxlSz.locH, lcv + 1 + cEff.pxlSz.locV)
+                              member("gradientA"&string(lr2)).image.setPixel(pnt.locH - (cEff.pxlSz.locH / 2) + lch, pnt.locV - (cEff.pxlSz.locV / 2) + lcv, gradClr)
+                              member("gradientB"&string(lr2)).image.setPixel(pnt.locH - (cEff.pxlSz.locH / 2) + lch, pnt.locV - (cEff.pxlSz.locV / 2) + lcv, gradClr)
+                            end if
+                          end if
+                        end if
+                      end if
+                    end if
+                  end repeat
+                end repeat
+              end repeat
+            end repeat
+          end if
+        end repeat
     end case
   end if
 end
@@ -2648,11 +2821,6 @@ on applyWLPlant(me, q, c)
     if (editM = 1) or (editM = 2) or (editM = 3) or (editM = 4) or (editM = 5) or (editM = 6) then
       repeat with cntr = 1 to gEEprops.effects[r].mtrx[q2][c2] * 0.01 * amount
         pnt = giveMiddleOfTile(point(q, c)) - point([-1, 1, -2, 2][random(4)], [-1, 1, -2, 2][random(4)])
-        --            writeMessage(afaMvLvlEdit(point(q2, c2), layer)) --middle
-        --            writeMessage(afaMvLvlEdit(point(q2 - 1, c2), layer)) --left
-        --            writeMessage(afaMvLvlEdit(point(q2 + 1, c2), layer)) --right
-        --            writeMessage(afaMvLvlEdit(point(q2, c2 - 1), layer)) --top
-        --            writeMessage(afaMvLvlEdit(point(q2, c2 + 1), layer)) --bottom
         edit = afaMvLvlEdit(point(q2, c2 + 1), layer)
         bttmR = ((edit = 0) or (edit = 7) or (edit = 8) or (edit = 9) or (edit = -1) or (edit = 6))
         edit = afaMvLvlEdit(point(q2, c2 - 1), layer)
@@ -2844,8 +3012,6 @@ on applyStandardPlant me, q, c, eftc, tp
     "Og Grass":
       amount = 7
   end case
-  
-  
   case lrSup of--["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]
     "All":
       lsL = [1,2,3]
@@ -3231,7 +3397,7 @@ on applyStandardPlant me, q, c, eftc, tp
                 copyPixelsToEffectColor(gdLayer, lr, rct, "lollipopMoldGraf", rect(20*rnd, 21, 20*(rnd+1), 39), 0.5, (random(20) + 80.0) / 100.0)
               end if
             end if
-              
+            
           "Og Grass":
             freeSides = 0
             if (solidAfaMv(point(q2-1,c2+1), layer)=0)then
@@ -3269,11 +3435,8 @@ end
 on giveGroundPos me, q, c,l
   q2 = q + gRenderCameraTilePos.locH
   c2 = c + gRenderCameraTilePos.locV
-  
   mdPnt = giveMiddleOfTile(point(q,c))
   pnt = mdPnt + point(-11+random(21), 10)
-  --if (gLEprops.matrix[q][c][l][1]=0) then
-  -- end if
   if (gLEprops.matrix[q2][c2][l][1]=3) then
     pnt.locV = pnt.locv - (pnt.locH-mdPnt.locH) - 5
   else if (gLEprops.matrix[q2][c2][l][1]=2) then
@@ -5505,7 +5668,6 @@ on applyMushroomStubs me, q, c, amount
           end if
         end repeat
       end if
-
     end repeat
   end repeat
   
@@ -8462,20 +8624,16 @@ on ApplyMosaicPlant me, q, c
     dmin = 9
     dmax = 19
     lr = 1
-    if solidMtrx[q2][c2][1] then
-      return
-    end if
+    if solidMtrx[q2][c2][1] then exit 
     -- important comment, do not remove
   else
     dmin = 19
     dmax = 29
     lr = 2
-    if solidMtrx[q2][c2][2] then
-      return
-    end if
+    if solidMtrx[q2][c2][2] then exit 
     -- important comment, do not remove
   end if
-
+  
   case colrIntensity of
     "H":
       maxblnd = 0.8
@@ -8804,6 +8962,132 @@ on ApplyCobweb me, q, c
   end repeat
 end
 
+on ApplyFingers me, q, c
+  q2 = q + gRenderCameraTilePos.locH
+  c2 = c + gRenderCameraTilePos.locV
+  
+  case lrSup of--["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]
+    "All":
+      lsL = [1,2,3]
+    "1":
+      lsL = [1]
+    "2":
+      lsL = [2]
+    "3":
+      lsL = [3]
+    "1:st and 2:nd":
+      lsL = [1,2]
+    "2:nd and 3:rd":
+      lsL = [2,3]
+    otherwise:
+      lsL = [1,2,3]
+  end case
+  
+  case fingerSz of
+    "S":
+      amount = 12
+    "M":
+      amount = 10
+    "L":
+      amount = 7
+    otherwise:
+      amount = random(2) + 7
+  end case
+  
+  repeat with layer in lsL then
+    dDn = (solidMtrx[q2][c2][layer]<>1) and (solidAfaMv(point(q2,c2+1), layer)=1)
+    dLf = (solidMtrx[q2][c2][layer]<>1) and (solidAfaMv(point(q2-1,c2), layer)=1)
+    dRg = (solidMtrx[q2][c2][layer]<>1) and (solidAfaMv(point(q2+1,c2), layer)=1)
+    
+    if (dDn <> 1 and dLf <> 1 and dRg <> 1) then next repeat
+    
+    mdPnt = giveMiddleOfTile(point(q,c))
+    repeat with cntr = 1 to gEEprops.effects[r].mtrx[q2][c2]*0.01*amount then
+      -- Position and angle
+      potential = []
+      if dDn then
+        ang = random(11) - 6
+        if dLf and dRg then
+          ang = random(81) - 41
+        else if dLf then
+          ang = random(40)
+        else if dRg then
+          ang = random(40) - 41
+        end if
+        potential.append([mdPnt + point(random(21) - 11, 10), ang])
+      end if
+      if dLf then
+        potential.append([mdPnt + point(-10, random(21) - 11), random(30) + 20])
+      end if
+      if dRg then
+        potential.append([mdPnt + point(10, random(21) - 11), random(30) - 51])
+      end if
+      picked = potential[random(potential.count)]
+      pnt = picked[1]
+      ang = picked[2]
+      
+      -- Sublayer, girth, and length
+      lr = random(9) + (layer-1)*10
+      case fingerSz of
+        "S":
+          sz = random(2) + 2
+        "M":
+          sz = random(3) + 3
+        "L":
+          sz = random(4) + 5
+        "?":
+          sz = random(7) + 2
+      end case
+      case fingerLen of
+        "S":
+          len = random(4) + 2
+        "M":
+          len = random(4) + 4
+        "L":
+          len = random(6) + 8
+        "?":
+          len = random(12) + 2
+      end case
+      if sz < 5 then
+        len = ((len - 2) * 0.65).integer + 2
+      end if
+      len = ((len / 2) + (len/2 * gEEprops.effects[r].mtrx[q2][c2]*0.01)).integer
+      
+      -- Draw the finger
+      wdth = sz
+      hght = sz * 1.5
+      tipGrad = (random(20) + 40) / 100.0
+      --offst = point(sin(ang * PI / 180) * wdth / 2, cos(ang * PI / 180) * hght / 2)
+      --pnt = pnt + offst
+      lastRing = FALSE
+      repeat with seg = 1 to len then
+        qd = rotateToQuadFix(rect(point(-wdth/2, -hght/2), point(wdth/2, hght/2)) + rect(pnt, pnt), ang)
+        
+        thisCol = colr
+        if (seg > 1) and (seg < len) and (not lastRing) and (random(3) = 1) then
+          if (random(2) = 1) then
+            thisCol = color(0,0,255)
+          else
+            thiscol = color(255,0,0)
+          end if
+          lastRing = TRUE
+        else if lastRing then
+          lastRing = FALSE
+        end if
+        
+        member("layer"&string(lr)).image.copyPixels(member("blob").image, qd, member("blob").image.rect, {#ink:36, #color:thisCol})
+        if colr <> color(0,255,0) then
+          segGrad = tipGrad * (0.333 + seg * 0.667 / len)
+          copyPixelsToEffectColor(gdLayer, lr, rotateToQuad(rect(pnt, pnt) + rect(-wdth,-hght/1.5,wdth,hght/1.5), ang), "softBrush1", member("softBrush1").rect, 0.5, segGrad)
+        end if
+        
+        pnt = pnt + degToVec(ang) * 3
+      end repeat
+    end repeat
+  end repeat
+end
+
+
 on applyGrapeRoots me, q, c, eftc
   q2 = q + gRenderCameraTilePos.locH
   c2 = c + gRenderCameraTilePos.locV
@@ -9002,3 +9286,8 @@ on BezPoint me, startPT, endPT, ctrlPT, T
   output = point(xVal, yVal)
   return output
 end
+
+
+
+
+

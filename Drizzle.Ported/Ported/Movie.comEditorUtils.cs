@@ -136,5 +136,9 @@ public sealed partial class MovieScript
 
         return default;
     }
+
+    public void popupwarning(dynamic ttl, dynamic msg) { }
+
+    public LingoNumber checkisdrizzlerendering() => 1;
 }
 
