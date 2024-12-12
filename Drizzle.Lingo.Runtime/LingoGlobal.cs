@@ -247,7 +247,7 @@ public sealed partial class LingoGlobal
             var minSize = Math.Min(nva.CountElems, nvb.CountElems);
             var res = new LingoList(minSize);
 
-            for (var i = 0; i < minSize; i++)
+            for (var i = 1; i <= minSize; i++)
             {
                 var elemA = nva[i];
                 var elemB = nvb[i];
@@ -279,7 +279,7 @@ public sealed partial class LingoGlobal
             var minSize = Math.Min(nva.CountElems, nvb.CountElems);
             var res = new LingoList(minSize);
 
-            for (var i = 0; i < minSize; i++)
+            for (var i = 1; i <= minSize; i++)
             {
                 var elemA = nva[i];
                 var elemB = nvb[i];
@@ -312,7 +312,7 @@ public sealed partial class LingoGlobal
             var minSize = Math.Min(nva.CountElems, nvb.CountElems);
             var res = new LingoList(minSize);
 
-            for (var i = 0; i < minSize; i++)
+            for (var i = 1; i <= minSize; i++)
             {
                 var elemA = nva[i];
                 var elemB = nvb[i];
@@ -345,7 +345,7 @@ public sealed partial class LingoGlobal
             var minSize = Math.Min(nva.CountElems, nvb.CountElems);
             var res = new LingoList(minSize);
 
-            for (var i = 0; i < minSize; i++)
+            for (var i = 1; i <= minSize; i++)
             {
                 var elemA = nva[i];
                 var elemB = nvb[i];
@@ -377,7 +377,7 @@ public sealed partial class LingoGlobal
             var minSize = Math.Min(nva.CountElems, nvb.CountElems);
             var res = new LingoList(minSize);
 
-            for (var i = 0; i < minSize; i++)
+            for (var i = 1; i <= minSize; i++)
             {
                 var elemA = nva[i];
                 var elemB = nvb[i];
