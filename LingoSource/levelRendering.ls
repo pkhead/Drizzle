@@ -4995,7 +4995,7 @@ on renderTileMaterial(layer, material, frntImg)
               
               if spec <= 0 then next repeat -- ignore air and buffer
               
-              if (tls.findPos(testPoint) = void) then -- areas where material is not placed
+              if (tls.getPos(testPoint) = 0) then -- areas where material is not placed
                 legalToPlace = false
                 exit repeat
               end if
