@@ -1313,11 +1313,11 @@ on ApplyCustomEffect(me, q, c, effectr, efname)
         
         fc = affop + (1.0-affop)* (1-((1-solidAfaMv(point(q2,c2), 3)) * requireSolid))
         
-        repeat with d = 1 to 30
-          lr = 30-d
+        repeat with dt = 1 to 30
+          lr = 30-dt
           
           if (lr = 9) or (lr = 19) then
-            lraddc = 1+(d>9)+(d>19)
+            lraddc = 1+(dt>9)+(dt>19)
             sld = (1-((1-solidMtrx[q2][c2][lraddc]) * requireSolid))
             fc = affop + (1.0 - affop) * (1-((1-solidAfaMv(point(q2,c2), lraddc)) * requireSolid))
           end if
@@ -8966,7 +8966,7 @@ on ApplyFingers me, q, c
   q2 = q + gRenderCameraTilePos.locH
   c2 = c + gRenderCameraTilePos.locV
   
-  case lrSup of--["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]
+  case lrSup of
     "All":
       lsL = [1,2,3]
     "1":
@@ -9057,8 +9057,6 @@ on ApplyFingers me, q, c
       wdth = sz
       hght = sz * 1.5
       tipGrad = (random(20) + 40) / 100.0
-      --offst = point(sin(ang * PI / 180) * wdth / 2, cos(ang * PI / 180) * hght / 2)
-      --pnt = pnt + offst
       lastRing = FALSE
       repeat with seg = 1 to len then
         qd = rotateToQuadFix(rect(point(-wdth/2, -hght/2), point(wdth/2, hght/2)) + rect(pnt, pnt), ang)

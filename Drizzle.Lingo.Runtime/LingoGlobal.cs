@@ -117,6 +117,10 @@ public sealed partial class LingoGlobal
 
     public static LingoNumber max(LingoNumber a, LingoNumber b) => LingoNumber.Max(a, b);
     public static LingoNumber min(LingoNumber a, LingoNumber b) => LingoNumber.Min(a, b);
+    public static LingoNumber bitand(LingoNumber a, LingoNumber b) => LingoNumber.BitAnd(a, b);
+    public static LingoNumber bitor(LingoNumber a, LingoNumber b) => LingoNumber.BitOr(a, b);
+    public static LingoNumber bitxor(LingoNumber a, LingoNumber b) => LingoNumber.BitXor(a, b);
+    public static LingoNumber bitnot(LingoNumber x) => LingoNumber.BitNot(x);
 
     public void put(object d)
     {

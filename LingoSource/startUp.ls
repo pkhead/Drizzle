@@ -1,7 +1,7 @@
 global gSaveProps, gTEprops, gTiles, gLEProps, gFullRender, gEEprops, gEffects, gLightEProps, lvlPropOutput, gLEVEL, gLOprops, gLoadedName, gViewRender, gMassRenderL, gCameraProps, gImgXtra, gEnvEditorProps, gPEprops, altGrafLG, gMegaTrash, showControls, gProps, gLOADPATH, gTrashPropOptions, solidMtrx, INT_EXIT, INT_EXRD, DRCustomMatList, DRLastTL, gCustomEffects
 
 on exitFrame me
-  hadException = 0
+  hadException: number = 0
   
   --  clearAsObjects()
   --  clearCache
@@ -293,7 +293,7 @@ on exitFrame me
           ad = value(savTextLine)
           if ad.findPos("ptPos") = 0 then
             -- add if missing
-            setProp ad, #ptPos, 0
+            ad[#ptPos] = 0
           end if
           
           sav2 = member("previewImprt")
