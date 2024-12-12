@@ -537,6 +537,26 @@ public sealed partial class LingoGlobal
 
         return new LingoSymbol(val);
     }
+    public LingoNumber ilk(object obj, LingoSymbol symbol)
+    {
+        bool val = symbol.Value switch
+        {
+            "list" => obj is LingoList or LingoPropertyList,
+            "linearlist" => obj is LingoList,
+            "proplist" => obj is LingoPropertyList,
+            "integer" => obj is LingoNumber { IsDecimal: false },
+            "float" => obj is LingoNumber { IsDecimal: true },
+            "string" => obj is string,
+            "rect" => obj is LingoRect,
+            "point" => obj is LingoPoint,
+            "color" => obj is LingoColor,
+            "symbol" => obj is LingoSymbol,
+            "image" => obj is LingoImage,
+            "void" => obj is null,
+            _ => throw new NotSupportedException()
+        };
+        return new LingoNumber(val ? 1 : 0);
+    }
 
     public void createfile(dynamic d, string f) => d.createfile(f);
 

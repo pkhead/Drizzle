@@ -380,10 +380,10 @@ on setUpLayer(layer)
   --  end repeat
   
   repeat with q = 0 to cols then
-    drawVerticalSurface(q, dpt, tl)
+    drawVerticalSurface(q, dpt)
   end repeat
   repeat with q = 0 to rows then
-    drawHorizontalSurface(q, dpt, tl)
+    drawHorizontalSurface(q, dpt)
   end repeat
   
   
@@ -4953,12 +4953,12 @@ on renderTileMaterial(layer, material, frntImg)
       -- Collect tiles that aren't completely air
       allTiles = []
       repeat with tlGrp in gTiles then
-        repeat with tl in tlGrp.tls then
-          if tl.tags.findPos("notChaos") then next repeat -- if you want to force it to skip
+        repeat with tlCG in tlGrp.tls then
+          if tlCG.tags.findPos("notChaos") then next repeat -- if you want to force it to skip
           
-          repeat with spec in tl.specs then
+          repeat with spec in tlCG.specs then
             if spec > 0 then
-              allTiles.add(tl)
+              allTiles.add(tlCG)
               exit repeat
             end if
           end repeat
@@ -5019,7 +5019,7 @@ on renderTileMaterial(layer, material, frntImg)
                 testPoint = tl + point(a,b)
                 spec = testTile.specs[(b+1) + (a*testTile.sz.locV)]
                 if spec > 0 then
-                  tls.deleteAt(tls.findPos(testPoint))
+                  tls.deleteAt(tls.getPos(testPoint))
                 end if
               end repeat
             end repeat

@@ -1400,6 +1400,46 @@ on ApplyCustomEffect(me, q, c, effectr, efname)
   end if
 end
 
+on doesColorFitMask clr, maskRed, maskGreen, maskBlue, maskEffA, maskEffB -- if a color fits the mask specified
+  if maskRed and clr = color(255, 0, 0) then
+    return true
+  end if
+  
+  if maskGreen and clr = color(0, 255, 0) then
+    return true
+  end if
+  
+  if maskBlue and clr = color(0, 0, 255) then
+    return true
+  end if
+  
+  if maskEffA then
+    if maskRed and clr = color(150, 0, 150) then
+      return true
+    end if
+    if maskGreen and clr = color(255, 0, 255) then
+      return true
+    end if
+    if maskBlue and clr = color(255, 150, 255) then
+      return true
+    end if
+  end if
+  
+  if maskEffB then
+    if maskRed and clr = color(0, 150, 150) then
+      return true
+    end if
+    if maskGreen and clr = color(0, 255, 255) then
+      return true
+    end if
+    if maskBlue and clr = color(150, 255, 255) then
+      return true
+    end if
+  end if
+  
+  return false
+end
+
 
 on applyStandardErosion me, q, c, eftc, tp, effectr
   q2 = q + gRenderCameraTilePos.locH
