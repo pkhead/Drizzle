@@ -4954,7 +4954,11 @@ on renderTileMaterial(layer, material, frntImg)
       allTiles = []
       repeat with tlGrp in gTiles then
         repeat with tlCG in tlGrp.tls then
-          if tlCG.tags.findPos("notChaos") then next repeat -- if you want to force it to skip
+          if tlCG.tags <> VOID then
+            if tlCG.tags.getPos("notChaos") > 0 then
+              next repeat
+            end if
+          end if
           
           repeat with spec in tlCG.specs then
             if spec > 0 then
