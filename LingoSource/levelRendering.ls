@@ -4951,7 +4951,7 @@ on renderTileMaterial(layer, material, frntImg)
       the randomSeed = gLOprops.tileSeed + layer
       
       -- Collect tiles that aren't completely air
-      allTiles: list = []
+      allTiles = []
       repeat with tlGrp in gTiles then
         repeat with tl in tlGrp.tls then
           if tl.tags.findPos("notChaos") then next repeat -- if you want to force it to skip
@@ -4983,11 +4983,11 @@ on renderTileMaterial(layer, material, frntImg)
           testTile = randomTiles[t][2]
           
           -- Determine legality of placement
-          legalToPlace: number = true
+          legalToPlace = true
           repeat with a = 0 to testTile.sz.locH-1 then
             repeat with b = 0 to testTile.sz.locV-1 then
               testPoint: point = tl + point(a,b)
-              spec: number = testTile.specs[(b+1) + (a*testTile.sz.locV)]
+              spec = testTile.specs[(b+1) + (a*testTile.sz.locV)]
               
               if spec <= 0 then next repeat -- ignore air and buffer
               
