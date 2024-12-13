@@ -103,7 +103,7 @@ on LRenderTileMaterial(l: number, nm: string, frntImg)
       tileSelection = []
       repeat with tlGrp in gTiles then
         repeat with tl in tlGrp.tls then
-          if (pickCats.findPos(tlGrp.nm) <> VOID and pickIgnore.findPos(tl.nm) = VOID) or (pickTiles.findPos(tl.nm) <> VOID) then
+          if (pickCats.getPos(tlGrp.nm) <> 0 and pickIgnore.getPos(tl.nm) = 0) or (pickTiles.getPos(tl.nm) <> 0) then
             --tileSelection.add(tl)
             -- Only select tiles with some solid bits
             repeat with spec in tl.specs then
@@ -118,9 +118,8 @@ on LRenderTileMaterial(l: number, nm: string, frntImg)
       
       -- Draw the material
       if pickTiles.count > 0 then
-        cnt: number = tls.count
-        repeat with q = 1 to cnt then
-          if (tls.count = 0) then exit repeat
+         -- this is slightly different than comms code but will fix that later (in comms because comms version has bugs)
+        repeat while tls.count > 0 then
           tl = tls[random(tls.count)]
           
           -- Shuffle tiles
@@ -143,7 +142,7 @@ on LRenderTileMaterial(l: number, nm: string, frntImg)
                 
                 if spec <= 0 then next repeat -- ignore air and buffer
                 
-                if (tls.findPos(testPoint) = void) then -- areas where material is not placed
+                if (tls.getPos(testPoint) = 0) then -- areas where material is not placed
                   legalToPlace = false
                   exit repeat
                 end if
@@ -170,14 +169,18 @@ on LRenderTileMaterial(l: number, nm: string, frntImg)
                 repeat with b = 0 to testTile.sz.locV-1 then
                   testPoint = tl + point(a,b)
                   spec = testTile.specs[(b+1) + (a*testTile.sz.locV)]
-                  if spec > 0 then
-                    tls.deleteAt(tls.findPos(testPoint))
+                  getPt: number = tls.getPos(testPoint)
+                  if getPt > 0 then
+                    tls.deleteAt(getPt)
                   end if
                 end repeat
               end repeat
               exit repeat
             end if
           end repeat
+          if tls.getPos(tl) then
+            tls.deleteAt(tls.getPos(tl))
+          end if
         end repeat
         the randomSeed = savSeed
       end if
