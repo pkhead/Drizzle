@@ -138,10 +138,6 @@ on loadLevel me, lvlName, fullPath
   l2 = objFileio.readFile()
   objFileio.closeFile()
   
-  sv2 = gLOprops.duplicate()
-  
-  
-  
   
   l1 = value(l2.line[1])
   gLEProps.matrix = l1

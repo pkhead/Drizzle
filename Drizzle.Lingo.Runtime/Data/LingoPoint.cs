@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 
 namespace Drizzle.Lingo.Runtime;
@@ -26,8 +26,8 @@ public struct LingoPoint : IEquatable<LingoPoint>, ILingoVector,
 
     object ILingoVector.this[int index] => index switch
     {
-        0 => loch,
-        1 => locv,
+        1 => loch,
+        2 => locv,
         _ => throw new ArgumentOutOfRangeException()
     };
 

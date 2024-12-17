@@ -67,6 +67,10 @@ public readonly struct LingoNumber : IEquatable<LingoNumber>, IComparable<LingoN
     public static LingoNumber Sin(LingoNumber dec) => new(Math.Sin(dec.DecimalValue));
     public static LingoNumber Tan(LingoNumber dec) => new(Math.Tan(dec.DecimalValue));
     public static LingoNumber Atan(LingoNumber dec) => new(Math.Atan(dec.DecimalValue));
+    public static LingoNumber BitAnd(LingoNumber a, LingoNumber b) => new(a.IntValue & b.IntValue);
+    public static LingoNumber BitOr(LingoNumber a, LingoNumber b) => new(a.IntValue | b.IntValue);
+    public static LingoNumber BitXor(LingoNumber a, LingoNumber b) => new(a.IntValue ^ b.IntValue);
+    public static LingoNumber BitNot(LingoNumber x) => new(~x.IntValue);
 
     // Pow is always float
     public static LingoNumber Pow(LingoNumber @base, LingoNumber exp) =>
