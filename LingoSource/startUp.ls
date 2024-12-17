@@ -271,7 +271,7 @@ on exitFrame me
     savTextLine: string = sav.text.line[q]
     if (savTextLine <> "") then
       if (savTextLine.char[1] = "-") then
-        vl: list = value(savTextLine.char[2..savTextLine.length])
+        vl = value(savTextLine.char[2..savTextLine.length])
         if (vl = VOID) then
           writeException("Tile Init Error", "Line " && q && " is malformed in the Init.txt file from your Graphics folder.")
           hadException = 1
@@ -829,7 +829,7 @@ on exitFrame me
   -- Custom effects
   sav = member("initImport")
   sav.text = ""
-  member("initImport").importFileInto("Effects\Init.txt")
+  member("initImport").importFileInto("Effects" & the dirSeparator & "Init.txt")
   sav.name = "initImport"
   
   didNewHeading = 0
