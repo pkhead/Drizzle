@@ -117,6 +117,10 @@ public sealed partial class LingoGlobal
 
     public static LingoNumber max(LingoNumber a, LingoNumber b) => LingoNumber.Max(a, b);
     public static LingoNumber min(LingoNumber a, LingoNumber b) => LingoNumber.Min(a, b);
+    public static LingoNumber bitand(LingoNumber a, LingoNumber b) => LingoNumber.BitAnd(a, b);
+    public static LingoNumber bitor(LingoNumber a, LingoNumber b) => LingoNumber.BitOr(a, b);
+    public static LingoNumber bitxor(LingoNumber a, LingoNumber b) => LingoNumber.BitXor(a, b);
+    public static LingoNumber bitnot(LingoNumber x) => LingoNumber.BitNot(x);
 
     public void put(object d)
     {
@@ -243,7 +247,7 @@ public sealed partial class LingoGlobal
             var minSize = Math.Min(nva.CountElems, nvb.CountElems);
             var res = new LingoList(minSize);
 
-            for (var i = 0; i < minSize; i++)
+            for (var i = 1; i <= minSize; i++)
             {
                 var elemA = nva[i];
                 var elemB = nvb[i];
@@ -275,7 +279,7 @@ public sealed partial class LingoGlobal
             var minSize = Math.Min(nva.CountElems, nvb.CountElems);
             var res = new LingoList(minSize);
 
-            for (var i = 0; i < minSize; i++)
+            for (var i = 1; i <= minSize; i++)
             {
                 var elemA = nva[i];
                 var elemB = nvb[i];
@@ -308,7 +312,7 @@ public sealed partial class LingoGlobal
             var minSize = Math.Min(nva.CountElems, nvb.CountElems);
             var res = new LingoList(minSize);
 
-            for (var i = 0; i < minSize; i++)
+            for (var i = 1; i <= minSize; i++)
             {
                 var elemA = nva[i];
                 var elemB = nvb[i];
@@ -341,7 +345,7 @@ public sealed partial class LingoGlobal
             var minSize = Math.Min(nva.CountElems, nvb.CountElems);
             var res = new LingoList(minSize);
 
-            for (var i = 0; i < minSize; i++)
+            for (var i = 1; i <= minSize; i++)
             {
                 var elemA = nva[i];
                 var elemB = nvb[i];
@@ -373,7 +377,7 @@ public sealed partial class LingoGlobal
             var minSize = Math.Min(nva.CountElems, nvb.CountElems);
             var res = new LingoList(minSize);
 
-            for (var i = 0; i < minSize; i++)
+            for (var i = 1; i <= minSize; i++)
             {
                 var elemA = nva[i];
                 var elemB = nvb[i];
@@ -441,12 +445,12 @@ public sealed partial class LingoGlobal
 
     public static LingoNumber op_lt(dynamic? a, dynamic? b) => a < b ? 1 : 0;
     public static LingoNumber op_lt(LingoNumber a, LingoNumber b) => a < b ? 1 : 0;
-    public static LingoNumber op_le(dynamic? a, dynamic? b) => a >= b ? 1 : 0;
-    public static LingoNumber op_le(LingoNumber a, LingoNumber b) => a >= b ? 1 : 0;
+    public static LingoNumber op_le(dynamic? a, dynamic? b) => a <= b ? 1 : 0;
+    public static LingoNumber op_le(LingoNumber a, LingoNumber b) => a <= b ? 1 : 0;
     public static LingoNumber op_gt(dynamic? a, dynamic? b) => a > b ? 1 : 0;
     public static LingoNumber op_gt(LingoNumber a, LingoNumber b) => a > b ? 1 : 0;
-    public static LingoNumber op_ge(dynamic? a, dynamic? b) => a <= b ? 1 : 0;
-    public static LingoNumber op_ge(LingoNumber a, LingoNumber b) => a <= b ? 1 : 0;
+    public static LingoNumber op_ge(dynamic? a, dynamic? b) => a >= b ? 1 : 0;
+    public static LingoNumber op_ge(LingoNumber a, LingoNumber b) => a >= b ? 1 : 0;
 
     public static LingoNumber op_and(object? a, object? b)
     {
@@ -532,6 +536,26 @@ public sealed partial class LingoGlobal
         };
 
         return new LingoSymbol(val);
+    }
+    public LingoNumber ilk(object obj, LingoSymbol symbol)
+    {
+        bool val = symbol.Value switch
+        {
+            "list" => obj is LingoList or LingoPropertyList,
+            "linearlist" => obj is LingoList,
+            "proplist" => obj is LingoPropertyList,
+            "integer" => obj is LingoNumber { IsDecimal: false },
+            "float" => obj is LingoNumber { IsDecimal: true },
+            "string" => obj is string,
+            "rect" => obj is LingoRect,
+            "point" => obj is LingoPoint,
+            "color" => obj is LingoColor,
+            "symbol" => obj is LingoSymbol,
+            "image" => obj is LingoImage,
+            "void" => obj is null,
+            _ => throw new NotSupportedException()
+        };
+        return new LingoNumber(val ? 1 : 0);
     }
 
     public void createfile(dynamic d, string f) => d.createfile(f);

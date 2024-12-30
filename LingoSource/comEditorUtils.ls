@@ -3,8 +3,8 @@ global gLoadedName, INT_EXIT, INT_EXRD, DRInternalList, DRFirstTileCat, DRLastMa
 on clearLogs()
   --type fl: dynamic
   --type return: void
-  member("logText").text = "Rain World Community Editor; V.0.4.52; Editor exception log"
-  member("DEBUGTR").text = "Rain World Community Editor; V.0.4.52; Large trash log"
+  member("logText").text = "Rain World Community Editor; V.0.4.53; Editor exception log"
+  member("DEBUGTR").text = "Rain World Community Editor; V.0.4.53; Large trash log"
   fl = new xtra("fileio")
   fl.openFile(the moviePath & "editorExceptionLog.txt", 0)
   fl.delete()
@@ -62,6 +62,14 @@ on outputInternalLog()
   fileOpener.openFile(the moviePath & "editorExceptionLog.txt", 0)
   fileOpener.writeString(member("logText").text)
   fileOpener.writeReturn(#windows)
+end
+
+on popupWarning(ttl, msg)
+  --alertObj = new(xtra "MUI")
+  --alertArgs = [#buttons:#Ok, #icon:#caution, #title:ttl, #message:msg&RETURN&RETURN&"Press 'Ok' to dismiss.", #movable:TRUE]
+  --if objectp(alertObj) then
+  --  Alert(alertObj, alertArgs)
+  --end if
 end
 
 --on exportAll()
@@ -238,6 +246,11 @@ on initDRInternal()
   RandomMachines2_grabTiles = ["Machinery", "Machinery2", "Small machine"]
   RandomMachines2_forbidden = ["Feather Box - W", "Feather Box - E", "Piston Arm", "Vertical Conveyor Belt A", "Ventilation Box Empty", "Ventilation Box", "Big Fan", "Giant Screw", "Compressor Segment", "Compressor R", "Compressor L", "Hub Machine", "Pole Holder", "Sky Box", "Conveyor Belt Wheel", "Piston Top", "Piston Segment Empty", "Piston Head", "Piston Segment Filled", "Piston Bottom", "Piston Segment Horizontal A", "Piston Segment Horizontal B", "machine box C_E", "machine box C_W", "machine box C_Sym", "Machine Box D", "machine box B", "Big Drill", "Elevator Track", "Conveyor Belt Covered", "Conveyor Belt L", "Conveyor Belt R", "Conveyor Belt Segment", "Dyson Fan"]
   DRBevelColors = [[color(255, 0, 0), point(-1, -1)], [color(255, 0, 0), point(0, -1)], [color(255, 0, 0), point(-1, 0)], [color(0, 0, 255), point(1, 1)], [color(0, 0, 255), point(0, 1)], [color(0, 0, 255), point(1, 0)]]
+end
+
+on checkIsDrizzleRendering()
+  -- For Drizzle to override to skip some initialization code that it shouldn't need to care about
+  return FALSE
 end
 
 --on freeImageNotFoundEx me

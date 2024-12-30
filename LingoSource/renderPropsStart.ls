@@ -12,7 +12,8 @@ on exitFrame(me)
   end if
   c = 1
   keepLooping = 1
-  afterEffects = (_movie.frame > 51)
+  --Set by LevelRenderer.cs now.
+  --afterEffects = (_movie.frame > 51)
   gLastImported = ""
   gCurrentlyRenderingTrash = FALSE
   if (gRenderTrashProps.count > 0) then

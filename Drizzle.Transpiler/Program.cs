@@ -561,7 +561,7 @@ internal static class Program
             // If this is a string switch, .ToLower() it and switch on lowercase values.
             // to avoid any case problems.
             if (node.Cases.Length > 0 && node.Cases[0].exprs[0] is AstNode.String)
-                ctx.Writer.Write(".ToString().ToLowerInvariant()");
+                ctx.Writer.Write("?.ToString().ToLowerInvariant()");
             else if (allInts)
             {
                 // Handle null int value in switch case.

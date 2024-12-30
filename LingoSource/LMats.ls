@@ -1,4 +1,4 @@
-global gLOprops, gEEprops, gAnyDecals, gTEprops, gLEprops, gRenderCameraTilePos, DRLastMatImp, DRLastSlpImp, DRLastFlrImP, DRLastTexImp, DRCustomMatList, DRLastTL, DRLastTrshImp, DRLastPipeImp, DRPxl, DRPxlRect, DRWhite
+global gLOprops, gEEprops, gAnyDecals, gTiles, gTEprops, gLEprops, gRenderCameraTilePos, DRLastMatImp, DRLastSlpImp, DRLastFlrImP, DRLastTexImp, DRCustomMatList, DRLastTL, DRLastTrshImp, DRLastPipeImp, DRPxl, DRPxlRect, DRWhite
 
 on LCheckIfATileIsSolidAndSameMaterial(tl, lr, matName)
   tl = point(restrict(tl.locH, 1, gLOprops.size.loch), restrict(tl.locV, 1, gLOprops.size.locv))
@@ -37,6 +37,159 @@ on LIsMyTileSetOpenToThisTile(matName, tl, l)
   return 0
 end
 
+on LRenderTileMaterial(l: number, nm: string, frntImg)
+  -- Random machines and chaotic stone-like materials (made by Alduris)
+  if (DRCustomMatList.count >= 1) then
+    matTl = DRCustomMatList[DRLastTL]
+    if (matTl.nm <> nm) then
+      repeat with inti = 1 to DRCustomMatList.count
+        if (DRCustomMatList[inti].nm = nm) then
+          matTl = DRCustomMatList[inti]
+          DRLastTL = inti
+          exit repeat
+        end if
+      end repeat
+    end if
+    if (matTl.nm = nm) then
+      matPickInfo = matTl.autofit
+      pickCats: list = []
+      pickTiles: list = []
+      pickIgnore: list = []
+      savSeed = the randomSeed
+      the randomSeed = gLOprops.tileSeed + l
+      
+      if matPickInfo.findPos(#categories) then
+        pickCats = matPickInfo.categories
+      end if
+      if matPickInfo.findPos(#tiles) then
+        pickTiles = matPickInfo.tiles
+      end if
+      if matPickInfo.findPos(#ignoreTiles) then
+        pickIgnore = matPickInfo.ignoreTiles
+      end if
+      
+      -- Find tiles with our material
+      tlsOrdered = []
+      repeat with q = 1 to gLOprops.size.loch
+        repeat with c = 1 to gLOprops.size.locv
+          LEPropqc = gLEProps.matrix[q][c][l][1]
+          if (LEPropqc <> 0) then
+            addMe: number = 0
+            TEPropqc = gTEprops.tlMatrix[q][c][l]
+            if(TEPropqc.tp = "material") then
+              if(TEPropqc.data = matTl.nm) then
+                addMe = 1
+              end if
+            else if (gTEprops.defaultMaterial = matTl.nm)then
+              if (TEPropqc.tp = "default")then
+                addMe = 1
+              end if
+            end if
+            
+            if(addMe)then
+              tlsOrdered.add([random(gLOprops.size.loch + gLOprops.size.locV), point(q, c)])
+            end if
+          end if
+        end repeat
+      end repeat
+      
+      tlsOrdered.sort()
+      tls = []
+      repeat with q = 1 to tlsOrdered.count
+        tls.add(tlsOrdered[q][2])
+      end repeat
+      
+      -- Figure out which tiles the user wants
+      tileSelection = []
+      repeat with tlGrp in gTiles then
+        repeat with tl in tlGrp.tls then
+          if (pickCats.getPos(tlGrp.nm) <> 0 and pickIgnore.getPos(tl.nm) = 0) or (pickTiles.getPos(tl.nm) <> 0) then
+            --tileSelection.add(tl)
+            -- Only select tiles with some solid bits
+            repeat with spec in tl.specs then
+              if spec > 0 then
+                tileSelection.add(tl)
+                exit repeat
+              end if
+            end repeat
+          end if
+        end repeat
+      end repeat
+      
+      -- Draw the material
+      if pickTiles.count > 0 then
+         -- this is slightly different than comms code but will fix that later (in comms because comms version has bugs)
+        repeat while tls.count > 0 then
+          tl = tls[random(tls.count)]
+          
+          -- Shuffle tiles
+          randomTiles = []
+          repeat with thisTl in tileSelection then
+            randomTiles.append([random(1000), thisTl])
+          end repeat
+          randomTiles.sort()
+          
+          -- Find a tile to place
+          repeat with t = 1 to randomTiles.count then
+            testTile = randomTiles[t][2]
+            
+            -- Determine legality of placement
+            legalToPlace: number = true
+            repeat with a = 0 to testTile.sz.locH-1 then
+              repeat with b = 0 to testTile.sz.locV-1 then
+                testPoint = tl + point(a,b)
+                spec = testTile.specs[(b+1) + (a*testTile.sz.locV)]
+                
+                if spec <= 0 then next repeat -- ignore air and buffer
+                
+                if (tls.getPos(testPoint) = 0) then -- areas where material is not placed
+                  legalToPlace = false
+                  exit repeat
+                end if
+                
+                geoSpec = afaMvLvlEdit(testPoint, l)
+                if (geoSpec <> spec) then
+                  -- spec does not match on non-solid tile
+                  legalToPlace = false
+                  exit repeat
+                end if
+              end repeat
+              if (not legalToPlace) then exit repeat
+            end repeat
+            
+            if legalToPlace then
+              -- Place tile
+              rootPos: point = tl + point(((testTile.sz.locH.float/2.0) + 0.4999).integer-1, ((testTile.sz.locV.float/2.0) + 0.4999).integer-1)
+              if(rootPos.inside(rect(gRenderCameraTilePos, gRenderCameraTilePos+point(100, 60))))then
+                frntImg = drawATileTile(rootPos.loch,rootPos.locV,l,testTile, frntImg, []) -- array argument required for chain holders. do not remove it!
+              end if
+              
+              -- Remove tile ref
+              repeat with a = 0 to testTile.sz.locH-1 then
+                repeat with b = 0 to testTile.sz.locV-1 then
+                  testPoint = tl + point(a,b)
+                  spec = testTile.specs[(b+1) + (a*testTile.sz.locV)]
+                  getPt: number = tls.getPos(testPoint)
+                  if getPt > 0 then
+                    tls.deleteAt(getPt)
+                  end if
+                end repeat
+              end repeat
+              exit repeat
+            end if
+          end repeat
+          if tls.getPos(tl) then
+            tls.deleteAt(tls.getPos(tl))
+          end if
+        end repeat
+        the randomSeed = savSeed
+      end if
+    end if
+  end if
+  return frntImg
+end
+
+
 on LDrawATileMaterial(q, c, l, nm) --frntImg,
   if (DRCustomMatList.count >= 1) then
     matTl = DRCustomMatList[DRLastTL]
@@ -60,7 +213,9 @@ on LDrawATileMaterial(q, c, l, nm) --frntImg,
       end case
       qcp = point(q, c)
       LEMatrixT = gLEProps.matrix[q][c][l][1]
+      
       if (matTl.findPos(#texture) <> VOID) then
+        -- Unified texture materials (made by LB)
         mText = matTl.texture
         matFile = member("MatTexImport")
         if (DRLastTexImp <> nm) then
@@ -393,7 +548,9 @@ on LDrawATileMaterial(q, c, l, nm) --frntImg,
             end repeat
           end if
       end case
+      
       if (matTl.findPos(#pipelike) <> VOID) then
+        -- Pipe-like materials (made by LudoCrypt)
         matPipes = matTl.pipelike
         randCount = matPipes.rnd
         if (matPipes.findPos(#depths) <> VOID) then
@@ -498,7 +655,9 @@ on LDrawATileMaterial(q, c, l, nm) --frntImg,
         end repeat
         the randomSeed = savSeed
       end if
+      
       if (matTl.findPos(#trash) <> VOID) then
+        -- Trash-like materials (made by LudoCrypt)
         matTrash = matTl.trash
         trashRnd = matTrash.rnd
         trashSz = matTrash.pixelSize
@@ -537,6 +696,12 @@ on LDrawATileMaterial(q, c, l, nm) --frntImg,
           the randomSeed = savSeed
         end if
       end if
+      
+      if (matTl.findPos(#autofit)) then
+        -- You should not be here, see LRenderTileMaterial instead
+      end if
+      
+      -- note to future people: this is where more material types go
     end if
   end if
   --return frntImg

@@ -67,13 +67,17 @@ public readonly struct LingoNumber : IEquatable<LingoNumber>, IComparable<LingoN
     public static LingoNumber Sin(LingoNumber dec) => new(Math.Sin(dec.DecimalValue));
     public static LingoNumber Tan(LingoNumber dec) => new(Math.Tan(dec.DecimalValue));
     public static LingoNumber Atan(LingoNumber dec) => new(Math.Atan(dec.DecimalValue));
+    public static LingoNumber BitAnd(LingoNumber a, LingoNumber b) => new(a.IntValue & b.IntValue);
+    public static LingoNumber BitOr(LingoNumber a, LingoNumber b) => new(a.IntValue | b.IntValue);
+    public static LingoNumber BitXor(LingoNumber a, LingoNumber b) => new(a.IntValue ^ b.IntValue);
+    public static LingoNumber BitNot(LingoNumber x) => new(~x.IntValue);
 
     // Pow is always float
     public static LingoNumber Pow(LingoNumber @base, LingoNumber exp) =>
         new(Math.Pow(@base.DecimalValue, exp.DecimalValue));
 
-    public static LingoNumber Max(LingoNumber a, LingoNumber b) => new(Math.Max(a.DecimalValue, b.DecimalValue));
-    public static LingoNumber Min(LingoNumber a, LingoNumber b) => new(Math.Min(a.DecimalValue, b.DecimalValue));
+    public static LingoNumber Max(LingoNumber a, LingoNumber b) => a.IsDecimal || b.IsDecimal ? new(Math.Max(a.DecimalValue, b.DecimalValue)) : new(Math.Max(a.IntValue, b.IntValue));
+    public static LingoNumber Min(LingoNumber a, LingoNumber b) => a.IsDecimal || b.IsDecimal ? new(Math.Min(a.DecimalValue, b.DecimalValue)) : new(Math.Max(a.IntValue, b.IntValue));
 
     public override string ToString() => IsDecimal ? DecimalValue.ToString("F4", CultureInfo.InvariantCulture) : IntValue.ToString(CultureInfo.InvariantCulture);
 
