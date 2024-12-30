@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +13,7 @@ public class LingoList : IEnumerable<object>, ILingoListDuplicate, IEquatable<Li
 
     int ILingoVector.CountElems => List.Count;
 
-    object? ILingoVector.this[int index] => List[index];
+    object? ILingoVector.this[int index] => List[index - 1];
 
     public dynamic? this[int index]
     {
@@ -253,7 +253,7 @@ public class LingoList : IEnumerable<object>, ILingoListDuplicate, IEquatable<Li
                     return cmpLength;
 
                 // If lengths DO match...
-                for (var i = 0; i < count; i++)
+                for (var i = 1; i <= count; i++)
                 {
                     var valX = vecXc[i];
                     var valY = vecYc[i];

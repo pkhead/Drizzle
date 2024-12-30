@@ -121,15 +121,8 @@ on exitFrame me
           me.updateEffectsL(0)
         end if
       end if
-      --      if gEEprops.editEffect = void then
-      --        me.initMode("createNew")
-      --      end if
-      
       sprite(244).rect = rect(-100, -100, -100, -100)
     "editEffect":
-      --      if gEEprops.effects[gEEprops.editEffect] = void then
-      --        me.initMode("editEffect")
-      --      end if
       if me.checkKey("r") then
         gEEprops.brushSize = restrict(gEEprops.brushSize + 1, 1, 10)
       end if
@@ -484,6 +477,12 @@ on newEffect me
       ef.options.add(["Color Intensity", ["High", "Medium", "Low", "None"], "Medium"])
       ef.crossScreen = 1
       
+    "Fingers":
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Dead"])
+      ef.options.add(["Finger Thickness", ["Small", "Medium", "FAT", "Random"], "Medium"])
+      ef.options.add(["Finger Length", ["Short", "Medium", "Tall", "Random"], "Medium"])
+      
     "Wires":
       ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
       ef.options.add(["Fatness", ["1px", "2px", "3px", "random"], "2px"])
@@ -817,7 +816,7 @@ on changeOption me
       
       
       
-    "Color", "Detail Color", "Fatness", "Size", "Layers", "3D", "Ceramic Color", "Effect Color", "Variation", "Color 1", "Color 2", "Affect Gradients and Decals", "Rotate", "Color Intensity", "Fruit Density", "Mushroom Size", "Mushroom Width", "Flowers", "Side":
+    "Color", "Detail Color", "Fatness", "Size", "Layers", "3D", "Ceramic Color", "Effect Color", "Variation", "Color 1", "Color 2", "Affect Gradients and Decals", "Rotate", "Color Intensity", "Fruit Density", "Mushroom Size", "Mushroom Width", "Flowers", "Side", "Finger Thickness", "Finger Length":
       gEEprops.effects[gEEprops.editEffect].options[gEEprops.emPos.locV][3] = gEEprops.effects[gEEprops.editEffect].options[gEEprops.emPos.locV][2][gEEprops.emPos.locH]
       
       

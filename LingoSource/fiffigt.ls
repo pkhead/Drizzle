@@ -479,7 +479,7 @@ on newMakeLevel(lvlName)
   
   sz  = gLOprops.size*20
   pos = point(0,0)
-
+  
   global gLOprops, gLightEProps, gLEProps, gEnvEditorProps, gLevel
   
   lightangle = degToVec(gLightEProps.lightAngle) * gLightEProps.flatness
@@ -587,6 +587,19 @@ on newMakeLevel(lvlName)
       
       txt = txt & "|"
     end repeat
+  end repeat
+  
+  put RETURN after txt
+  -- Put the cangles into the txt
+  put "camera angles:" after txt
+  repeat with q = 1 to gCameraProps.cameras.count then
+    repeat with i = 1 to 4 then
+      put gCameraProps.quads[q][i][1] & "," & gCameraProps.quads[q][i][2] after txt
+      if i < 4 then put ";" after txt
+    end repeat
+    if (q < gCameraProps.cameras.count)then
+      put "|" after txt
+    end if
   end repeat
   
   foundFile = 0

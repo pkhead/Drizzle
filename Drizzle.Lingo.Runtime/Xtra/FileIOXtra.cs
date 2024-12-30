@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 
 namespace Drizzle.Lingo.Runtime.Xtra;
@@ -19,7 +19,7 @@ public sealed class FileIOXtra : BaseXtra
             _ => throw new ArgumentException("Invalid file mode!")
         };
 
-        _file = File.Open(filePath, FileMode.Open, access);
+        _file = File.Open(filePath, FileMode.OpenOrCreate, access);
     }
 
     public void closefile()
