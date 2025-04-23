@@ -8,13 +8,20 @@ on exitFrame me
     sprite(23).blend = 0
   end if
   
+  if dontRunStuff() then
+    go the frame
+    return
+  end if
+  
   msTile = (_mouse.mouseLoc/point(16.0, 16.0))+point(0.4999, 0.4999)
   msTile = point(msTile.loch.integer, msTile.locV.integer)+point(-1, -1)+gLEprops.camPos
   
   repeat with q = 1 to 4 then
-    if (_key.keyPressed([86, 91, 88, 84][q]))and(gDirectionKeys[q] = 0) and _movie.window.sizeState <> #minimized then
-      gLEProps.camPos = gLEProps.camPos + [point(-1, 0), point(0,-1), point(1,0), point(0,1)][q] * (1 + 9 * _key.keyPressed(83) + 34 * _key.keyPressed(85))
-      if not _key.keyPressed(92) then
+    if (me.getDirection(q))and(gDirectionKeys[q] = 0) then
+      fast = checkCustomKeybind(#MoveFast, 83)
+      faster = checkCustomKeybind(#MoveFaster, 85)
+      gLEProps.camPos = gLEProps.camPos + [point(-1, 0), point(0,-1), point(1,0), point(0,1)][q] * (1 + 9 * fast + 34 * faster)
+      if not checkCustomKeybind(#MoveOutside, 92) then
         if gLEProps.camPos.loch < -1 then
           gLEProps.camPos.loch = -1
         end if
@@ -36,7 +43,7 @@ on exitFrame me
       drawShortCutsImg(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), 16, 1)
       
     end if
-    gDirectionKeys[q] = _key.keyPressed([86, 91, 88, 84][q])
+    gDirectionKeys[q] = me.getDirection(q)
     --script("propEditor").renderPropsImage()
   end repeat
   
@@ -44,11 +51,11 @@ on exitFrame me
   rct = rect(0,0,gLOprops.size.loch, gLOprops.size.locv) + rect(gLOProps.extraTiles[1], gLOProps.extraTiles[2], -gLOProps.extraTiles[3], -gLOProps.extraTiles[4]) - rect(gLEProps.camPos, gLEProps.camPos)
   sprite(71).rect = (rct.intersect(rect(0,0,52,40))+rect(1, 1, 1, 1))*rect(16,16,16,16)
   
-  if checkKey("Q") then
+  if me.checkKey("Q") then
     PickUpTile(msTile)
   end if
   
-  if checkKey("L") then
+  if me.checkKey("L") then
     gTEprops.workLayer = gTEprops.workLayer +1
     if gTEprops.workLayer > 3 then
       gTEprops.workLayer = 1
@@ -63,12 +70,12 @@ on exitFrame me
   actn = 0
   actn2 = 0
   
-  gTEprops.keys.m1 = _mouse.mouseDown and _movie.window.sizeState <> #minimized
+  gTEprops.keys.m1 = _mouse.mouseDown
   if (gTEprops.keys.m1)and(gTEprops.lastKeys.m1=0) then
     actn = 1
   end if
   gTEprops.lastKeys.m1 = gTEprops.keys.m1
-  gTEprops.keys.m2 = _mouse.rightmouseDown and _movie.window.sizeState <> #minimized
+  gTEprops.keys.m2 = _mouse.rightmouseDown
   if (gTEprops.keys.m2)and(gTEprops.lastKeys.m2=0) then
     actn2 = 1
   end if
@@ -109,23 +116,23 @@ on exitFrame me
     end if
   end if
   
-  if checkKey("W") then
+  if me.checkKey("W") then
     updateTileMenu(point(0, -1))
   end if
-  if checkKey("S") then
+  if me.checkKey("S") then
     updateTileMenu(point(0, 1))
   end if
-  if checkKey("A") then
+  if me.checkKey("A") then
     updateTileMenu(point(-1, 0))
   end if
-  if checkKey("D") then
+  if me.checkKey("D") then
     updateTileMenu(point(1, 0))
   end if
   
   if gTEprops.toolType = "material" then
-    if _key.keypressed("F") and _movie.window.sizeState <> #minimized then
+    if checkCustomKeybind(#TileBigBrush, "F") then
       sprite(88).rect = rect(msTile*16, (msTile+point(1,1))*16) + rect(-16,-16,16,16) - rect(gLEprops.camPos*16, gLEprops.camPos*16)
-    else if _key.keypressed("V") and _movie.window.sizeState <> #minimized then
+    else if checkCustomKeybind(#TileBiggerBrush, "V") then
       sprite(88).rect = rect(msTile*16, (msTile+point(1,1))*16) + rect(-32,-32,32,32) - rect(gLEprops.camPos*16, gLEprops.camPos*16)
     else
       sprite(88).rect = rect(msTile*16, (msTile+point(1,1))*16) - rect(gLEprops.camPos*16, gLEprops.camPos*16)
@@ -167,11 +174,11 @@ on exitFrame me
     
   end if
   
-  if _key.keyPressed("E") and _movie.window.sizeState <> #minimized then
+  if checkCustomKeybind(#TileDefaultMaterial, "E") then
     updateTileMenu(point(0,0))
   end if
   
-  if _key.keyPressed("C") and _key.keyPressed("X") and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+  if checkCustomKeybind(#ClearAllTiles, ["C","X",48]) then
     me.deleteAllTiles()
   end if
   
@@ -182,8 +189,6 @@ on exitFrame me
     rct = rect(0, gLOprops.size.locv-gEnvEditorProps.waterLevel-gLOProps.extraTiles[4], gLOprops.size.loch, gLOprops.size.locv) - rect(gLEProps.camPos, gLEProps.camPos)
     sprite(9).rect = ((rct.intersect(rect(0,0,52,40))+rect(1, 1, 1, 1))*rect(16,16,16,16))+rect(0, -8, 0, 0)
   end if
-  
-  
   
   
   script("levelOverview").goToEditor()
@@ -210,9 +215,33 @@ on deleteAllTiles()
 end
 
 
-on checkKey(key)
+on getDirection me, q
+  -- check order: left, up, right, down
+  k = [#MoveLeft, #MoveUp, #MoveRight, #MoveDown][q]
+  orig = [86, 91, 88, 84][q]
+  return checkCustomKeybind(k, orig)
+end
+
+on checkKey me, key
   rtrn = 0
-  gTEprops.keys[symbol(key)] = _key.keyPressed(key) and _movie.window.sizeState <> #minimized
+  
+  kb = VOID
+  case key of
+    "W":
+      kb = #TileSelectUp
+    "S":
+      kb = #TileSelectDown
+    "A":
+      kb = #TileCategoryPrev
+    "D":
+      kb = #TileCategoryNext
+    "Q":
+      kb = #TileSample
+    "L":
+      kb = #TileChangeLayer
+  end case
+  
+  gTEProps.keys[symbol(key)] = checkCustomKeybind(kb, key) and not dontRunStuff()
   if (gTEprops.keys[symbol(key)])and(gTEprops.lastKeys[symbol(key)]=0) then
     rtrn = 1
   end if
@@ -244,8 +273,10 @@ on writeMaterial(msTile)
         7:
           txt = "Short Cut Entrance"
           sprite(8).visibility = 1
-          -- 8:
-          --   txt = "Lizard's Hole"
+        8:
+          txt = "Lizard's Hole"
+        9:
+          txt = "Glass"
       end case
     else 
       txt = ""
@@ -350,13 +381,17 @@ end
 
 
 on action(msTile)
+  if dontRunStuff() then
+    return
+  end if
+  
   if msTile.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)) and (_mouse.mouseLoc.inside(rect(16, 17, 848, 657)))then
     case gTEprops.toolType of
       "material":
         l = [msTile]
-        if _key.keypressed("F") and _movie.window.sizeState <> #minimized then
+        if checkCustomKeybind(#TileBigBrush, "F") then
           l = [msTile, msTile+point(1,0),msTile+point(-1,0),msTile+point(0,1),msTile+point(0,-1),msTile+point(-1,-1),msTile+point(-1,1),msTile+point(1,1),msTile+point(1,-1)]
-        else if _key.keypressed("V") and _movie.window.sizeState <> #minimized then
+        else if checkCustomKeybind(#TileBiggerBrush, "V") then
           l = [msTile, msTile+point(1,0),msTile+point(-1,0),msTile+point(0,1),msTile+point(0,-1),msTile+point(-1,-1),msTile+point(-1,1),msTile+point(1,1),msTile+point(1,-1),msTile+point(0,-2),msTile+point(1,-2),msTile+point(2,-2),msTile+point(-1,-2),msTile+point(-2,-2),msTile+point(0,2),msTile+point(1,2),msTile+point(2,2),msTile+point(-1,2),msTile+point(-2,2),msTile+point(-2,0),msTile+point(-2,1),msTile+point(-2,-1),msTile+point(2,0),msTile+point(2,1),msTile+point(2,-1)]
         end if
         repeat with q in l then
@@ -369,7 +404,7 @@ on action(msTile)
           end if
         end repeat
       "tile":
-        if ((isTilePositionLegal(msTile))or(_key.keypressed("F"))or(_key.keypressed("V"))or(_key.keypressed("G"))) and _movie.window.sizeState <> #minimized then
+        if ((isTilePositionLegal(msTile))or(checkCustomKeybind(#TileBigBrush, "F"))or(checkCustomKeybind(#TileBiggerBrush, "V"))or(checkCustomKeybind(#TileForcePlace, "F"))or(checkCustomKeybind(#TileForceGeometry, "G"))) then
           placeTile(msTile, gTEprops.tmPos)
           --  TEdraw(rect(msTile+point(-4, -4),msTile+point(4, 4)), 1)
           -- TEdraw(rect(msTile+point(-4, -4),msTile+point(4, 4)), 2)
@@ -380,16 +415,20 @@ end
 
 
 on deleteTile(msTile)
+  if dontRunStuff() then
+    return
+  end if
+  
   global gLOprops
   if msTile.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)) and (_mouse.mouseLoc.inside(rect(16, 17, 848, 657)))then
     case   gTEprops.tlMatrix[msTile.locH][msTile.locV][gTEprops.workLayer].tp of
       "material":
         F = 0
         F1 = 0
-        if _key.keypressed("F") and _movie.window.sizeState <> #minimized then
+        if checkCustomKeybind(#TileBigBrush, "F")  then
           F = -1
           F1 = 1
-        else if _key.keypressed("V") and _movie.window.sizeState <> #minimized then
+        else if checkCustomKeybind(#TileBiggerBrush, "V") then
           F = -2
           F1 = 2
         end if
@@ -467,6 +506,10 @@ on drawTilePreview()
     end repeat
   end repeat
   
+  -- Import the tile preview if needed
+  tryAddToPreview(tl)
+  
+  -- Draw the tile preview at mouse position
   member("tileMouse").image = image(tl.sz.locH*16, tl.sz.locV*16, 16)
   if (tl.ptPos > 60000) and (getBoolConfig("More tile previews")) then
     drps = tl.ptPos - 60000
@@ -582,12 +625,15 @@ end
 
 
 on placeTile(plcTile, tmPos)
+  if dontRunStuff() then
+    return
+  end if
   
   if(plcTile.locH < 1)or(plcTile.locV < 1)or(plcTile.locH > gTEprops.tlMatrix.count)or(plcTile.locV > gTEprops.tlMatrix[1].count)then
     return void
   end if
   
-  forceAdaptTerrain = _key.keypressed("G") and _movie.window.sizeState <> #minimized
+  forceAdaptTerrain = checkCustomKeybind(#TileForceGeometry, "G")
   
   tl = gTiles[tmPos.locH].tls[tmPos.locV]
   mdPnt = point(((tl.sz.locH*0.5)+0.4999).integer,((tl.sz.locV*0.5)+0.4999).integer)
@@ -846,8 +892,59 @@ on SpecialRectPlacement(rct)
         
         py = py + currentPattern.tall
       end repeat
+      
+    "Ventbox Rect", "Ventbox Perforated Rect":
+      -- Edge case
+      if (rct.right - rct.left < 4) or (rct.bottom - rct.top < 4) then
+        return
+      end if
+      
+      -- Find the tiles
+      tileList = ["Ventbox", "Ventbox N", "Ventbox E", "Ventbox S", "Ventbox W", "Ventbox NW", "Ventbox NE", "Ventbox SE", "Ventbox SW"]
+      if gTiles[gTEprops.tmPos.locH].tls[gTEprops.tmPos.locV].nm = "Ventbox Perforated Rect" then
+        tileList = ["Ventbox Perforated", "Ventbox Perforated N", "Ventbox Perforated E", "Ventbox Perforated S", "Ventbox Perforated W", "Ventbox Perforated NW", "Ventbox Perforated NE", "Ventbox Perforated SE", "Ventbox Perforated SW"]
+      end if
+      found = 0
+      tilePositions = [VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID]
+      repeat with q = getFirstTileCat() to gTiles.count
+        repeat with a = 1 to gTiles[q].tls.count
+          thisPos = tileList.getPos(gTiles[q].tls[a].nm)
+          if thisPos > 0 then
+            found = found + 1
+            tilePositions[found] = point(q,a)
+            if found = 9 then exit repeat
+          end if
+        end repeat
+        if found = 9 then exit repeat
+      end repeat
+      if found <> 9 then return
+      
+      -- Place the corners
+      placeTile(point(rct.left, rct.bottom-1), tilePositions[9])
+      placeTile(point(rct.right-1, rct.bottom-1), tilePositions[8])
+      placeTile(point(rct.right-1, rct.top), tilePositions[7])
+      placeTile(point(rct.left, rct.top), tilePositions[6])
+      
+      -- Place the walls
+      repeat with a = rct.left + 2 to rct.right - 2 then
+        placeTile(point(a, rct.bottom-1), tilePositions[4])
+        placeTile(point(a, rct.top), tilePositions[2])
+      end repeat
+      repeat with b = rct.top + 2 to rct.bottom - 2 then
+        placeTile(point(rct.left, b), tilePositions[5])
+        placeTile(point(rct.right-1, b), tilePositions[3])
+      end repeat
+      
+      -- Place the innards
+      repeat with a = rct.left + 2 to rct.right - 2 then
+        repeat with b = rct.top + 2 to rct.bottom - 2 then
+          placeTile(point(a, b), tilePositions[1])
+        end repeat
+      end repeat
   end case
 end 
+
+
 
 
 

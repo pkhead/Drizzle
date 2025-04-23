@@ -1,5 +1,3 @@
-
-
 global gLEProps, gDirectionKeys, gLOprops, gEnvEditorProps, showControls
 
 
@@ -10,19 +8,18 @@ on exitFrame me
     sprite(93).blend = 0
   end if
   
-  if checkMinimize() then
-    _player.appMinimize()
-    
-  end if
-  if checkExit() then
-    _player.quit()
+  if dontRunStuff() then
+    go the frame
+    return
   end if
   
   
   repeat with q = 1 to 4 then
-    if (_key.keyPressed([86, 91, 88, 84][q]))and(gDirectionKeys[q] = 0) and _movie.window.sizeState <> #minimized then
-      gLEProps.camPos = gLEProps.camPos + [point(-1, 0), point(0,-1), point(1,0), point(0,1)][q] * (1 + 9 * _key.keyPressed(83) + 34 * _key.keyPressed(85))
-      if not _key.keyPressed(92) then
+    if (me.getDirection(q))and(gDirectionKeys[q] = 0) then
+      fast = checkCustomKeybind(#MoveFast, 83)
+      faster = checkCustomKeybind(#MoveFaster, 85)
+      gLEProps.camPos = gLEProps.camPos + [point(-1, 0), point(0,-1), point(1,0), point(0,1)][q] * (1 + 9 * fast + 34 * faster)
+      if not checkCustomKeybind(#MoveOutside, 92) then
         if gLEProps.camPos.loch < -1 then
           gLEProps.camPos.loch = -1
         end if
@@ -41,7 +38,7 @@ on exitFrame me
       lvlEditDraw(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), 3)
       drawShortCutsImg(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), 16)
     end if
-    gDirectionKeys[q] = _key.keyPressed([86, 91, 88, 84][q])
+    gDirectionKeys[q] = me.getDirection(q)
     --script("propEditor").renderPropsImage()
   end repeat
   
@@ -63,11 +60,12 @@ end
 
 
 
-
-
-
-
-
+on getDirection me, q
+  -- check order: left, up, right, down
+  k = [#MoveLeft, #MoveUp, #MoveRight, #MoveDown][q]
+  orig = [86, 91, 88, 84][q]
+  return checkCustomKeybind(k, orig)
+end
 
 
 

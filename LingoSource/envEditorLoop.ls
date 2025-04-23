@@ -8,6 +8,11 @@ on exitFrame me
     sprite(206).blend = 0
   end if
   
+  if dontRunStuff() then
+    go the frame
+    return
+  end if
+  
   script("levelOverview").goToEditor()
   
   if gLOprops.size.locH > gLOprops.size.locV then
@@ -45,7 +50,7 @@ on exitFrame me
     sprite(205).visibility = false
   end if
   
-  if (_key.keyPressed("l") and _movie.window.sizeState <> #minimized)then
+  if (checkCustomKeybind(#ChangeWaterLevel, "l"))then
     waterLevel = gLOprops.size.locv - gLOprops.extraTiles[2] - gLOprops.extraTiles[4] - (_mouse.mouseLoc.locV/fac).integer
     gEnvEditorProps.waterLevel = waterLevel
   end if
@@ -61,6 +66,8 @@ on exitFrame me
   if(script("envEditorStart").checkKey("f")) then gEnvEditorProps.waterInFront = 1 - gEnvEditorProps.waterInFront
   go the frame
 end
+
+
 
 
 

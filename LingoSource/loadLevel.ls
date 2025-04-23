@@ -8,6 +8,11 @@ on exitFrame me
     sprite(32).blend = 0
   end if
   
+  if dontRunStuff() then
+    go the frame
+    return
+  end if
+  
   if checkMinimize() then
     _player.appMinimize()
     
@@ -15,6 +20,8 @@ on exitFrame me
   if checkExit() then
     _player.quit()
   end if
+  
+  checkDebugKeybinds()
   
   txt = "Use the up and down keys to select a project. Use enter to open it."
   put RETURN after txt
@@ -44,7 +51,7 @@ on exitFrame me
   dwn = _key.keyPressed(125)
   lft = _key.keyPressed(123)
   rgth = _key.keyPressed(124)
-  if _movie.window.sizeState = #minimized then
+  if dontRunStuff() then
     up = false
     dwn = false
     lft = false
@@ -86,14 +93,16 @@ on exitFrame me
   ldPrps.lft = lft
   ldPrps.rgth = rgth
   
-  if _key.keyPressed("N") and _movie.window.sizeState <> #minimized then
-    gLoadedName = "New Project"
-    member("level Name").text = "New Project"
-    _movie.go(7)
-  else if (_key.keyPressed(36))and(projects.count > 0) and _movie.window.sizeState <> #minimized then
-    if(chars(projects[ldPrps.currProject], 1, 1) <> "#")then
-      me.loadLevel(projects[ldPrps.currProject])
+  if not dontRunStuff() then
+    if _key.keyPressed("N") and _movie.window.sizeState <> #minimized then
+      gLoadedName = "New Project"
+      member("level Name").text = "New Project"
       _movie.go(7)
+    else if (_key.keyPressed(36))and(projects.count > 0) and _movie.window.sizeState <> #minimized then
+      if(chars(projects[ldPrps.currProject], 1, 1) <> "#")then
+        me.loadLevel(projects[ldPrps.currProject])
+        _movie.go(7)
+      end if
     end if
   end if
   go the frame
@@ -137,6 +146,8 @@ on loadLevel me, lvlName, fullPath
   --objFileio.writeString(string(l))
   l2 = objFileio.readFile()
   objFileio.closeFile()
+  
+  
   
   
   l1 = value(l2.line[1])
@@ -232,6 +243,8 @@ end
 
 on versionFix me
   --  gTEprops.tlMatrix[(tl[2])][(tl[3])][layer].data
+  global gNotFoundTiles
+  gNotFoundTiles = []
   repeat with q = 1 to gLOprops.size.loch then
     repeat with c = 1 to gLOprops.size.locv then
       repeat with d = 1 to 3 then
@@ -260,6 +273,11 @@ on versionFix me
           if huntNew <> "" then
             gTEprops.tlMatrix[q][c][d].data = [point(2, 1), "NOT FOUND"]
             repeat with cat = 1 to gTiles.count then
+              -- Skip material categories
+              if gTiles[cat].findPos(#clr) = 0 then
+                next repeat
+              end if
+              -- Check tiles
               repeat with tl = 1 to gTiles[cat].tls.count then
                 if gTiles[cat].tls[tl].nm = huntNew then
                   gTEprops.tlMatrix[q][c][d].data = [point(cat, tl), huntNew]
@@ -274,6 +292,10 @@ on versionFix me
             if not found then
               writeException("Tile Not Found", "the tile "&QUOTE& huntNew &QUOTE&" is missing in the Init.txt file from your Graphics folder.")
               put "Warning: unknown tile '" & huntNew & "' in map file. Replacing with default material."
+              if gNotFoundTiles.getPos(huntNew) = 0 then
+                gNotFoundTiles.add(huntNew)
+                _player.alert("Warning: unknown tile '" & huntNew & "' in map file. Replacing with default material.")
+              end if
               gTEprops.tlMatrix[q][c][d] = [#tp: "default", #data: 0]
             end if
           end if
@@ -390,6 +412,7 @@ on versionFix me
     lay = 0
     _3dOp = 0
     sideOp = 0
+    srfOp = 0
     repeat with op3 in ef.options
       if (op3[1] = "Seed") then
         sd = 1
@@ -415,11 +438,18 @@ on versionFix me
         else if (op3[2] <> ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]) then
           op3[2] = ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]
         end if
+      else if (op3[1] = "Require In-Bounds") then
+        srfOp = 1
       end if
     end repeat
+    
+    -- Custom effects
     if (cEff <> VOID) then
       if (sideOp = 0) then
-        if cEff.tp = "clinger" then ef.options.add(["Side", ["Left", "Right", "Random"], "Random"])
+        if ["clinger","standardClinger"].findPos(cEff.tp)>0 then ef.options.add(["Side", ["Left", "Right", "Random"], "Random"])
+      end if
+      if (cEff.tp = "grower" or cEff.tp = "hanger" or cEff.tp = "clinger") and (srfOp = 0) then
+        ef.options.add(["Require In-Bounds", ["Yes", "No"], ["No", "Yes"][getBoolConfig("Sky roots fix") + 1]])
       end if
       if (_3dOp = 0) then
         if cEff.tp = "wall" and cEff.findPos("can3D") > 0 then
@@ -436,12 +466,13 @@ on versionFix me
         end if
       end if
     end if
+    
+    -- Seed
     if (sd = 0) then
       ef.options.add(["Seed", [], random(500)])
     end if
-    if (rotOp = 0) and (ef.nm = "Little Flowers") then
-      ef.options.add(["Rotate", ["On", "Off"], "Off"])
-    end if
+    
+    -- Fix layers
     if (lay = 0) and (["BlackGoo", "Super BlackGoo", "Stained Glass Properties"].getPos(ef.nm) = 0) then
       if (cEff <> VOID) then
         if cEff.tp = "individual" then
@@ -449,11 +480,16 @@ on versionFix me
         else
           ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
         end if
-      else if (["Fungi Flowers", "Lighthouse Flowers", "Colored Fungi Flowers", "Colored Lighthouse Flowers", "Fern", "Giant Mushroom", "Sprawlbush", "featherFern", "Fungus Tree"].getPos(ef.nm) > 0) then
+      else if (["Fungi Flowers", "Lighthouse Flowers", "Colored Fungi Flowers", "Colored Lighthouse Flowers", "Fern", "Giant Mushroom", "Sprawlbush", "featherFern", "Fungus Tree", "Head Lamp"].getPos(ef.nm) > 0) then
         ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "1"])
       else
         ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
       end if
+    end if
+    
+    -- Some other missing options
+    if (rotOp = 0) and (ef.nm = "Little Flowers") then
+      ef.options.add(["Rotate", ["On", "Off"], "Off"])
     end if
     if (clr = 0) and (ef.nm = "DaddyCorruption") then
       ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
@@ -464,17 +500,28 @@ on versionFix me
     if (gaf = 0) and (["Slime", "SlimeX3", "Fat Slime"].getPos(ef.nm) > 0) then
       ef.options.add(["Affect Gradients and Decals", ["Yes", "No"], "Yes"])
     end if
+    
+    -- Sky roots fix
+    if (srfOp = 0) and ["Arm Growers", "Growers", "Mini Growers", "Rollers", "Thorn Growers", "Garbage Spirals", "Fuzzy Growers", "Spinets", "Small Springs", "Hang Roots", "Thick Roots", "Shadow Plants", "Colored Hang Roots", "Colored Thick Roots", "Colored Shadow Plants", "Root Plants", "Coral Growers", "Leaf Growers", "Meat Growers", "Horror Growers", "Thunder Growers", "Ice Growers", "Grass Growers", "Fancy Growers", "Mosaic Plants", "Grape Roots", "Hand Growers"].getPos(ef.nm) > 0 then
+      ef.options.add(["Require In-Bounds", ["Yes", "No"], ["No", "Yes"][getBoolConfig("Sky roots fix") + 1]])
+    end if
+    
+    -- Cross screen
     if (ef.findPos(#crossScreen) = VOID) then
       ef.addProp(#crossScreen, 0)
     end if
     if (["Arm Growers", "Growers", "Mini Growers", "Rollers", "Thorn Growers", "Garbage Spirals", "Fuzzy Growers", "Spinets", "Small Springs", "Wires", "Chains", "Colored Wires", "Colored Chains", "Hang Roots", "Thick Roots", "Shadow Plants", "Colored Hang Roots", "Colored Thick Roots", "Colored Shadow Plants", "Root Plants", "Coral Growers", "Leaf Growers", "Meat Growers", "Horror Growers", "Thunder Growers", "Ice Growers", "Grass Growers", "Fancy Growers", "Mosaic Plants", "Grape Roots", "Hand Growers"].getPos(ef.nm) > 0) then
       ef.crossScreen = 1
     end if
+    
+    -- Joar you're silly
     if (["Slime", "Fat Slime", "Scales", "SlimeX3", "DecalsOnlySlime", "Melt", "Rust", "Barnacles", "Colored Barnacles", "Clovers", "Erode", "Sand", "Super Erode", "Ultra Super Erode", "Roughen", "Impacts", "Super Melt", "Destructive Melt"].getPos(ef.nm) > 0) then
       ef.tp = "standardErosion"
     else
       ef.tp = "nn"
     end if
+    
+    -- Erosion settings
     if (ef.nm = "Roughen") then
       ef.repeats = 30
       ef.affectOpenAreas = 0.05
@@ -511,3 +558,5 @@ on versionFix me
     end if
   end repeat
 end
+
+

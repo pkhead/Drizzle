@@ -23,10 +23,26 @@ end
 
 on checkKey me, key
   rtrn = 0
-  gEnvEditButtons[symbol(key)] = _key.keyPressed(key) and _movie.window.sizeState <> #minimized
+  
+  kb = VOID
+  case key of
+    "w":
+      kb = #ToggleWater
+    "f":
+      kb = #ToggleWaterLayer
+  end case
+  
+  gEnvEditButtons[symbol(key)] = checkCustomKeybind(kb, key)
   if (gEnvEditButtons[symbol(key)])and(gLastEnvEditButtons[symbol(key)]=0) then
     rtrn = 1
   end if
   gLastEnvEditButtons[symbol(key)] = gEnvEditButtons[symbol(key)]
   return rtrn
 end
+
+
+
+
+
+
+

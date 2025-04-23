@@ -1,4 +1,4 @@
-global vertRepeater, r, gEEprops, solidMtrx, gLEprops, colr, colrDetail, colrInd, gdLayer, gdDetailLayer, gdIndLayer, gLOProps, gLevel, gEffectProps, gViewRender, keepLooping, gRenderCameraTilePos, effectSeed, lrSup, chOp, fatOp, gradAf, effectIn3D, gAnyDecals, gRotOp, slimeFxt, DRDarkSlimeFix, DRWhite, DRPxl, DRPxlRect, colrIntensity, fruitDensity, leafDensity, mshrSzW, mshrSz, hasFlowers, effSide, fingerLen, fingerSz, gCustomEffects, gEffects, gLastImported
+global vertRepeater, r, gEEprops, solidMtrx, gLEprops, colr, colrDetail, colrInd, gdLayer, gdDetailLayer, gdIndLayer, gLOProps, gLevel, gEffectProps, gViewRender, keepLooping, gRenderCameraTilePos, effectSeed, lrSup, chOp, fatOp, gradAf, effectIn3D, gAnyDecals, gRotOp, slimeFxt, DRDarkSlimeFix, DRWhite, DRPxl, DRPxlRect, colrIntensity, fruitDensity, leafDensity, mshrSzW, mshrSz, hasFlowers, effSide, fingerLen, fingerSz, gCustomEffects, gEffects, gLastImported, skyRootsFix, lampColr, lampLayer
 
 on exitFrame(me)
   if (checkMinimize()) then
@@ -152,7 +152,7 @@ on effectOnTile me, q, c, q2, c2, effectr
         if effectr.mtrx[q2][c2] > 0 then
           me.applyBigPlant(q,c)
         end if
-      "Sprawlbush", "featherFern", "Fungus Tree":
+      "Sprawlbush", "featherFern", "Fungus Tree", "Head Lamp":
         if effectr.mtrx[q2][c2] > 0 then
           me.apply3Dsprawler(q,c, efname)
         end if
@@ -379,8 +379,9 @@ on initEffect me
     end if
   end repeat
   
-  effectIn3D = false
-  gRotOp = false
+  effectIn3D = FALSE
+  gRotOp = FALSE
+  skyRootsFix = 0
   repeat with op in efopts
     case op[1] of 
       "Layers":
@@ -424,6 +425,13 @@ on initEffect me
         fingerSz = ["?", "S", "M", "L"][["Small", "Medium", "FAT"].getPos(op[3]) + 1]
       "Finger Length":
         fingerLen = ["?", "S", "M", "L"][["Short", "Medium", "Tall"].getPos(op[3]) + 1]
+      "Lamp Color":
+        lampColr = [color(255, 0, 255), color(0, 255, 255), color(0, 255, 0)][["Color1", "Color2", "Dead"].getPos(op[3])]
+        LampLayer = ["A", "B", "C"][["Color1", "Color2", "Dead"].getPos(op[3])]
+      "Require In-Bounds":
+        if (op[3] = "Yes") then
+          skyRootsFix = 1
+        end if
     end case
   end repeat
   
@@ -774,7 +782,7 @@ on ApplyCustomEffect(me, q, c, effectr, efname)
     effGraf = effGraf.image
     
     case cEff.tp of
-      "standardPlant": -- standard plant effect
+      "standardPlant", "standardHanger", "standardClinger": -- standard plant effect
         -- Get potential layers
         case lrSup of
           "All":
@@ -801,9 +809,17 @@ on ApplyCustomEffect(me, q, c, effectr, efname)
         
         -- Now we place the effect
         repeat with layer in lsL
-          if solidMtrx[q2][c2][layer]=0 and solidAfaMv(point(q2,c2+1),layer)=1 then
+          solidCheck = solidAfaMv(point(q2,c2+1),layer) 
+          if cEff.tp = "standardHanger" then
+            solidCheck = solidAfaMv(point(q2,c2-1),layer)
+          else if cEff.tp = "standardClinger" then
+            solidCheck = solidAfaMv(point(q2-1,c2),layer) + solidAfaMv(point(q2+1,c2),layer)
+          end if
+          
+          if solidMtrx[q2][c2][layer]=0 and solidCheck>=1 then
             repeat with i = 1 to mtrx[q2][c2] * 0.01 * amount then
-              pnt = me.giveGroundPos(q,c,layer)
+              pnt = me.giveGroundPosCustom(q,c,layer, cEff.tp)
+              clingerMult = (giveMiddleOfTile(point(q,c))>pnt.locH)
               d = random(9) + ((layer-1)*10)
               
               var = random(cEff.vars)
@@ -827,6 +843,16 @@ on ApplyCustomEffect(me, q, c, effectr, efname)
               if cEff.findPos("rotVar") then
                 rot = random(cEff.rotVar * 2 + 1) - cEff.rotVar
               end if
+              case cEff.tp of
+                "standardHanger":
+                  rot = rot + 180
+                "standardClinger":
+                  if clingerMult = 1 then
+                    rot = rot + 90
+                  else
+                    rot = rot + 270
+                  end if
+              end case
               
               flp = 0
               if cEff.findPos("randomFlip") then
@@ -834,8 +860,8 @@ on ApplyCustomEffect(me, q, c, effectr, efname)
               end if
               rootAmt = 5
               if cEff.findPos("rootAmt") then rootAmt = cEff.rootAmt
-              qd = rect(pnt, pnt) + rect(-(cEff.pxlSz.locH/2.0)*sz, -cEff.pxlSz.locV*sz, (cEff.pxlSz.locH/2.0)*sz, rootAmt)
-              qd = rotateToQuadFix(qd, rot)
+              
+              qd = rotateRectAroundPoint(rect(-(cEff.pxlSz.locH/2.0)*sz, -cEff.pxlSz.locV*sz, (cEff.pxlSz.locH/2.0)*sz, rootAmt), pnt, rot)
               if flp then qd = flipQuadH(qd)
               
               useEffCol = 0
@@ -931,6 +957,9 @@ on ApplyCustomEffect(me, q, c, effectr, efname)
             sz = cEff.szChange[1]
           end if
           
+          quadsToDraw = []
+          drawQuad = 0
+          
           -- Draw loop: as with every grower, draw from tip to ground (or void)
           repeat while (pnt.locV < gLOprops.size.locV * 20 + 100) and (pnt.locV > -100) and (pnt.locH < gLOprops.size.locH * 20 + 100) and (pnt.locH > -100) then
             if doingTip = 1 then
@@ -975,32 +1004,65 @@ on ApplyCustomEffect(me, q, c, effectr, efname)
             end if
             
             -- Draw the damn thing
-            if useEffCol then
-              member("layer"&string(d)).image.copyPixels(effGraf, qd, grab, {#color:colr, #ink:36})
-              if colr <> color(0,255,0) then
-                if cEff.findPos("hasGrad") then
-                  if cEff.hasGrad then grab = grab + rect(0, pxlSz.locV, 0, pxlSz.locV)
+            if skyRootsFix then
+              quadToAdd = [qd, effGraf, grab, -1, -1, blnd, blnd2, doingTip]
+              
+              if useEffCol then
+                if colr <> color(0,255,0) then
+                  if cEff.findPos("hasGrad") then
+                    if cEff.hasGrad then
+                      grab = grab + rect(0, pxlSz.locV, 0, pxlSz.locV)
+                      quadToAdd[4] = grab
+                    end if
+                  end if
+                  
+                  if cEff.findPos("effectFadeOut2") and blnd2 > 0 and doingTip = 0 then
+                    qd = (lastPnt + pnt) / 2.0
+                    qd = rect(qd, qd) + rect(-pxlSz.locH*sz/1.6,-pxlSz.locV/1.6, pxlSz.locH*sz/1.6, pxlSz.locV/1.6)
+                    qd = rotateToQuadFix(qd, lookAtpoint(lastPnt, pnt))
+                    if flp then qd = flipQuadH(qd)
+                    quadToAdd[5] = qd
+                  end if
                 end if
-                copyPixelsToEffectColor(gdLayer, d, qd, "previewImprt", grab, 0.5, blnd)
-                
-                if cEff.findPos("effectFadeOut2") and blnd2 > 0 and doingTip = 0 then
-                  qd = (lastPnt + pnt) / 2.0
-                  qd = rect(qd, qd) + rect(-pxlSz.locH*sz/1.6,-pxlSz.locV/1.6, pxlSz.locH*sz/1.6, pxlSz.locV/1.6)
-                  qd = rotateToQuadFix(qd, lookAtpoint(lastPnt, pnt))
-                  if flp then qd = flipQuadH(qd)
-                  copyPixelsToEffectColor(gdLayer, d, qd, "softBrush1", member("softBrush1").image.rect, 0.5, blnd2)
+              else
+                if cEff.findPos("forceGrad") then
+                  if cEff.forceGrad then
+                    grab = grab + rect(0, pxlSz.locV, 0, pxlSz.locV)
+                    quadToAdd[4] = grab
+                  end if
                 end if
               end if
+              
+              quadsToDraw.add(quadToAdd)
             else
-              member("layer"&string(d)).image.copyPixels(effGraf, qd, grab, {#ink:36})
-              if cEff.findPos("forceGrad") then
-                if cEff.forceGrad then
-                  grab = grab + rect(0, pxlSz.locV, 0, pxlSz.locV)
-                  copyPixelsToEffectColor("A", d, qd, "previewImprt", grab, 0.5, blnd)
-                  copyPixelsToEffectColor("B", d, qd, "previewImprt", grab, 0.5, blnd)
+              if useEffCol then
+                member("layer"&string(d)).image.copyPixels(effGraf, qd, grab, {#color:colr, #ink:36})
+                if colr <> color(0,255,0) then
+                  if cEff.findPos("hasGrad") then
+                    if cEff.hasGrad then grab = grab + rect(0, pxlSz.locV, 0, pxlSz.locV)
+                  end if
+                  copyPixelsToEffectColor(gdLayer, d, qd, "previewImprt", grab, 0.5, blnd)
+                  
+                  if cEff.findPos("effectFadeOut2") and blnd2 > 0 and doingTip = 0 then
+                    qd = (lastPnt + pnt) / 2.0
+                    qd = rect(qd, qd) + rect(-pxlSz.locH*sz/1.6,-pxlSz.locV/1.6, pxlSz.locH*sz/1.6, pxlSz.locV/1.6)
+                    qd = rotateToQuadFix(qd, lookAtpoint(lastPnt, pnt))
+                    if flp then qd = flipQuadH(qd)
+                    copyPixelsToEffectColor(gdLayer, d, qd, "softBrush1", member("softBrush1").image.rect, 0.5, blnd2)
+                  end if
+                end if
+              else
+                member("layer"&string(d)).image.copyPixels(effGraf, qd, grab, {#ink:36})
+                if cEff.findPos("forceGrad") then
+                  if cEff.forceGrad then
+                    grab = grab + rect(0, pxlSz.locV, 0, pxlSz.locV)
+                    copyPixelsToEffectColor("A", d, qd, "previewImprt", grab, 0.5, blnd)
+                    copyPixelsToEffectColor("B", d, qd, "previewImprt", grab, 0.5, blnd)
+                  end if
                 end if
               end if
             end if
+            
             
             -- Adjust per-segment variables
             if cEff.findPos("effectFadeOut") then blnd = blnd * cEff.effectFadeOut
@@ -1026,11 +1088,50 @@ on ApplyCustomEffect(me, q, c, effectr, efname)
             
             -- Stop once we hit solid ground
             tlPos = giveGridPos(pnt) + gRenderCameraTilePos
-            if solidAfaMv(tlPos, lr) then exit repeat
+            
+            if skyRootsFix and withinBoundsOfLevel(tlPos) = 0 then
+              drawQuad = 0
+              exit repeat
+            end if
+            
+            if solidAfaMv(tlPos, lr) then
+              drawQuad = 1
+              exit repeat
+            end if
           end repeat
+          
+          if drawQuad then
+            if skyRootsFix then
+              repeat with qdd in quadsToDraw
+                if useEffCol then
+                  member("layer"&string(d)).image.copyPixels(qdd[2], qdd[1], qdd[3], {#color:colr, #ink:36})
+                  if colr <> color(0,255,0) then
+                    qddg = qdd[3]
+                    if cEff.findPos("hasGrad") then
+                      if cEff.hasGrad then qddg = qdd[4]
+                    end if
+                    copyPixelsToEffectColor(gdLayer, d, qdd[1], "previewImprt", qddg, 0.5, qdd[6])
+                    
+                    if cEff.findPos("effectFadeOut2") and qdd[7] > 0 and qdd[8] = 0 then
+                      copyPixelsToEffectColor(gdLayer, d, qdd[5], "softBrush1", member("softBrush1").image.rect, 0.5, qdd[7])
+                    end if
+                  end if
+                else
+                  member("layer"&string(d)).image.copyPixels(qdd[2], qdd[1], qdd[3], {#ink:36})
+                  if cEff.findPos("forceGrad") then
+                    if cEff.forceGrad then
+                      copyPixelsToEffectColor("A", d, qdd[1], "previewImprt", qdd[4], 0.5, qdd[6])
+                      copyPixelsToEffectColor("B", d, qdd[1], "previewImprt", qdd[4], 0.5, qdd[6])
+                    end if
+                  end if
+                end if
+              end repeat
+            end if
+          end if
+          
         end if
         
-      "individual": -- individual plant effect
+      "individual", "individualHanger", "individualClinger": -- individual plant effect
         case lrSup of
           "All":
             d = random(29)
@@ -1049,10 +1150,23 @@ on ApplyCustomEffect(me, q, c, effectr, efname)
         end case
         lr = 1 + (d > 9) + (d > 19)
         
-        if solidMtrx[q2][c2][lr]=0 and solidAfaMv(point(q2,c2+1),lr)=1 then
+        solidCheck = solidAfaMv(point(q2,c2+1),lr) 
+        if cEff.tp = "individualHanger" then
+          solidCheck = solidAfaMv(point(q2,c2-1),lr)
+        else if cEff.tp = "individualClinger" then
+          solidCheck = solidAfaMv(point(q2-1,c2),lr) + solidAfaMv(point(q2+1,c2),lr)
+        end if
+        
+        if solidMtrx[q2][c2][lr]=0 and solidCheck then
           -- Figure out variables
           mdPnt = giveMiddleOfTile(point(q,c))
           pnt = mdPnt + point(random(21)-11, 10)
+          if cEff.tp = "individualHanger" then
+            pnt = mdPnt + point(random(21)-11, -10)
+          else if cEff.tp = "individualClinger" then
+            clingerSide = -solidAfaMv(point(q2-1,c2),lr) + solidAfaMv(point(q2+1,c2),lr)
+            pnt = mdPnt + point(10*clingerSide, random(21)-11)
+          end if
           
           var = random(cEff.vars)
           if cEff.findPos("strengthAffectVar") then var = random(restrict((cEff.vars*(mtrx[q2][c2]-11+random(21))*0.01).integer, 1, cEff.vars))
@@ -1071,6 +1185,11 @@ on ApplyCustomEffect(me, q, c, effectr, efname)
           if cEff.findPos("rotVar") then
             rot = random(cEff.rotVar * 2 + 1) - cEff.rotVar
           end if
+          if cEff.tp = "individualHanger" then
+            rot = rot + 180
+          else if cEff.tp = "individualClinger" then
+            rot = rot + 180 + 90 * clingerSide
+          end if
           
           flp = 0
           if cEff.findPos("randomFlip") then
@@ -1079,8 +1198,7 @@ on ApplyCustomEffect(me, q, c, effectr, efname)
           rootAmt = 5
           if cEff.findPos("rootAmt") then rootAmt = cEff.rootAmt
           
-          qd = rect(pnt, pnt) + rect(-(cEff.pxlSz.locH/2.0)*sz, -cEff.pxlSz.locV*sz, (cEff.pxlSz.locH/2.0)*sz, rootAmt)
-          qd = rotateToQuadFix(qd, rot)
+          qd = rotateRectAroundPoint(rect(-(cEff.pxlSz.locH/2.0)*sz, -cEff.pxlSz.locV*sz, (cEff.pxlSz.locH/2.0)*sz, rootAmt), pnt, rot)
           if flp then qd = flipQuadH(qd)
           
           -- Draw the thing
@@ -1220,9 +1338,9 @@ on ApplyCustomEffect(me, q, c, effectr, efname)
             
             if cEff.findPos("outline") then -- outline, if wanted
               if cEff.outline then
-                repeat with jlist in [[point(-1,-1), color(0,0,255)], [point(-0,-1), color(0,0,255)], [point(-1,-0), color(0,0,255)], [point(1,1), color(255,0,0)],[point(0,1), color(255,0,0)],[point(1,0), color(255,0,0)]] then
-                  oqd = [qd[1] + jlist[1], qd[2] + jlist[1], qd[3] + jlist[1], qd[4] + jlist[1]]
-                  member("layer"&string(d)).image.copyPixels(effGraf, oqd, grab, {#color:jlist[2], #ink:36})
+                repeat with jt in [[point(-1,-1), color(0,0,255)], [point(-0,-1), color(0,0,255)], [point(-1,-0), color(0,0,255)], [point(1,1), color(255,0,0)],[point(0,1), color(255,0,0)],[point(1,0), color(255,0,0)]] then
+                  oqd = [qd[1] + jt[1], qd[2] + jt[1], qd[3] + jt[1], qd[4] + jt[1]]
+                  member("layer"&string(d)).image.copyPixels(effGraf, oqd, grab, {#color:jt[2], #ink:36})
                 end repeat
               end if
             end if
@@ -1249,6 +1367,17 @@ on ApplyCustomEffect(me, q, c, effectr, efname)
         end repeat
         
       "texture": --things that add textures to the wall
+        
+        layerImages = []
+        layerImagesA = []
+        layerImagesB = []
+        
+        repeat with dldld = 0 to 29 then
+          layerImages.add(member("layer"&string(dldld)).image)
+          layerImagesA.add(member("gradientA"&string(dldld)).image)
+          layerImagesB.add(member("gradientB"&string(dldld)).image)
+        end repeat
+        
         case lrSup of
           "All":
             dmin = 0
@@ -1315,7 +1444,6 @@ on ApplyCustomEffect(me, q, c, effectr, efname)
         
         repeat with dt = 1 to 30
           lr = 30-dt
-          
           if (lr = 9) or (lr = 19) then
             lraddc = 1+(dt>9)+(dt>19)
             sld = (1-((1-solidMtrx[q2][c2][lraddc]) * requireSolid))
@@ -1346,34 +1474,34 @@ on ApplyCustomEffect(me, q, c, effectr, efname)
               end if
               
               var = random(cEff.vars)
-          
+              
               if (cEff.findPos("strengthAffectVar")) then
                 if cEff.strengthAffectVar then
                   var = random(restrict((cEff.vars*(effSt-11+random(21))*0.01).integer, 1, cEff.vars))
                 end if
               end if
               
-              repeat with lr2 = lr to restrict(lr + bleed, dmin, 29) then
-                
-                layerlr = member("layer"&string(lr2)).image
-                
-                repeat with lch = 0 to (cEff.pxlSz.locH - 1) then
-                  repeat with lcv = 0 to (cEff.pxlSz.locV - 1) then
-                    lrClr = layerlr.getPixel(pnt.locH - (cEff.pxlSz.locH / 2) + lch, pnt.locV - (cEff.pxlSz.locV / 2) + lcv)
-                    
-                    if doesColorFitMask(lrClr, maskRed, maskGreen, maskBlue, maskEffA, maskEffB) then
-                      gtCl = effGraf.getPixel(lch + (var - 1) * cEff.pxlSz.locH, lcv + 1)
-                      if (gtCl <> DRWhite) then
-                        --layerlr.setPixel(pnt.locH - (cEff.pxlSz.locH / 2) + lch, pnt.locV - (cEff.pxlSz.locV / 2) + lcv, gtCl)
-                        
-                        
+              repeat with lch = 0 to (cEff.pxlSz.locH - 1) then
+                repeat with lcv = 0 to (cEff.pxlSz.locV - 1) then
+                  gtCl = effGraf.getPixel(lch + (var - 1) * cEff.pxlSz.locH, lcv + 1)
+                  if (gtCl <> DRWhite) then
+                    repeat with lr2 = lr to restrict(lr + bleed, dmin, 29) then
+                      
+                      layerlr = layerImages[lr2 + 1]
+                      layerlrA = layerImagesA[lr2 + 1]
+                      layerlrB = layerImagesB[lr2 + 1]
+                      layerlrAB = [layerlrA, layerlrB]
+                      
+                      lrClr = layerlr.getPixel(pnt.locH - (cEff.pxlSz.locH / 2) + lch, pnt.locV - (cEff.pxlSz.locV / 2) + lcv)
+                      
+                      if doesColorFitMask(lrClr, maskRed, maskGreen, maskBlue, maskEffA, maskEffB) then
                         if useEffCol then
                           layerlr.setPixel(pnt.locH - (cEff.pxlSz.locH / 2) + lch, pnt.locV - (cEff.pxlSz.locV / 2) + lcv, colr)
                           if (cEff.findPos("hasGrad")) then
                             if cEff.hasGrad then
                               gradClr = effGraf.getPixel(lch + (var - 1) * cEff.pxlSz.locH, lcv + 1 + cEff.pxlSz.locV)
                               if (gdLayer <> "C") then
-                                member("gradient"&gdLayer&string(lr2)).image.setPixel(pnt.locH - (cEff.pxlSz.locH / 2) + lch, pnt.locV - (cEff.pxlSz.locV / 2) + lcv, gradClr)
+                                layerlrAB[(gdLayer = "A") + (gdLayer = "B") * 2].setPixel(pnt.locH - (cEff.pxlSz.locH / 2) + lch, pnt.locV - (cEff.pxlSz.locV / 2) + lcv, gradClr)
                               end if
                             end if
                           end if
@@ -1383,14 +1511,14 @@ on ApplyCustomEffect(me, q, c, effectr, efname)
                           if (cEff.findPos("forceGrad")) then
                             if (cEff.forceGrad) then
                               gradClr = effGraf.getPixel(lch + (var - 1) * cEff.pxlSz.locH, lcv + 1 + cEff.pxlSz.locV)
-                              member("gradientA"&string(lr2)).image.setPixel(pnt.locH - (cEff.pxlSz.locH / 2) + lch, pnt.locV - (cEff.pxlSz.locV / 2) + lcv, gradClr)
-                              member("gradientB"&string(lr2)).image.setPixel(pnt.locH - (cEff.pxlSz.locH / 2) + lch, pnt.locV - (cEff.pxlSz.locV / 2) + lcv, gradClr)
+                              layerlrA.setPixel(pnt.locH - (cEff.pxlSz.locH / 2) + lch, pnt.locV - (cEff.pxlSz.locV / 2) + lcv, gradClr)
+                              layerlrB.setPixel(pnt.locH - (cEff.pxlSz.locH / 2) + lch, pnt.locV - (cEff.pxlSz.locV / 2) + lcv, gradClr)
                             end if
                           end if
                         end if
                       end if
-                    end if
-                  end repeat
+                    end repeat
+                  end if
                 end repeat
               end repeat
             end repeat
@@ -2550,6 +2678,7 @@ on ApplyFuzzyGrower(me, q, c)
     blnd2 = 1
     wdth = 0.3
     searchBase = 50
+    quadsToDraw = []
     repeat while pnt.locV < 30000
       dir = 180 - 150 + random(300)
       dir = lerp(lastDir, dir, 0.35)
@@ -2581,8 +2710,15 @@ on ApplyFuzzyGrower(me, q, c)
       end if
       var = random(13)
       tdRect = rect((var - 1) * 20, 1, var * 20, 51)
-      member("layer" & string(d)).image.copyPixels(member("fuzzyBushGraf").image, qd, tdRect, {#color:colr, #ink:36})
-      copyPixelsToEffectColor(gdLayer, d, qd, "fuzzyBushGrad", tdRect, 0.5, blnd)
+      
+      
+      if skyRootsFix then
+        quadsToDraw.add([qd, tdRect, blnd])
+      else
+        member("layer" & string(d)).image.copyPixels(member("fuzzyBushGraf").image, qd, tdRect, {#color:colr, #ink:36})
+        copyPixelsToEffectColor(gdLayer, d, qd, "fuzzyBushGrad", tdRect, 0.5, blnd)
+      end if
+      
       blnd = blnd * 0.5
       if (blnd2 > 0) then
         rctR = (lastPnt + pnt) / 2.0
@@ -2592,12 +2728,25 @@ on ApplyFuzzyGrower(me, q, c)
         blnd2 = blnd2 - 0.15
       end if
       tlPos = giveGridPos(pnt) + gRenderCameraTilePos
+      
+      if skyRootsFix and withinBoundsOfLevel(tlPos) = 0 then
+        exit
+      end if
+      
       if (tlPos.inside(rect(1, 1, gLOprops.size.loch + 1, gLOprops.size.locv + 1)) = 0) then
         exit repeat
       else if (solidAfaMv(tlPos, lr) = 1) then
         exit repeat
       end if   
     end repeat
+    
+    if skyRootsFix then
+      repeat with qdd in quadsToDraw
+        member("layer" & string(d)).image.copyPixels(member("fuzzyBushGraf").image, qdd[1], qdd[2], {#color:colr, #ink:36})
+        copyPixelsToEffectColor(gdLayer, d, qdd[1], "fuzzyBushGrad", qdd[2], 0.5, qdd[3])
+      end repeat
+    end if
+    
   end if
 end
 
@@ -2773,6 +2922,8 @@ on ApplyFancyGrower me, q, c, eftc
     
     searchBase = 50
     
+    quadsToDraw = []
+    
     repeat while pnt.locV < 30000 then
       dir = 180 - 50 + random(100)
       dir = lerp(lastDir, dir, 0.35)
@@ -2809,8 +2960,13 @@ on ApplyFancyGrower me, q, c, eftc
       
       var = random(13)
       
-      member("layer"&string(d)).image.copyPixels(member("fancyBushGraf").image, qd, rect((var-1)*20, 1, var*20, 50+1), {#color:colr, #ink:36} )
-      copyPixelsToEffectColor(gdLayer, d, qd, "fancyBushGrad", rect((var-1)*20, 1, var*20, 50+1), 0.5, blnd)
+      if skyRootsFix then
+        quadsToDraw.add([qd, rect((var-1)*20, 1, var*20, 50+1), blnd])
+      else
+        member("layer"&string(d)).image.copyPixels(member("fancyBushGraf").image, qd, rect((var-1)*20, 1, var*20, 50+1), {#color:colr, #ink:36} )
+        copyPixelsToEffectColor(gdLayer, d, qd, "fancyBushGrad", rect((var-1)*20, 1, var*20, 50+1), 0.5, blnd)
+      end if
+      
       blnd = blnd * 0.85
       
       if(blnd2 > 0)then
@@ -2825,6 +2981,11 @@ on ApplyFancyGrower me, q, c, eftc
       end if
       
       tlPos = giveGridPos(pnt) + gRenderCameraTilePos
+      
+      if skyRootsFix and withinBoundsOfLevel(tlPos) = 0 then
+        exit
+      end if
+      
       if tlPos.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)) = 0 then
         exit repeat
       else if solidAfaMv(tlPos, lr) = 1 then
@@ -2832,6 +2993,14 @@ on ApplyFancyGrower me, q, c, eftc
       end if
       
     end repeat
+    
+    if skyRootsFix then
+      repeat with qdd in quadsToDraw
+        member("layer"&string(d)).image.copyPixels(member("fancyBushGraf").image, qdd[1], qdd[2], {#color:colr, #ink:36} )
+        copyPixelsToEffectColor(gdLayer, d, qdd[1], "fancyBushGrad", qdd[2], 0.5, qdd[3])
+      end repeat
+    end if
+    
   end if
 end
 
@@ -3485,6 +3654,51 @@ on giveGroundPos me, q, c,l
   return pnt
 end
 
+on giveGroundPosCustom me, q, c, l, t
+  q2 = q + gRenderCameraTilePos.locH
+  c2 = c + gRenderCameraTilePos.locV
+  mdPnt = giveMiddleOfTile(point(q,c))
+  pnt = mdPnt
+  case t of
+    "standardPlant":
+      pnt = mdPnt + point(-11+random(21), 10)
+      if (gLEprops.matrix[q2][c2][l][1]=3) then
+        pnt.locV = pnt.locv - (pnt.locH-mdPnt.locH) - 5
+      else if (gLEprops.matrix[q2][c2][l][1]=2) then
+        pnt.locV = pnt.locv - (mdPnt.locH-pnt.locH) - 5
+      end if
+      
+    "standardHanger":
+      pnt = mdPnt - point(-11+random(21), 10)
+      if (gLEprops.matrix[q2][c2][l][1]=4) then
+        pnt.locV = pnt.locv + (pnt.locH-mdPnt.locH) + 5
+      else if (gLEprops.matrix[q2][c2][l][1]=5) then
+        pnt.locV = pnt.locv + (mdPnt.locH-pnt.locH) + 5
+      end if
+      
+    "standardClinger":
+      case effSide of
+        "L":
+          side = 1
+          pnt = mdPnt - point(10, -11+random(21))
+        "R":
+          side = 2
+          pnt = mdPnt + point(10, -11+random(21))
+        otherwise:
+          side = random(2)
+          pnt = mdPnt + point(10 * ((side - 1) * 2 - 1), -11+random(21))
+      end case
+      
+      if (gLEprops.matrix[q2][c2][l][1]=(5-side)) then
+        pnt.locH = pnt.locH + ((pnt.locV-mdPnt.locV) + 5) * ((side - 1) * 2 - 1)
+      else if (gLEprops.matrix[q2][c2][l][1]=(4+side)) then
+        pnt.locH = pnt.locH + ((mdPnt.locV-pnt.locV) + 5) * ((side - 1) * 2 - 1)
+      end if
+      
+  end case
+  return pnt
+end
+
 on applyHugeFlower me, q, c, eftc
   q2 = q + gRenderCameraTilePos.locH
   c2 = c + gRenderCameraTilePos.locV
@@ -3512,15 +3726,33 @@ on applyHugeFlower me, q, c, eftc
     headPos = mdPnt+point(-11+random(21), -11+random(21))
     pnt = point(headPos.locH, headPos.locV)
     
-    member("layer"&string(d)).image.copyPixels(member("flowerhead").image, rect(pnt.locH-3, pnt.locV-3, pnt.locH+3, mdPnt.locV+3), member("flowerhead").image.rect, {#color:colr, #ink:36})
+    startQuadToDraw = []
+    quadsToDraw = []
+    
+    startQuadToDraw.add(rect(pnt.locH-3, pnt.locV-3, pnt.locH+3, mdPnt.locV+3))
+    
+    if not skyRootsFix then
+      member("layer"&string(d)).image.copyPixels(member("flowerhead").image, rect(pnt.locH-3, pnt.locV-3, pnt.locH+3, mdPnt.locV+3), member("flowerhead").image.rect, {#color:colr, #ink:36})
+    end if
     
     h = pnt.locV
     
     repeat while h < 30000 then
       h = h + 1
       pnt.locH = pnt.locH -2 + random(3)
-      member("layer"&string(d)).image.copyPixels(member("pxl").image, rect(pnt.locH-1, h, pnt.locH+2, h+2), member("pxl").image.rect, {#color:colr})
+      
+      if skyRootsFix then
+        quadsToDraw.add(rect(pnt.locH-1, h, pnt.locH+2, h+2))
+      else
+        member("layer"&string(d)).image.copyPixels(member("pxl").image, rect(pnt.locH-1, h, pnt.locH+2, h+2), member("pxl").image.rect, {#color:colr})
+      end if
+      
       tlPos = giveGridPos(point(pnt.locH, h)) + gRenderCameraTilePos
+      
+      if skyRootsFix and withinBoundsOfLevel(tlPos) = 0 then
+        exit
+      end if
+      
       if tlPos.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)) = 0 then
         exit repeat
       else if solidAfaMv(tlPos, lr) = 1 then
@@ -3528,7 +3760,16 @@ on applyHugeFlower me, q, c, eftc
       end if
       
     end repeat
+    
+    if skyRootsFix then
+      repeat with qdd in quadsToDraw
+        member("layer"&string(d)).image.copyPixels(member("pxl").image, qdd, member("pxl").image.rect, {#color:colr})
+      end repeat
+      member("layer"&string(d)).image.copyPixels(member("flowerhead").image, startQuadToDraw[1], member("flowerhead").image.rect, {#color:colr, #ink:36})
+    end if
+    
     copyPixelsToEffectColor(gdLayer, d, rect(headPos.locH-37, headPos.locV-37, headPos.locH+37, h+10), "hugeFlowerMaskMask", member("hugeFlowerMask").image.rect, 0.8)
+    
   end if
 end
 
@@ -3559,6 +3800,8 @@ on applyMiniGrowers me, q, c, eftc
     headPos = mdPnt+point(-11+random(21), -11+random(21))
     pnt = point(headPos.locH, headPos.locV)
     
+    quadsToDraw = []
+    
     --member("layer"&string(d)).image.copyPixels(member("flowerhead").image, rect(pnt.locH-3, pnt.locV-3, pnt.locH+3, mdPnt.locV+3), member("flowerhead").image.rect, {#color:colr, #ink:36})
     
     h = pnt.locV
@@ -3566,8 +3809,19 @@ on applyMiniGrowers me, q, c, eftc
     repeat while h < 30000 then
       h = h + 1
       pnt.locH = pnt.locH -2 + random(3)
-      member("layer"&string(d)).image.copyPixels(member("pxl").image, rect(pnt.locH-1, h, pnt.locH, h+2), member("pxl").image.rect, {#color:colr})
+      
+      if skyRootsFix then
+        quadsToDraw.add(rect(pnt.locH-1, h, pnt.locH, h+2))
+      else
+        member("layer"&string(d)).image.copyPixels(member("pxl").image, rect(pnt.locH-1, h, pnt.locH, h+2), member("pxl").image.rect, {#color:colr})
+      end if
+      
       tlPos = giveGridPos(point(pnt.locH, h)) + gRenderCameraTilePos
+      
+      if skyRootsFix and withinBoundsOfLevel(tlPos) = 0 then
+        exit
+      end if
+      
       if tlPos.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)) = 0 then
         exit repeat
       else if solidAfaMv(tlPos, lr) = 1 then
@@ -3575,6 +3829,13 @@ on applyMiniGrowers me, q, c, eftc
       end if
       
     end repeat
+    
+    if skyRootsFix then
+      repeat with qdd in quadsToDraw
+        member("layer"&string(d)).image.copyPixels(member("pxl").image, qdd, member("pxl").image.rect, {#color:colr})
+      end repeat
+    end if
+    
     copyPixelsToEffectColor(gdLayer, d, rect(headPos.locH-37, headPos.locV-37, headPos.locH+37, h+10), "hugeFlowerMaskMask", member("hugeFlowerMask").image.rect, 0.8)
   end if
 end
@@ -3614,6 +3875,8 @@ on ApplyThunderGrower me, q, c, eftc
     
     searchBase = 50
     
+    quadsToDraw = []
+    
     repeat while pnt.locV < 30000 then
       dir = 180 - 170 + random(300)
       dir = lerp(lastDir, dir, 0.35)
@@ -3650,8 +3913,13 @@ on ApplyThunderGrower me, q, c, eftc
       
       var = random(13)
       
-      member("layer"&string(d)).image.copyPixels(member("thunderBushGraf").image, qd, rect((var-1)*20, 1, var*20, 50+1), {#color:colr, #ink:36} )
-      copyPixelsToEffectColor(gdLayer, d, qd, "thunderBushGrad", rect((var-1)*20, 1, var*20, 50+1), 0.5, blnd)
+      if skyRootsFix then
+        quadsToDraw.add([qd, rect((var-1)*20, 1, var*20, 50+1), blnd])
+      else
+        member("layer"&string(d)).image.copyPixels(member("thunderBushGraf").image, qd, rect((var-1)*20, 1, var*20, 50+1), {#color:colr, #ink:36} )
+        copyPixelsToEffectColor(gdLayer, d, qd, "thunderBushGrad", rect((var-1)*20, 1, var*20, 50+1), 0.5, blnd)
+      end if
+      
       blnd = blnd * 0.85
       
       if(blnd2 > 0)then
@@ -3666,12 +3934,28 @@ on ApplyThunderGrower me, q, c, eftc
       end if
       
       tlPos = giveGridPos(pnt) + gRenderCameraTilePos
+      
+      if skyRootsFix and withinBoundsOfLevel(tlPos) = 0 then
+        exit
+      end if
+      
       if tlPos.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)) = 0 then
         exit repeat
       else if solidAfaMv(tlPos, lr) = 1 then
         exit repeat
       end if 
+      
+      
+      
     end repeat
+    
+    if skyRootsFix then
+      repeat with qdd in quadsToDraw
+        member("layer"&string(d)).image.copyPixels(member("thunderBushGraf").image, qdd[1], qdd[2], {#color:colr, #ink:36} )
+        copyPixelsToEffectColor(gdLayer, d, qdd[1], "thunderBushGrad", qdd[2], 0.5, qdd[3])
+      end repeat
+    end if
+    
   end if
 end
 
@@ -3712,6 +3996,8 @@ on ApplyHorrorGrower me, q, c, eftc
     
     searchBase = 250
     
+    quadsToDraw = []
+    
     repeat while pnt.locV < 30000 then
       dir = 180 - 250 + random(500)
       dir = lerp(lastDir, dir, 0.35)
@@ -3748,8 +4034,13 @@ on ApplyHorrorGrower me, q, c, eftc
       
       var = random(13)
       
-      member("layer"&string(d)).image.copyPixels(member("fuzzyBushGraf").image, qd, rect((var-1)*20, 1, var*20, 50+1), {#color:colr, #ink:36} )
-      copyPixelsToEffectColor(gdLayer, d, qd, "fuzzyBushGrad", rect((var-1)*20, 1, var*20, 50+1), 0.5, blnd)
+      if skyRootsFix then
+        quadsToDraw.add([qd, rect((var-1)*20, 1, var*20, 50+1), blnd])
+      else
+        member("layer"&string(d)).image.copyPixels(member("fuzzyBushGraf").image, qd, rect((var-1)*20, 1, var*20, 50+1), {#color:colr, #ink:36} )
+        copyPixelsToEffectColor(gdLayer, d, qd, "fuzzyBushGrad", rect((var-1)*20, 1, var*20, 50+1), 0.5, blnd)
+      end if
+      
       blnd = blnd * 0.1
       
       if(blnd2 > 0)then
@@ -3764,6 +4055,11 @@ on ApplyHorrorGrower me, q, c, eftc
       end if
       
       tlPos = giveGridPos(pnt) + gRenderCameraTilePos
+      
+      if skyRootsFix and withinBoundsOfLevel(tlPos) = 0 then
+        exit
+      end if
+      
       if tlPos.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)) = 0 then
         exit repeat
       else if solidAfaMv(tlPos, lr) = 1 then
@@ -3771,6 +4067,14 @@ on ApplyHorrorGrower me, q, c, eftc
       end if
       
     end repeat
+    
+    if skyRootsFix then
+      repeat with qdd in quadsToDraw
+        member("layer"&string(d)).image.copyPixels(member("fuzzyBushGraf").image, qdd[1], qdd[2], {#color:colr, #ink:36} )
+        copyPixelsToEffectColor(gdLayer, d, qdd[1], "fuzzyBushGrad", qdd[2], 0.5, qdd[3])
+      end repeat
+    end if
+    
   end if
 end
 
@@ -3801,6 +4105,9 @@ on ApplySideKelp(me, q, c)
     pnt = point(headPos.locH, headPos.locV)
     lastDir = 180 - 101 + random(201)
     points = [pnt]
+    
+    quadsToDraw = []
+    
     repeat while pnt.locV < 30000
       dir = 180 - 31 + random(61)
       dir = lerp(lastDir, dir, 0.75)
@@ -3813,16 +4120,36 @@ on ApplySideKelp(me, q, c)
       points.add(pnt)
       var = random(13)
       rectDk = rect((var - 1) * 40, 1, var * 40, 51)
-      member("layer" & string(d)).image.copyPixels(member("sidekelpgraf").image, qd, rectDk, {#color:colr, #ink:36})
-      copyPixelsToEffectColor(gdLayer, d, qd, "sidekelpgrad", rectDk, 0.5, blnd)
+      
+      if skyRootsFix then
+        quadsToDraw.add([qd, rectDk, blnd])
+      else
+        member("layer" & string(d)).image.copyPixels(member("sidekelpgraf").image, qd, rectDk, {#color:colr, #ink:36})
+        copyPixelsToEffectColor(gdLayer, d, qd, "sidekelpgrad", rectDk, 0.5, blnd)
+      end if
+      
       blnd = blnd * 0.85
+      
       tlPos = giveGridPos(pnt) + gRenderCameraTilePos
+      
+      if skyRootsFix and withinBoundsOfLevel(tlPos) = 0 then
+        exit
+      end if
+      
       if (tlPos.inside(rect(1, 1, gLOprops.size.loch + 1, gLOprops.size.locv + 1)) = 0) then
         exit repeat
       else if solidAfaMv(tlPos, lr) = 1 then
         exit repeat
       end if
     end repeat
+    
+    if skyRootsFix then
+      repeat with qdd in quadsToDraw
+        member("layer" & string(d)).image.copyPixels(member("sidekelpgraf").image, qdd[1], qdd[2], {#color:colr, #ink:36})
+        copyPixelsToEffectColor(gdLayer, d, qdd[1], "sidekelpgrad", qdd[2], 0.5, qdd[3])
+      end repeat
+    end if
+    
     if (blnd2 > 0) then
       rctR = (lastPnt + pnt) / 2.0
       rct = rect(rctR, rctR) + rect(-12, -36, 12, 36)
@@ -3859,6 +4186,9 @@ on ApplyFlipSideKelp(me, q, c)
     pnt = point(headPos.locH, headPos.locV)
     lastDir = 180 - 101 + random(201)
     points = [pnt]
+    
+    quadsToDraw = []
+    
     repeat while pnt.locV < 30000
       dir = 180 - 31 + random(61)
       dir = lerp(lastDir, dir, 0.75)
@@ -3871,16 +4201,36 @@ on ApplyFlipSideKelp(me, q, c)
       points.add(pnt)
       var = random(13)
       rectDk = rect((var - 1) * 40, 1, var * 40, 51)
-      member("layer" & string(d)).image.copyPixels(member("sidekelpgraf").image, qd, rectDk, {#color:colr, #ink:36})
-      copyPixelsToEffectColor(gdLayer, d, qd, "sidekelpgrad", rectDk, 0.5, blnd)
+      
+      if skyRootsFix then
+        quadsToDraw.add([qd, rectDk, blnd])
+      else
+        member("layer" & string(d)).image.copyPixels(member("sidekelpgraf").image, qd, rectDk, {#color:colr, #ink:36})
+        copyPixelsToEffectColor(gdLayer, d, qd, "sidekelpgrad", rectDk, 0.5, blnd)
+      end if
+      
       blnd = blnd * 0.85
+      
       tlPos = giveGridPos(pnt) + gRenderCameraTilePos
+      
+      if skyRootsFix and withinBoundsOfLevel(tlPos) = 0 then
+        exit
+      end if
+      
       if (tlPos.inside(rect(1, 1, gLOprops.size.loch + 1, gLOprops.size.locv + 1)) = 0) then
         exit repeat
       else if solidAfaMv(tlPos, lr) = 1 then
         exit repeat
       end if
     end repeat
+    
+    if skyRootsFix then
+      repeat with qdd in quadsToDraw
+        member("layer" & string(d)).image.copyPixels(member("sidekelpgraf").image, qdd[1], qdd[2], {#color:colr, #ink:36})
+        copyPixelsToEffectColor(gdLayer, d, qdd[1], "sidekelpgrad", qdd[2], 0.5, qdd[3])
+      end repeat
+    end if
+    
     if (blnd2 > 0) then
       rctR = (lastPnt + pnt) / 2.0
       rct = rect(rctR, rctR) + rect(-12, -36, 12, 36)
@@ -3917,6 +4267,9 @@ on ApplyMixKelp(me, q, c)
     pnt = point(headPos.locH, headPos.locV)
     lastDir = 180 - 101 + random(201)
     points = [pnt]
+    
+    quadsToDraw = []
+    
     repeat while pnt.locV < 30000
       dir = 180 - 31 + random(61)
       dir = lerp(lastDir, dir, 0.75)
@@ -3932,16 +4285,36 @@ on ApplyMixKelp(me, q, c)
       points.add(pnt)
       var = random(13)
       rectDk = rect((var - 1) * 60, 1, var * 60, 51)
-      member("layer" & string(d)).image.copyPixels(member("fsidekelpgraf").image, qd, rectDk, {#color:colr, #ink:36})
-      copyPixelsToEffectColor(gdLayer, d, qd, "fsidekelpgrad", rectDk, 0.5, blnd)
+      
+      if skyRootsFix then
+        quadsToDraw.add([qd, rectDk, blnd])
+      else
+        member("layer" & string(d)).image.copyPixels(member("fsidekelpgraf").image, qd, rectDk, {#color:colr, #ink:36})
+        copyPixelsToEffectColor(gdLayer, d, qd, "fsidekelpgrad", rectDk, 0.5, blnd)
+      end if
+      
       blnd = blnd * 0.85
+      
       tlPos = giveGridPos(pnt) + gRenderCameraTilePos
+      
+      if skyRootsFix and withinBoundsOfLevel(tlPos) = 0 then
+        exit
+      end if
+      
       if (tlPos.inside(rect(1, 1, gLOprops.size.loch + 1, gLOprops.size.locv + 1)) = 0) then
         exit repeat
       else if solidAfaMv(tlPos, lr) = 1 then
         exit repeat
       end if
     end repeat
+    
+    if skyRootsFix then
+      repeat with qdd in quadsToDraw
+        member("layer" & string(d)).image.copyPixels(member("fsidekelpgraf").image, qdd[1], qdd[2], {#color:colr, #ink:36})
+        copyPixelsToEffectColor(gdLayer, d, qdd[1], "fsidekelpgrad", qdd[2], 0.5, qdd[3])
+      end repeat
+    end if
+    
     if (blnd2 > 0) then
       rctR = (lastPnt + pnt) / 2.0
       rct = rect(rctR, rctR) + rect(-12, -36, 12, 36)
@@ -3979,6 +4352,7 @@ on ApplyBubbleGrower(me, q, c)
     blnd2 = 1
     wdth = 0.5
     searchBase = 50
+    quadsToDraw = []
     repeat while pnt.locV < 30000
       dir = 180 - 61 + random(121)
       dir = lerp(lastDir, dir, 0.35)
@@ -4011,8 +4385,14 @@ on ApplyBubbleGrower(me, q, c)
       end if
       var = random(13)
       rectDk = rect((var - 1) * 20, 1, var * 20, 50 + 1)
-      member("layer" & string(d)).image.copyPixels(member("bubblegrowergraf").image, qd, rectDk, {#color:colr, #ink:36})
-      copyPixelsToEffectColor(gdLayer, d, qd, "bubblegrowergrad", rectDk, 0.5, blnd)
+      
+      if skyRootsFix then
+        quadsToDraw.add([qd, rectDk, blnd])
+      else
+        member("layer" & string(d)).image.copyPixels(member("bubblegrowergraf").image, qd, rectDk, {#color:colr, #ink:36})
+        copyPixelsToEffectColor(gdLayer, d, qd, "bubblegrowergrad", rectDk, 0.5, blnd)
+      end if
+      
       blnd = blnd * 0.90
       if (blnd2 > 0) then
         rctR = (lastPnt + pnt) / 2.0
@@ -4022,12 +4402,25 @@ on ApplyBubbleGrower(me, q, c)
         blnd2 = blnd2 - 0.4
       end if
       tlPos = giveGridPos(pnt) + gRenderCameraTilePos
+      
+      if skyRootsFix and withinBoundsOfLevel(tlPos) = 0 then
+        exit
+      end if
+      
       if (tlPos.inside(rect(1, 1, gLOprops.size.loch + 1, gLOprops.size.locv + 1)) = 0) then
         exit repeat
       else if (solidAfaMv(tlPos, lr) = 1) then
         exit repeat
       end if     
     end repeat
+    
+    if skyRootsFix then
+      repeat with qdd in quadsToDraw
+        member("layer" & string(d)).image.copyPixels(member("bubblegrowergraf").image, qdd[1], qdd[2], {#color:colr, #ink:36})
+        copyPixelsToEffectColor(gdLayer, d, qdd[1], "bubblegrowergrad", qdd[2], 0.5, qdd[3])
+      end repeat
+    end if
+    
   end if
 end
 
@@ -4067,6 +4460,8 @@ on ApplyArmGrower me, q, c, eftc
     
     points = [pnt]
     
+    quadsToDraw = []
+    
     repeat while pnt.locV < 30000 then
       dir = 180 - 31 + random(61)
       dir = lerp(lastDir, dir, 0.75)
@@ -4086,8 +4481,18 @@ on ApplyArmGrower me, q, c, eftc
       
       var = random(13)
       
-      member("layer"&string(d)).image.copyPixels(member("ArmGrowerGraf").image, qd, rect((var-1)*20, 1, var*20, 50+1), {#color:colr, #ink:36} )
+      if skyRootsFix then
+        quadsToDraw.add([qd, rect((var-1)*20, 1, var*20, 50+1)])
+      else
+        member("layer"&string(d)).image.copyPixels(member("ArmGrowerGraf").image, qd, rect((var-1)*20, 1, var*20, 50+1), {#color:colr, #ink:36} )
+      end if
+      
       tlPos = giveGridPos(pnt) + gRenderCameraTilePos
+      
+      if skyRootsFix and withinBoundsOfLevel(tlPos) = 0 then
+        exit
+      end if
+      
       if tlPos.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)) = 0 then
         exit repeat
       else if solidAfaMv(tlPos, lr) = 1 then
@@ -4095,6 +4500,12 @@ on ApplyArmGrower me, q, c, eftc
       end if
       
     end repeat
+    
+    if skyRootsFix then
+      repeat with qdd in quadsToDraw
+        member("layer"&string(d)).image.copyPixels(member("ArmGrowerGraf").image, qdd[1], qdd[2], {#color:colr, #ink:36} )
+      end repeat
+    end if
     
     if(points.count > 2)then
       repeat with p = 1 to points.count-1 then
@@ -4136,8 +4547,6 @@ on ApplyThornGrower me, q, c, eftc
   end case
   lr = 1+(d>9)+(d>19)
   
-  
-  
   if (gLEprops.matrix[q2][c2][lr][1]=0)then--and(afaMvLvlEdit(point(q,c+1), 1)=1) then
     mdPnt = giveMiddleOfTile(point(q,c))
     headPos = mdPnt+point(-11+random(21), -11+random(21))
@@ -4150,6 +4559,8 @@ on ApplyThornGrower me, q, c, eftc
     wdth = 0.5
     
     searchBase = 50
+    
+    quadsToDraw = []
     
     repeat while pnt.locV < 30000 then
       dir = 180 - 61 + random(121)
@@ -4187,8 +4598,15 @@ on ApplyThornGrower me, q, c, eftc
       
       var = random(13)
       
-      member("layer"&string(d)).image.copyPixels(member("thornBushGraf").image, qd, rect((var-1)*20, 1, var*20, 50+1), {#color:colr, #ink:36} )
-      copyPixelsToEffectColor(gdLayer, d, qd, "thornBushGrad", rect((var-1)*20, 1, var*20, 50+1), 0.5, blnd)
+      
+      if skyRootsFix then
+        quadsToDraw.add([qd, rect((var-1)*20, 1, var*20, 50+1), blnd])
+      else
+        member("layer"&string(d)).image.copyPixels(member("thornBushGraf").image, qd, rect((var-1)*20, 1, var*20, 50+1), {#color:colr, #ink:36} )
+        copyPixelsToEffectColor(gdLayer, d, qd, "thornBushGrad", rect((var-1)*20, 1, var*20, 50+1), 0.5, blnd)
+      end if
+      
+      
       blnd = blnd * 0.85
       
       if(blnd2 > 0)then
@@ -4203,6 +4621,11 @@ on ApplyThornGrower me, q, c, eftc
       end if
       
       tlPos = giveGridPos(pnt) + gRenderCameraTilePos
+      
+      if skyRootsFix and withinBoundsOfLevel(tlPos) = 0 then
+        exit
+      end if
+      
       if tlPos.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)) = 0 then
         exit repeat
       else if solidAfaMv(tlPos, lr) = 1 then
@@ -4211,7 +4634,12 @@ on ApplyThornGrower me, q, c, eftc
       
     end repeat
     
-    
+    if skyRootsFix then
+      repeat with qdd in quadsToDraw
+        member("layer"&string(d)).image.copyPixels(member("thornBushGraf").image, qdd[1], qdd[2], {#color:colr, #ink:36} )
+        copyPixelsToEffectColor(gdLayer, d, qdd[1], "thornBushGrad", qdd[2], 0.5, qdd[3])
+      end repeat
+    end if
     
     -- copyPixelsToEffectColor(gdLayer, d, rect(headPos.locH-37, headPos.locV-37, headPos.locH+37, h+10), "hugeFlowerMaskMask", member("hugeFlowerMask").image.rect, 0.8)
     
@@ -4255,6 +4683,8 @@ on ApplyIceGrower me, q, c, eftc
     
     searchBase = 50
     
+    quadsToDraw = []
+    
     repeat while pnt.locV < 30000 then
       dir = 180 - 1 + random(2)
       dir = lerp(lastDir, dir, 0.35)
@@ -4291,8 +4721,13 @@ on ApplyIceGrower me, q, c, eftc
       
       var = random(13)
       
-      member("layer"&string(d)).image.copyPixels(member("iceBushGraf").image, qd, rect((var-1)*20, 1, var*20, 50+1), {#color:colr, #ink:36} )
-      copyPixelsToEffectColor(gdLayer, d, qd, "iceBushGrad", rect((var-1)*20, 1, var*20, 50+1), 0.5, blnd)
+      if skyRootsFix then
+        quadsToDraw.add([qd, rect((var-1)*20, 1, var*20, 50+1), blnd])
+      else
+        member("layer"&string(d)).image.copyPixels(member("iceBushGraf").image, qd, rect((var-1)*20, 1, var*20, 50+1), {#color:colr, #ink:36} )
+        copyPixelsToEffectColor(gdLayer, d, qd, "iceBushGrad", rect((var-1)*20, 1, var*20, 50+1), 0.5, blnd)
+      end if
+      
       blnd = blnd * 0.85
       
       if(blnd2 > 0)then
@@ -4307,6 +4742,11 @@ on ApplyIceGrower me, q, c, eftc
       end if
       
       tlPos = giveGridPos(pnt) + gRenderCameraTilePos
+      
+      if skyRootsFix and withinBoundsOfLevel(tlPos) = 0 then
+        exit
+      end if
+      
       if tlPos.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)) = 0 then
         exit repeat
       else if solidAfaMv(tlPos, lr) = 1 then
@@ -4314,6 +4754,14 @@ on ApplyIceGrower me, q, c, eftc
       end if
       
     end repeat
+    
+    if skyRootsFix then
+      repeat with qdd in quadsToDraw
+        member("layer"&string(d)).image.copyPixels(member("iceBushGraf").image, qdd[1], qdd[2], {#color:colr, #ink:36} )
+        copyPixelsToEffectColor(gdLayer, d, qdd[1], "iceBushGrad", qdd[2], 0.5, qdd[3])
+      end repeat
+    end if
+    
   end if
 end
 
@@ -4354,6 +4802,8 @@ on ApplyGrassGrower me, q, c, eftc
     
     searchBase = 50
     
+    quadsToDraw = []
+    
     repeat while pnt.locV < 30000 then
       dir = 180 - 1 + random(2)
       dir = lerp(lastDir, dir, 0.35)
@@ -4390,11 +4840,21 @@ on ApplyGrassGrower me, q, c, eftc
       
       var = random(13)
       
-      member("layer"&string(d)).image.copyPixels(member("grassBushGraf").image, qd, rect((var-1)*20, 1, var*20, 50+1), {#color:colr, #ink:36} )
-      copyPixelsToEffectColor(gdLayer, d, qd, "grassBushGrad", rect((var-1)*20, 1, var*20, 50+1), 0.5, blnd)
+      if skyRootsFix then
+        quadsToDraw.add([qd, rect((var-1)*20, 1, var*20, 50+1), blnd])
+      else
+        member("layer"&string(d)).image.copyPixels(member("grassBushGraf").image, qd, rect((var-1)*20, 1, var*20, 50+1), {#color:colr, #ink:36} )
+        copyPixelsToEffectColor(gdLayer, d, qd, "grassBushGrad", rect((var-1)*20, 1, var*20, 50+1), 0.5, blnd)
+      end if
+      
       blnd = blnd * 0.85
       
       tlPos = giveGridPos(pnt) + gRenderCameraTilePos
+      
+      if skyRootsFix and withinBoundsOfLevel(tlPos) = 0 then
+        exit
+      end if
+      
       if tlPos.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)) = 0 then
         exit repeat
       else if solidAfaMv(tlPos, lr) = 1 then
@@ -4402,6 +4862,15 @@ on ApplyGrassGrower me, q, c, eftc
       end if
       
     end repeat
+    
+    if skyRootsFix then
+      repeat with qdd in quadsToDraw
+        member("layer"&string(d)).image.copyPixels(member("grassBushGraf").image, qdd[1], qdd[2], {#color:colr, #ink:36} )
+        copyPixelsToEffectColor(gdLayer, d, qdd[1], "grassBushGrad", qdd[2], 0.5, qdd[3])
+      end repeat
+    end if
+    
+    
   end if
 end
 
@@ -4442,6 +4911,8 @@ on ApplyMeatGrower me, q, c, eftc
     
     searchBase = 100
     
+    quadsToDraw = []
+    
     repeat while pnt.locV < 30000 then
       dir = 180 - 200 + random(400)
       dir = lerp(lastDir, dir, 0.25)
@@ -4467,8 +4938,13 @@ on ApplyMeatGrower me, q, c, eftc
       
       var = random(13)
       
-      member("layer"&string(d)).image.copyPixels(member("meatGrowGraf").image, qd, rect((var-1)*60, 1, var*60, 50+1), {#color:colr, #ink:36} )
-      copyPixelsToEffectColor(gdLayer, d, qd, "meatGrowGrad", rect((var-1)*60, 1, var*60, 50+1), 0.5, blnd)
+      if skyRootsFix then
+        quadsToDraw.add([qd, rect((var-1)*60, 1, var*60, 50+1), blnd])
+      else
+        member("layer"&string(d)).image.copyPixels(member("meatGrowGraf").image, qd, rect((var-1)*60, 1, var*60, 50+1), {#color:colr, #ink:36} )
+        copyPixelsToEffectColor(gdLayer, d, qd, "meatGrowGrad", rect((var-1)*60, 1, var*60, 50+1), 0.5, blnd)
+      end if
+      
       blnd = blnd * 0.90
       
       if(blnd2 > 0)then
@@ -4482,6 +4958,11 @@ on ApplyMeatGrower me, q, c, eftc
       end if
       
       tlPos = giveGridPos(pnt) + gRenderCameraTilePos
+      
+      if skyRootsFix and withinBoundsOfLevel(tlPos) = 0 then
+        exit
+      end if
+      
       if tlPos.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)) = 0 then
         exit repeat
       else if solidAfaMv(tlPos, lr) = 1 then
@@ -4489,6 +4970,16 @@ on ApplyMeatGrower me, q, c, eftc
       end if
       
     end repeat 
+    
+    
+    if skyRootsFix then
+      repeat with qdd in quadsToDraw
+        member("layer"&string(d)).image.copyPixels(member("meatGrowGraf").image, qdd[1], qdd[2], {#color:colr, #ink:36} )
+        copyPixelsToEffectColor(gdLayer, d, qdd[1], "meatGrowGrad", qdd[2], 0.5, qdd[3])
+      end repeat
+    end if
+    
+    
   end if
 end
 
@@ -4531,6 +5022,8 @@ on ApplyLeafGrower me, q, c, eftc
     
     searchBase = 50
     
+    quadsToDraw = []
+    
     repeat while pnt.locV < 30000 then
       dir = 180 - 61 + random(121)
       dir = lerp(lastDir, dir, 0.35)
@@ -4567,8 +5060,13 @@ on ApplyLeafGrower me, q, c, eftc
       
       var = random(13)
       
-      member("layer"&string(d)).image.copyPixels(member("leafBushGraf").image, qd, rect((var-1)*20, 1, var*20, 50+1), {#color:colr, #ink:36} )
-      copyPixelsToEffectColor(gdLayer, d, qd, "leafBushGrad", rect((var-1)*20, 1, var*20, 50+1), 0.5, blnd)
+      if skyRootsFix then
+        quadsToDraw.add([qd, rect((var-1)*20, 1, var*20, 50+1), blnd])
+      else
+        member("layer"&string(d)).image.copyPixels(member("leafBushGraf").image, qd, rect((var-1)*20, 1, var*20, 50+1), {#color:colr, #ink:36} )
+        copyPixelsToEffectColor(gdLayer, d, qd, "leafBushGrad", rect((var-1)*20, 1, var*20, 50+1), 0.5, blnd)
+      end if
+      
       blnd = blnd * 0.85
       
       if(blnd2 > 0)then
@@ -4583,6 +5081,11 @@ on ApplyLeafGrower me, q, c, eftc
       end if
       
       tlPos = giveGridPos(pnt) + gRenderCameraTilePos
+      
+      if skyRootsFix and withinBoundsOfLevel(tlPos) = 0 then
+        exit
+      end if
+      
       if tlPos.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)) = 0 then
         exit repeat
       else if solidAfaMv(tlPos, lr) = 1 then
@@ -4590,6 +5093,14 @@ on ApplyLeafGrower me, q, c, eftc
       end if
       
     end repeat
+    
+    if skyRootsFix then
+      repeat with qdd in quadsToDraw
+        member("layer"&string(d)).image.copyPixels(member("leafBushGraf").image, qdd[1], qdd[2], {#color:colr, #ink:36} )
+        copyPixelsToEffectColor(gdLayer, d, qdd[1], "leafBushGrad", qdd[2], 0.5, qdd[3])
+      end repeat
+    end if
+    
   end if
 end
 
@@ -4630,6 +5141,8 @@ on ApplyCoralGrower me, q, c, eftc
     
     searchBase = 100
     
+    quadsToDraw = []
+    
     repeat while pnt.locV < 30000 then
       dir = 180 - 30 + random(60)
       dir = lerp(lastDir, dir, 0.35)
@@ -4666,8 +5179,13 @@ on ApplyCoralGrower me, q, c, eftc
       
       var = random(13)
       
-      member("layer"&string(d)).image.copyPixels(member("coralBushGraf").image, qd, rect((var-1)*20, 1, var*20, 50+1), {#color:colr, #ink:36} )
-      copyPixelsToEffectColor(gdLayer, d, qd, "coralBushGrad", rect((var-1)*20, 1, var*20, 50+1), 0.5, blnd)
+      if skyRootsFix then
+        quadsToDraw.add([qd, rect((var-1)*20, 1, var*20, 50+1), blnd])
+      else
+        member("layer"&string(d)).image.copyPixels(member("coralBushGraf").image, qd, rect((var-1)*20, 1, var*20, 50+1), {#color:colr, #ink:36} )
+        copyPixelsToEffectColor(gdLayer, d, qd, "coralBushGrad", rect((var-1)*20, 1, var*20, 50+1), 0.5, blnd)
+      end if
+      
       blnd = blnd * 0.7
       
       if(blnd2 > 0)then
@@ -4681,6 +5199,11 @@ on ApplyCoralGrower me, q, c, eftc
       end if
       
       tlPos = giveGridPos(pnt) + gRenderCameraTilePos
+      
+      if skyRootsFix and withinBoundsOfLevel(tlPos) = 0 then
+        exit
+      end if
+      
       if tlPos.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)) = 0 then
         exit repeat
       else if solidAfaMv(tlPos, lr) = 1 then
@@ -4688,6 +5211,14 @@ on ApplyCoralGrower me, q, c, eftc
       end if
       
     end repeat
+    
+    if skyRootsFix then
+      repeat with qdd in quadsToDraw
+        member("layer"&string(d)).image.copyPixels(member("coralBushGraf").image, qdd[1], qdd[2], {#color:colr, #ink:36} )
+        copyPixelsToEffectColor(gdLayer, d, qdd[1], "coralBushGrad", qdd[2], 0.5, qdd[3])
+      end repeat
+    end if
+    
   end if
 end
 
@@ -4728,6 +5259,8 @@ on ApplySpinets me, q, c, eftc
     
     searchBase = 50
     
+    quadsToDraw = []
+    
     repeat while pnt.locV < 30000 then
       dir = 180 - 61 + random(121)
       dir = lerp(lastDir, dir, 0.35)
@@ -4764,8 +5297,13 @@ on ApplySpinets me, q, c, eftc
       
       var = random(13)
       
-      member("layer"&string(d)).image.copyPixels(member("spinetsGraf").image, qd, rect((var-1)*20, 1, var*20, 50+1), {#color:colr, #ink:36} )
-      copyPixelsToRootEffectColor(gdLayer, d, qd, "spinetsGrad", rect((var-1)*20, 1, var*20, 50+1), 0.5, blnd)
+      if skyRootsFix then
+        quadsToDraw.add([qd, rect((var-1)*20, 1, var*20, 50+1), blnd])
+      else
+        member("layer"&string(d)).image.copyPixels(member("spinetsGraf").image, qd, rect((var-1)*20, 1, var*20, 50+1), {#color:colr, #ink:36} )
+        copyPixelsToRootEffectColor(gdLayer, d, qd, "spinetsGrad", rect((var-1)*20, 1, var*20, 50+1), 0.5, blnd)
+      end if
+      
       blnd = blnd * 0.85
       
       if(blnd2 > 0)then
@@ -4780,6 +5318,9 @@ on ApplySpinets me, q, c, eftc
       end if
       
       tlPos = giveGridPos(pnt) + gRenderCameraTilePos
+      if skyRootsFix and withinBoundsOfLevel(tlPos) = 0 then
+        exit
+      end if
       if tlPos.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)) = 0 then
         exit repeat
       else if solidAfaMv(tlPos, lr) = 1 then
@@ -4788,7 +5329,12 @@ on ApplySpinets me, q, c, eftc
       
     end repeat
     
-    
+    if skyRootsFix then
+      repeat with qdd in quadsToDraw
+        member("layer"&string(d)).image.copyPixels(member("spinetsGraf").image, qdd[1], qdd[2], {#color:colr, #ink:36} )
+        copyPixelsToRootEffectColor(gdLayer, d, qdd[1], "spinetsGrad", qdd[2], 0.5, qdd[3])
+      end repeat
+    end if
     
     -- copyPixelsToEffectColor(gdLayer, d, rect(headPos.locH-37, headPos.locV-37, headPos.locH+37, h+10), "hugeFlowerMaskMask", member("hugeFlowerMask").image.rect, 0.8)
     
@@ -4929,6 +5475,11 @@ on ApplyGarbageSpiral me, q, c, eftc
       
       
       tlPos = giveGridPos(pnt) + gRenderCameraTilePos
+      
+      if skyRootsFix and withinBoundsOfLevel(tlPos) = 0 then
+        exit
+      end if
+      
       if tlPos.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)) = 0 then
         exit repeat
       else if solidAfaMv(tlPos, lr) = 1 then
@@ -5057,6 +5608,8 @@ on ApplyRoller me, q, c, eftc
     
     seedChance = 1.0
     
+    quadsToDraw = []
+    
     repeat while pnt.locV < 30000 then
       dir = dir - 11 + random(21) + dirAdd
       
@@ -5097,16 +5650,31 @@ on ApplyRoller me, q, c, eftc
           if(random(1000)<power(seedChance, 1.5)*1000)then
             seedPos = pnt + MoveToPoint(pnt, lastPnt, (diag(pnt, lastPnt)*random(1000)).float/1000.0) + degToVec(random(360))*random(3)
             seedLr = restrict(useD - 2 + random(3), frontWall, backWall)
-            member("layer"&string(seedLr)).image.copyPixels(member("rustDot").image, rect(seedPos,seedPos)+rect(-2, -2, 2, 2), member("rustDot").image.rect, {#color:colr, #ink:36} )
-            copyPixelsToEffectColor(gdLayer, seedLr, rect(seedPos,seedPos)+rect(-2, -2, 2, 2), "rustDot", member("rustDot").image.rect, 0.8, 1)
             
-            if(random(3) > 1)then
-              seedLr = restrict(seedLr - 1, frontWall, backWall)
-              member("layer"&string(seedLr)).image.copyPixels(member("pxl").image, rect(seedPos,seedPos)+rect(-1, -1, 1, 1), member("pxl").image.rect, {#color:colr} )
-              copyPixelsToEffectColor(gdLayer, seedLr, rect(seedPos,seedPos)+rect(-1, -1, 1, 1), "pxl", member("pxl").image.rect, 0.8, 1)
+            if skyRootsFix then
+              quadTryAdd = [0, seedLr, rect(seedPos,seedPos), -1]
+              
+              if(random(3) > 1) then
+                seedLr = restrict(seedLr - 1, frontWall, backWall)
+                quadTryAdd[4] = seedLr
+              end if
+              
+              quadsToDraw.add(quadTryAdd)
             else
-              member("layer"&string(seedLr)).image.copyPixels(member("pxl").image, rect(seedPos,seedPos)+rect(-1, -1, 1, 1), member("pxl").image.rect, {#color:color(255, 0, 0)} )
+              member("layer"&string(seedLr)).image.copyPixels(member("rustDot").image, rect(seedPos,seedPos)+rect(-2, -2, 2, 2), member("rustDot").image.rect, {#color:colr, #ink:36} )
+              copyPixelsToEffectColor(gdLayer, seedLr, rect(seedPos,seedPos)+rect(-2, -2, 2, 2), "rustDot", member("rustDot").image.rect, 0.8, 1)
+              
+              if(random(3) > 1)then
+                seedLr = restrict(seedLr - 1, frontWall, backWall)
+                member("layer"&string(seedLr)).image.copyPixels(member("pxl").image, rect(seedPos,seedPos)+rect(-1, -1, 1, 1), member("pxl").image.rect, {#color:colr} )
+                copyPixelsToEffectColor(gdLayer, seedLr, rect(seedPos,seedPos)+rect(-1, -1, 1, 1), "pxl", member("pxl").image.rect, 0.8, 1)
+              else
+                member("layer"&string(seedLr)).image.copyPixels(member("pxl").image, rect(seedPos,seedPos)+rect(-1, -1, 1, 1), member("pxl").image.rect, {#color:color(255, 0, 0)} )
+              end if
             end if
+            
+            
+            
           end if
         end repeat
       end if
@@ -5114,16 +5682,30 @@ on ApplyRoller me, q, c, eftc
       
       points.add([pnt, useD])
       
-      member("layer"&string(useD)).image.copyPixels(member("pxl").image, qd, rect(0,0,1,1), {#color:colr} )
       
+      
+      if skyRootsFix then
+        quadsToDraw.add([1, useD, qd])
+      else
+        member("layer"&string(useD)).image.copyPixels(member("pxl").image, qd, rect(0,0,1,1), {#color:colr} )
+      end if
       
       if(lastUseD <> useD)then
-        member("layer"&string(lastUseD)).image.copyPixels(member("pxl").image, qd, rect(0,0,1,1), {#color:colr} )
+        if skyRootsFix then
+          quadsToDraw.add([1, lastUseD, qd])
+        else
+          member("layer"&string(lastUseD)).image.copyPixels(member("pxl").image, qd, rect(0,0,1,1), {#color:colr} )
+        end if
       end if
       
       lastUseD = useD
       
       tlPos = giveGridPos(pnt) + gRenderCameraTilePos
+      
+      if skyRootsFix and withinBoundsOfLevel(tlPos) = 0 then
+        exit
+      end if
+      
       if tlPos.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)) = 0 then
         exit repeat
       else if solidAfaMv(tlPos, 1 + (useD > 9) + (useD > 19)) = 1 then
@@ -5131,6 +5713,24 @@ on ApplyRoller me, q, c, eftc
       end if
       
     end repeat
+    
+    if skyRootsFix then
+      repeat with qdd in quadsToDraw
+        if (qdd[1]) then
+          member("layer"&string(qdd[2])).image.copyPixels(member("pxl").image, qdd[3], rect(0,0,1,1), {#color:colr} )
+        else
+          member("layer"&string(qdd[2])).image.copyPixels(member("rustDot").image, qdd[3]+rect(-2, -2, 2, 2), member("rustDot").image.rect, {#color:colr, #ink:36} )
+          copyPixelsToEffectColor(gdLayer, qdd[2], qdd[3]+rect(-2, -2, 2, 2), "rustDot", member("rustDot").image.rect, 0.8, 1)
+          
+          if(qdd[4] >= 0)then
+            member("layer"&string(qdd[4])).image.copyPixels(member("pxl").image, qdd[3]+rect(-1, -1, 1, 1), member("pxl").image.rect, {#color:colr} )
+            copyPixelsToEffectColor(gdLayer, qdd[4], qdd[3]+rect(-1, -1, 1, 1), "pxl", member("pxl").image.rect, 0.8, 1)
+          else
+            member("layer"&string(qdd[2])).image.copyPixels(member("pxl").image, qdd[3]+rect(-1, -1, 1, 1), member("pxl").image.rect, {#color:color(255, 0, 0)} )
+          end if
+        end if
+      end repeat
+    end if
     
     
     if(points.count > 2)then
@@ -5182,6 +5782,7 @@ on applyHangRoots me, q, c, eftc
     lftBorder = mdPnt.locH-10
     rgthBorder =  mdPnt.locH+10
     
+    quadsToDraw = []
     
     repeat while pnt.locV+gRenderCameraTilePos.locV*20 > -100 then
       
@@ -5192,15 +5793,29 @@ on applyHangRoots me, q, c, eftc
       dir = moveToPoint(pnt, lstPos, 1.0)
       crossDir = giveDirFor90degrToLine(-dir, dir)
       qd = [pnt-crossDir, pnt+crossDir, lstPos+crossDir, lstPos-crossDir]
-      member("layer"&string(d)).image.copyPixels(member("pxl").image, qd, member("pxl").image.rect, {#color:color(255, 0, 0)})
+      
+      
+      if skyRootsFix then
+        quadsToDraw.add(qd)
+      else
+        member("layer"&string(d)).image.copyPixels(member("pxl").image, qd, member("pxl").image.rect, {#color:color(255, 0, 0)})
+      end if
       
       if solidAfaMv(giveGridPos(lstPos) + gRenderCameraTilePos, lr) = 1 then
         exit repeat
       end if
       
+      if skyRootsFix and withinBoundsOfLevel(giveGridPos(lstPos) + gRenderCameraTilePos) = 0 then
+        exit
+      end if
+      
     end repeat
     
-    
+    if skyRootsFix then
+      repeat with qdd in quadsToDraw
+        member("layer"&string(d)).image.copyPixels(member("pxl").image, qdd, member("pxl").image.rect, {#color:color(255, 0, 0)})
+      end repeat
+    end if
     
   end if
 end
@@ -5258,7 +5873,6 @@ on applyThickRoots me, q, c, eftc
     
     thickness = (gEEprops.effects[r].mtrx[q2][c2]/100.0)*power(random(10000)/10000.0, 0.3)
     
-    
     repeat while pnt.locV+gRenderCameraTilePos.locV*20 > -100 then
       
       floatDpth = floatDpth + lerp(-0.3, 0.3, random(1000)/1000.0)
@@ -5305,6 +5919,10 @@ on applyThickRoots me, q, c, eftc
         end if
       else
         health = restrict(health+1, 0, 6)
+      end if
+      
+      if skyRootsFix and withinBoundsOfLevel(lstGridPos) = 0 then
+        exit
       end if
       
     end repeat
@@ -5452,6 +6070,10 @@ on applyShadowPlants me, q, c, eftc
         health = restrict(health+1, 0, 6)
       end if
       
+      if skyRootsFix and withinBoundsOfLevel(lstGridPos) = 0 then
+        exit
+      end if
+      
     end repeat
     
     fuzzLength = 20+random(50)
@@ -5537,6 +6159,7 @@ on applyColoredHangRoots me, q, c, eftc
   --  end if
   
   lr = 1+(d>9)+(d>19)
+  quadsToDraw = []
   
   if (gLEprops.matrix[q2][c2][lr][1]=0)then--and(afaMvLvlEdit(point(q,c+1), 1)=1) then
     mdPnt = giveMiddleOfTile(point(q,c))
@@ -5557,19 +6180,36 @@ on applyColoredHangRoots me, q, c, eftc
       dir = moveToPoint(pnt, lstPos, 1.0)
       crossDir = giveDirFor90degrToLine(-dir, dir)
       qd = [pnt-crossDir, pnt+crossDir, lstPos+crossDir, lstPos-crossDir]
-      member("layer"&string(d)).image.copyPixels(member("pxl").image, qd, member("pxl").image.rect, {#color:colr, #ink:10})
-      if (gdLayer <> "C") then
-        member("gradient" & gdLayer & string(d)).image.copyPixels(member("pxlDR200").image, qd, member("pxlDR200").image.rect, {ink:39})
+      
+      if skyRootsFix then 
+        quadsToDraw.add(qd)
+      else
+        member("layer"&string(d)).image.copyPixels(member("pxl").image, qd, member("pxl").image.rect, {#color:colr, #ink:10})
+        if (gdLayer <> "C") then
+          member("gradient" & gdLayer & string(d)).image.copyPixels(member("pxlDR200").image, qd, member("pxlDR200").image.rect, {ink:39})
+        end if
       end if
+      
       --copyPixelsToRootEffectColor(gdLayer, d, qd, "pxl", member("pxl").image.rect, 0.5)
       
       if solidAfaMv(giveGridPos(lstPos) + gRenderCameraTilePos, lr) = 1 then
         exit repeat
       end if
       
+      if skyRootsFix and withinBoundsOfLevel(giveGridPos(lstPos) + gRenderCameraTilePos) = 0 then
+        exit
+      end if
+      
     end repeat
     
-    
+    if skyRootsFix then
+      repeat with qdd in quadsToDraw
+        member("layer"&string(d)).image.copyPixels(member("pxl").image, qdd, member("pxl").image.rect, {#color:colr, #ink:10})
+        if (gdLayer <> "C") then
+          member("gradient" & gdLayer & string(d)).image.copyPixels(member("pxlDR200").image, qdd, member("pxlDR200").image.rect, {ink:39})
+        end if
+      end repeat
+    end if
     
   end if
 end
@@ -5818,6 +6458,10 @@ on applyColoredThickRoots me, q, c, eftc
         health = restrict(health+1, 0, 6)
       end if
       
+      if skyRootsFix and withinBoundsOfLevel(lstGridPos) = 0 then
+        exit
+      end if
+      
     end repeat
     
     lstPos = points[1][1] + point(0,1)
@@ -5944,6 +6588,10 @@ on applyColoredShadowPlants me, q, c, eftc
         end if
       else
         health = restrict(health+1, 0, 6)
+      end if
+      
+      if skyRootsFix and withinBoundsOfLevel(lstGridPos) = 0 then
+        exit
       end if
       
     end repeat
@@ -6136,6 +6784,10 @@ on applyRootPlants me, q, c, eftc
         health = restrict(health+1, 0, 6)
       end if
       
+      if skyRootsFix and withinBoundsOfLevel(lstGridPos) = 0 then
+        exit
+      end if
+      
     end repeat
     
     fuzzLength = 20+random(50)
@@ -6256,7 +6908,7 @@ on applyDaddyCorruption me, q, c, amount
     
     if(solid = 0)and(dp < 27)and(rad > 1.2)then
       repeat with dr in [point(0,0), point(-1,0), point(0,-1), point(0,1), point(1,0)]then
-        if( member("layer"&string(dp+2)).getPixel(startPos.locH + dr.locH*rad*0.5, startPos.locV + dr.locV*rad*0.5) <> color(255,255,255))then --lingo sometimes returns number for some reason but drizzle doesn't!
+        if( member("layer"&string(dp+2)).getPixel(startPos.locH + dr.locH*rad*0.5, startPos.locV + dr.locV*rad*0.5) <> color(255, 255, 255))then --compare it to -1 here, not to white
           rad = rad / 2
           solid = 1
           exit repeat
@@ -6356,7 +7008,7 @@ on applyCorruptionNoEye me, q, c, amount
     
     if(solid = 0)and(dp < 27)and(rad > 1.2)then
       repeat with dr in [point(0,0), point(-1,0), point(0,-1), point(0,1), point(1,0)]then
-        if( member("layer"&string(dp+2)).getPixel(startPos.locH + dr.locH*rad*0.5, startPos.locV + dr.locV*rad*0.5) <> color(255,255,255))then --do not -1
+        if( member("layer"&string(dp+2)).getPixel(startPos.locH + dr.locH*rad*0.5, startPos.locV + dr.locV*rad*0.5) <> color(255,255,255))then --compare it to -1 here, not to white
           rad = rad / 2
           solid = 1
           exit repeat
@@ -6451,7 +7103,7 @@ on applyWastewaterMold me, q, c, amount
     
     if(solid = 0)and(dp < 27)and(rad > 1.2)then
       repeat with dr in [point(0,0), point(-1,0), point(0,-1), point(0,1), point(1,0)]then
-        if( member("layer"&string(dp+2)).getPixel(startPos.locH + dr.locH*rad*0.5, startPos.locV + dr.locV*rad*0.5) <> color(255,255,255)) then --do not -1
+        if( member("layer"&string(dp+2)).getPixel(startPos.locH + dr.locH*rad*0.5, startPos.locV + dr.locV*rad*0.5) <> color(255,255,255))then --compare it to -1 here, not to white
           rad = rad / 2
           solid = 1
           exit repeat
@@ -6553,7 +7205,7 @@ on applyClubMoss me, q, c, amount
     
     if(solid = 0)and(dp < 27)and(rad > 1.2)then
       repeat with dr in [point(0,0), point(-1,0), point(0,-1), point(0,1), point(1,0)]then
-        if( member("layer"&string(dp+2)).getPixel(startPos.locH + dr.locH*rad*0.5, startPos.locV + dr.locV*rad*0.5) <> color(255,255,255))then --do not -1
+        if( member("layer"&string(dp+2)).getPixel(startPos.locH + dr.locH*rad*0.5, startPos.locV + dr.locV*rad*0.5) <> color(255,255,255))then --compare it to -1 here, not to white
           rad = rad / 2
           solid = 1
           exit repeat
@@ -6646,7 +7298,7 @@ on applyMossWall me, q, c, amount
     
     if(solid = 0)and(dp < 27)and(rad > 1.2)then
       repeat with dr in [point(0,0), point(-1,0), point(0,-1), point(0,1), point(1,0)]then
-        if( member("layer"&string(dp+2)).getPixel(startPos.locH + dr.locH*rad*0.5, startPos.locV + dr.locV*rad*0.5) <> color(255,255,255))then --do not -1
+        if( member("layer"&string(dp+2)).getPixel(startPos.locH + dr.locH*rad*0.5, startPos.locV + dr.locV*rad*0.5) <> color(255,255,255))then --compare it to -1 here, not to white
           rad = rad / 2
           solid = 1
           exit repeat
@@ -6741,7 +7393,7 @@ on applyFlowers me, q, c, amount
     
     if(solid = 0)and(dp < 27)and(rad > 1.2)then
       repeat with dr in [point(0,0), point(-1,0), point(0,-1), point(0,1), point(1,0)]then
-        if( member("layer"&string(dp+2)).getPixel(startPos.locH + dr.locH*rad*0.5, startPos.locV + dr.locV*rad*0.5) <> color(255,255,255))then --do not -1
+        if( member("layer"&string(dp+2)).getPixel(startPos.locH + dr.locH*rad*0.5, startPos.locV + dr.locV*rad*0.5) <> color(255,255,255))then --compare it to -1 here, not to white
           rad = rad / 2
           solid = 1
           exit repeat
@@ -8078,6 +8730,7 @@ on applyIvy me, q, c, eftc
         end if
     end case
     ivyrandom = Random(100)
+    quadsToDraw = []
     repeat while pnt.locV+gRenderCameraTilePos.locV*20 > -100 then
       ivyrandom = Random(100)
       fruitrandom = Random(100)
@@ -8091,17 +8744,23 @@ on applyIvy me, q, c, eftc
       fruitytest = [pnt-crossDir-1, pnt+crossDir, lstPos+crossDir-1, lstPos-crossDir]
       fuck = test + member("IvyLeafGraf").image.rect
       fruity = fruitytest + member("IvyFruit").image.rect
-      member("layer"&string(d)).image.copyPixels(member("pxl").image, qd, member("pxl").image.rect, {#color:colr, #ink:10})
-      if(fruitrandom<fruitpercent)then
-        member("layer"&string(d)).image.copyPixels(member("IvyFruit").image, fruity, member("IvyFruit").image.rect, {#color:color(255, 0, 255), #ink:10})
-        member("gradientA"&string(d)).image.copyPixels(member("IvyFruit").image, fruity, member("IvyFruit").image.rect, {ink:39}) 
-      end if
-      if(ivyrandom<leafDensity)then
-        member("layer"&string(d)).image.copyPixels(member("IvyLeafGraf").image, fuck, member("IvyLeafGraf").image.rect, {#color:colr, #ink:10})
-        if (colrIntensity <> "N" and gdLayer <> "C") then
-          member("gradient"&gdLayer&string(d)).image.copyPixels(ivygrad, fuck, ivygrad.rect, {ink:39}) 
+      
+      if skyRootsFix then
+        quadsToDraw.add([qd, fruitrandom<fruitpercent, ivyrandom<leafDensity, fruity, fuck, ivygrad])
+      else
+        member("layer"&string(d)).image.copyPixels(member("pxl").image, qd, member("pxl").image.rect, {#color:colr, #ink:10})
+        if(fruitrandom<fruitpercent)then
+          member("layer"&string(d)).image.copyPixels(member("IvyFruit").image, fruity, member("IvyFruit").image.rect, {#color:color(255, 0, 255), #ink:10})
+          member("gradientA"&string(d)).image.copyPixels(member("IvyFruit").image, fruity, member("IvyFruit").image.rect, {ink:39}) 
+        end if
+        if(ivyrandom<leafDensity)then
+          member("layer"&string(d)).image.copyPixels(member("IvyLeafGraf").image, fuck, member("IvyLeafGraf").image.rect, {#color:colr, #ink:10})
+          if (colrIntensity <> "N" and gdLayer <> "C") then
+            member("gradient"&gdLayer&string(d)).image.copyPixels(ivygrad, fuck, ivygrad.rect, {ink:39}) 
+          end if
         end if
       end if
+      
       if(colrIntensity="R")then
         ivyrngrad = Random(4)
         case ivyrngrad of
@@ -8115,10 +8774,32 @@ on applyIvy me, q, c, eftc
             ivygrad = member("pxl").image
         end case
       end if
+      
+      if skyRootsFix and withinBoundsOfLevel(giveGridPos(lstPos) + gRenderCameraTilePos) = 0 then
+        exit
+      end if
+      
       if solidAfaMv(giveGridPos(lstPos) + gRenderCameraTilePos, lr) = 1 then
         exit repeat
       end if
     end repeat
+    
+    if skyRootsFix then
+      repeat with qdd in quadsToDraw
+        member("layer"&string(d)).image.copyPixels(member("pxl").image, qdd[1], member("pxl").image.rect, {#color:colr, #ink:10})
+        if(qdd[2])then
+          member("layer"&string(d)).image.copyPixels(member("IvyFruit").image, qdd[4], member("IvyFruit").image.rect, {#color:color(255, 0, 255), #ink:10})
+          member("gradientA"&string(d)).image.copyPixels(member("IvyFruit").image, qdd[4], member("IvyFruit").image.rect, {ink:39}) 
+        end if
+        if(qdd[3])then
+          member("layer"&string(d)).image.copyPixels(member("IvyLeafGraf").image, qdd[5], member("IvyLeafGraf").image.rect, {#color:colr, #ink:10})
+          if (colrIntensity <> "N" and gdLayer <> "C") then
+            member("gradient"&gdLayer&string(d)).image.copyPixels(qdd[6], qdd[5], qdd[6].rect, {ink:39}) 
+          end if
+        end if
+      end repeat
+    end if
+    
   end if
 end
 -- end leo
@@ -8239,6 +8920,8 @@ on apply3Dsprawler me, q, c, effc
       sts = [#branches:3+random(3)+3*big, #expectedBranchLife:[#small:130, #big:200, #smallRandom:50, #bigRandom:100], #startTired:-77 - (77*big), #avoidWalls:0.6, #generalDir:1.2, #randomDir:0.6, #step:2.0, #featherCounter:0, #airRoots:0]
     "Fungus Tree":
       sts = [#branches:10+random(10)+15*big, #expectedBranchLife:[#small:30, #big:60, #smallRandom:15, #bigRandom:30], #startTired:0, #avoidWalls:0.8, #generalDir:0.8, #randomDir:1.0, #step:3.0, thickness:(6+random(3))*(1+big*0.4), #branchPoints:[]]
+    "Head Lamp":
+      sts = [#branches:1, #expectedBranchLife:[#small:80, #big:160, #smallRandom:5, #bigRandom:20], #startTired:0, #avoidWalls:0.8, #generalDir:3, #randomDir:10, #step:3.0, thickness:(10+random(3))*(1+big*0.4), #branchPoints:[]]
       
   end case
   
@@ -8248,7 +8931,7 @@ on apply3Dsprawler me, q, c, effc
     pnt = giveMiddleOfTile(point(q,c))+point(-10+random(20), 10)
     
     case effc of
-      "Fungus Tree":
+      "Fungus Tree", "Head Lamp":
         
         if big then
           expectedLife = sts.expectedBranchLife.big+random(sts.expectedBranchLife.bigRandom)
@@ -8280,7 +8963,7 @@ on apply3Dsprawler me, q, c, effc
       case effc of
         "featherFern":
           sts.airRoots = 25+15*big
-        "Fungus Tree":
+        "Fungus Tree", "Head Lamp":
           branch = sts.branchPoints[random(sts.branchPoints.count)]
           sts.branchPoints.deleteOne(branch)
           
@@ -8301,7 +8984,7 @@ on apply3Dsprawler me, q, c, effc
         case effc of
           "featherFern":
             tiredNess = tiredNess + 0.5 + abs(tiredNess*0.05) - 0.3*big
-          "Fungus Tree":
+          "Fungus Tree", "Head Lamp":
             tiredNess = -90*(1.0-((startLifeTime-step)/startLifeTime.float))
         end case
         
@@ -8440,12 +9123,86 @@ on apply3Dsprawler me, q, c, effc
             
             pstColor = 1
             
+          "Head Lamp":
+            -- Made by April
             
+            thickness = ((startLifeTime-step)/startLifeTime.float)*baseThickness
+            
+            sts.branchPoints.add([#pos:pos, #dir:moveToPoint(point(0,0), aimPnt, 1.0), #thickness:thickness, #layer:brLr, #lifeLeft:startLifeTime-step, #tired:tiredNess])
+            if step <= 7 then            
+              --for making the stump more lumpy & strange, quite like your mother
+              rct=thickness*7
+              rct2= rect(-8, 0, 9, 17)
+              repeat with circleStep = 0 to 3 then    
+                rct=rct-(rct/10)
+                --draws circle around stump then places random points along stump 
+                stumpRadius= (rct)/2
+                rnd=stumpRadius
+                repeat with circlePnt = 0 to rnd then
+                  randAngle = random(180)
+                  randAngle = randAngle * (pi/180)
+                  randAnglePos= point(sin(randAngle)*100, cos(randAngle)*100)
+                  randAnglePos=randAnglePos*random(stumpRadius)
+                  randAnglePos=randAnglePos/100
+                  --draw circle
+                  repeat with insideStep = 0 to 2 then 
+                    if (brLr-(insideStep+circleStep)) < 29 and (brLr-(insideStep+circleStep)) > 0 then
+                      member("layer"&string(brLr.integer-(insideStep+circleStep))).image.copyPixels(member("blob").image, rct2+rect(randAnglePos, randAnglePos)+rect(pos, pos), member("blob").rect, {#ink:36, #color:colr})
+                    end if
+                  end repeat
+                end repeat
+              end repeat
+              
+            end if 
+            
+            if step = expectedLife then
+              rnd = random(4)
+              headSize= rect(-79, -9, 80, 10)+rect(pos,pos)
+              --draw bounds for antennas and fruit
+              HeadLampSprite=rect(160*(rnd-1), 0,160*rnd, 19)
+              rnd=random(15)+7
+              overallrnd=random(80)-40
+              rctL=rotateToQuadFix(headSize, rnd+overallrnd)
+              rctR=rotateToQuadFix(headSize, -1*rnd+overallrnd+random(5))
+              --draw fruits
+              fruitRnd=random(6)
+              fruitRct=rect(-17, -10, 18, 10)
+              fruitRctR=rotateToQuadFix(fruitRct+rect(rctR[3], rctR[3]), (rnd+overallrnd)/2)
+              FruitRctL=rotateToQuadFix(fruitRct+rect(rctL[4], rctL[4]), (rnd+overallrnd)/2)
+              fruitSpriteRct=rect(35*(fruitRnd-1), 0, 35*fruitRnd, 20)
+              
+              --peak dogshit to prevent drawing outside valid layers
+              if (brLr.integer-1)<0 then
+                brLr=brLr+1
+              end if
+              
+              --Right fruits
+              member("layer"&string(brLr.integer-1)).image.copyPixels(member("HeadLampFruitGraf").image, fruitRctR, fruitSpriteRct, {#ink:36, #color:lampColr})
+              copyPixelsToRootEffectColor(lampLayer, brLr-1, fruitRctR, "HeadLampFruitGraf", fruitSpriteRct, 0.5, 1)
+              --left fruit
+              fruitRnd=random(6)
+              fruitSpriteRct=rect(35*(fruitRnd-1), 0, 35*fruitRnd, 20)
+              member("layer"&string(brLr.integer-1)).image.copyPixels(member("HeadLampFruitGraf").image, FruitRctL-rect(0,0,0,3), fruitSpriteRct, {#ink:36, #color:lampColr})
+              
+              copyPixelsToRootEffectColor(lampLayer, brLr-1, FruitRctL-rect(0,0,0,3), "HeadLampFruitGraf", fruitSpriteRct, 0.5, 1)
+              --draw antennas
+              member("layer"&string(brLr.integer)).image.copyPixels(member("HeadLampGrafR").image, rctR, HeadLampSprite, {#ink:36, #color:colr})
+              member("layer"&string(brLr.integer)).image.copyPixels(member("HeadLampGrafL").image, rctL, HeadLampSprite, {#ink:36, #color:colr})
+              --erase any effectcolor below it
+              copyPixelsToEffectColor(gdLayer, brLr, rctR, "HeadLampGrafR", HeadLampSprite, 0.5, -1)
+              copyPixelsToEffectColor(gdLayer, brLr, rctL, "HeadLampGrafL", HeadLampSprite, 0.5, -1)
+              
+              copyPixelsToEffectColor(gdLayer, brLr, rctR, "HeadLampGrad", member("HeadLampGrad").rect, 0.5, 1)
+              copyPixelsToEffectColor(gdLayer, brLr, rctL, "HeadLampGrad", member("HeadLampGrad").rect, 0.5, 1)
+            end if
+            
+            rct = rect(pos, pos) + rect(-1, -3, 1, 3)+rect(-thickness, -thickness, thickness, thickness)
+            rct = rotateToQuad( rct ,lookAtPoint(pos, lstPos))
+            
+            brLrDir = brLrDir -11 + random(21)
+            
+            pstColor = 1
         end case
-        
-        
-        
-        
         
         member("layer"&string(brLr.integer)).image.copyPixels(member("blob").image, rct, member("blob").image.rect, {#ink:36, #color:colr})
         member("layer"&string(lstLayer.integer)).image.copyPixels(member("blob").image, rct, member("blob").image.rect, {#ink:36, #color:colr})
@@ -8454,6 +9211,9 @@ on apply3Dsprawler me, q, c, effc
           blnd = (1.0-((expectedLife - step)/expectedLife.float))*25 + random((1.0-((expectedLife - step)/expectedLife.float))*75)
           if effc = "Fungus Tree" then
             blnd = (1.0-((expectedLife - step)/expectedLife.float))*100
+          end if
+          if effc = "Head Lamp" then
+            blnd = (1.0-((expectedLife - step)/expectedLife.float))*50
           end if
           member("softbrush2").image.copypixels(member("pxl").image, member("softbrush2").image.rect, rect(0,0,1,1), {#color:color(255,255,255)})
           member("softbrush2").image.copypixels(member("softbrush1").image, member("softbrush2").image.rect, member("softbrush1").image.rect, {#blend:blnd})
@@ -8705,7 +9465,9 @@ on ApplyMosaicPlant me, q, c
   if ind > 0 then
     startPt = mosaicPlantStarts[ind]
     
-    if solidMtrx[startPt.locH.integer][startPt.locV.integer][lr+1] = 0 then exit
+    if solidMtrx[startPt.locH.integer][startPt.locV.integer][lr+1] = 0 then
+      return
+    end if
     
     -- What is the closest other?
     clsPt = point(-100000, -100000)
@@ -8888,7 +9650,9 @@ on ApplyCobweb me, q, c
   end case
   lr = 1 + (d > 9) + (d > 19)
   
-  if solidMtrx[q2][c2][lr] = 1 then exit
+  if solidMtrx[q2][c2][lr] = 1 then
+    return
+  end if
   
   startPt = giveMiddleOfTile(point(q, c))+point(-11+random(21), -11+random(21)) + gRenderCameraTilePos * 20.0
   
@@ -8910,7 +9674,9 @@ on ApplyCobweb me, q, c
     rot = (rot + 6) mod 360
   end repeat
   
-  if angs.count < 3 then exit -- we preferably want at least 3 points
+  if angs.count < 3 then -- we preferably want at least 3 points
+    return
+  end if
   
   -- Pick our angles
   picked = [angs[random(angs.count)]]
@@ -9149,6 +9915,9 @@ on applyGrapeRoots me, q, c, eftc
       d = random(30)-1
   end case
   lr = 1+(d>9)+(d>19)
+  
+  quadsToDraw = []
+  
   if (gLEprops.matrix[q2][c2][lr][1]=0)then
     mdPnt = giveMiddleOfTile(point(q,c))
     headPos = mdPnt+point(-11+random(21), -11+random(21))
@@ -9164,12 +9933,31 @@ on applyGrapeRoots me, q, c, eftc
       dir = moveToPoint(pnt, lstPos, 1.0)
       crossDir = giveDirFor90degrToLine(-dir, dir)
       qd = [pnt-crossDir, pnt+crossDir, lstPos+crossDir, lstPos-crossDir]
-      layerd.copyPixels(DRPxl, qd, DRPxlRect, {#color:gLOProps.pals[gLOProps.pal].detCol})
+      
+      
+      if skyRootsFix then
+        quadsToDraw.add(qd)
+      else
+        layerd.copyPixels(DRPxl, qd, DRPxlRect, {#color:gLOProps.pals[gLOProps.pal].detCol})
+      end if
+      
       if solidAfaMv(giveGridPos(lstPos) + gRenderCameraTilePos, lr) = 1 then
         exit repeat
       end if
+      
+      if skyRootsFix and withinBoundsOfLevel(giveGridPos(lstPos) + gRenderCameraTilePos) = 0 then
+        exit
+      end if
+      
       if random (10 ) =1 then grape.append (pnt)
     end repeat
+    
+    if skyRootsFix then
+      repeat with qdd in quadsToDraw
+        layerd.copyPixels(DRPxl, qdd, DRPxlRect, {#color:gLOProps.pals[gLOProps.pal].detCol})
+      end repeat
+    end if
+    
     grapegraf = member("grapegraf").image
     repeat with i=1 to grape.count then 
       pt=grape[i]
@@ -9219,6 +10007,7 @@ on applyHandGrowers me, q, c, eftc
     layerd.copyPixels(member("flowerhead").image, rect(pnt.locH-3, pnt.locV-3, pnt.locH+3, mdPnt.locV+3), member("flowerhead").image.rect, {#color:colr, #ink:36})
     t=0.0
     h = pnt.locV
+    --magnitude
     mog=0
     mog2=0
     hwide=10+(mog2/25)

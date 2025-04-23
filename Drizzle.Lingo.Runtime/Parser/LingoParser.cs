@@ -404,24 +404,24 @@ public static class LingoParser
         var kwFuncPut = KeywordFunctionContent("put", expr);
 
         return Try(IdentifierUnchecked.TracePos(x => $"Found word term: {x}")
-            .Bind(ident => ident switch
+            .Bind(ident => ident.ToLowerInvariant() switch
             {
                 "new" => @new,
                 "member" => member,
                 "go" => kwFuncGo,
                 "put" => kwFuncPut,
                 "the" => the,
-                "TRUE" or "true" => Return<AstNode.Base>(new AstNode.Constant("true")),
-                "FALSE" or "false" => Return<AstNode.Base>(new AstNode.Constant("false")),
-                "VOID" or "void" => Return<AstNode.Base>(new AstNode.Constant("void")),
-                "EMPTY" or "empty" => Return<AstNode.Base>(new AstNode.Constant("empty")),
-                "BACKSPACE" or "backspace" => Return<AstNode.Base>(new AstNode.Constant("backspace")),
-                "ENTER" or "enter" => Return<AstNode.Base>(new AstNode.Constant("enter")),
-                "QUOTE" or "quote" => Return<AstNode.Base>(new AstNode.Constant("quote")),
-                "RETURN" or "return" => Return<AstNode.Base>(new AstNode.Constant("return")),
-                "SPACE" or "space" => Return<AstNode.Base>(new AstNode.Constant("space")),
-                "TAB" or "tab" => Return<AstNode.Base>(new AstNode.Constant("tab")),
-                "PI" or "pi" => Return<AstNode.Base>(new AstNode.Constant("pi")),
+                "true" => Return<AstNode.Base>(new AstNode.Constant("true")),
+                "false" => Return<AstNode.Base>(new AstNode.Constant("false")),
+                "void" => Return<AstNode.Base>(new AstNode.Constant("void")),
+                "empty" => Return<AstNode.Base>(new AstNode.Constant("empty")),
+                "backspace" => Return<AstNode.Base>(new AstNode.Constant("backspace")),
+                "enter" => Return<AstNode.Base>(new AstNode.Constant("enter")),
+                "quote" => Return<AstNode.Base>(new AstNode.Constant("quote")),
+                "return" => Return<AstNode.Base>(new AstNode.Constant("return")),
+                "space" => Return<AstNode.Base>(new AstNode.Constant("space")),
+                "tab" => Return<AstNode.Base>(new AstNode.Constant("tab")),
+                "pi" => Return<AstNode.Base>(new AstNode.Constant("pi")),
                 _ => Fail<AstNode.Base>()
             }));
     }

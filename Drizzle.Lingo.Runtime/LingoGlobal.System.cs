@@ -15,6 +15,9 @@ public sealed partial class LingoGlobal
             _global = global;
         }
 
+        public void restart() { }
+        public void shutdown() { }
+
         public LingoNumber milliseconds => (int)_global.LingoRuntime.Stopwatch.ElapsedMilliseconds;
 
         public LingoPoint desktoprectlist => new LingoPoint(1024f, 768f);

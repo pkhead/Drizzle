@@ -133,7 +133,7 @@ public sealed partial class LevelRenderer
         _runtime.GetCastMember("rainBowMask")!.image = new LingoImage(cols * 20, rows * 20, 32);
 
         var sw = Stopwatch.StartNew();
-        Movie.gSkyColor = new LingoColor(0, 0, 0);
+        // Movie.gSkyColor = new LingoColor(0, 0, 0);
         Movie.gTinySignsDrawn = new LingoNumber(0);
         Movie.gRenderTrashProps = new LingoList();
         _runtime.GetCastMember(@"finalImage")!.image = new LingoImage(cols * 20, rows * 20, 32);

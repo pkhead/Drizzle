@@ -51,8 +51,8 @@ on exitFrame me
   txt = "MASS RENDER"
   put RETURN after txt
   put RETURN after txt
-  repeat with q in massRenderSelectL then
-    put q after txt
+  repeat with ql in massRenderSelectL then
+    put ql after txt
     put RETURN after txt
   end repeat
   
@@ -65,7 +65,7 @@ on exitFrame me
   dwn = _key.keyPressed(125)
   lft = _key.keyPressed(123)
   rgth = _key.keyPressed(124)
-  if _movie.window.sizeState = #minimized then
+  if dontRunStuff() then
     up = false
     dwn = false
     lft = false
@@ -107,21 +107,21 @@ on exitFrame me
   ldPrps.lft = lft
   ldPrps.rgth = rgth
   
-  if _key.keyPressed("A") and _movie.window.sizeState <> #minimized then
-    
-    
-    repeat with qStr in projects then
-      if ( massRenderSelectL.getPos(pth &qStr) = 0)and(chars(qStr, 1, 1) <> "#")then
-        massRenderSelectL.add(pth & qStr)
-      end if
-    end repeat
-  else if _key.keyPressed("C") and _movie.window.sizeState <> #minimized then
-    massRenderSelectL = []
-  else  if (_key.keyPressed(48)) and _key.keypressed("Z") and _key.keypressed("R") or (_key.keyPressed("1")) and _movie.window.sizeState <> #minimized then
-    _movie.go(9)
+  if not dontRunStuff() then
+    if _key.keyPressed("A") then
+      repeat with qp in projects then
+        if ( massRenderSelectL.getPos(pth & qp) = 0)and(chars(qp, 1, 1) <> "#")then
+          massRenderSelectL.add(pth & qp)
+        end if
+      end repeat
+    else if _key.keyPressed("C") then
+      massRenderSelectL = []
+    else  if (checkExitRender()) or (_key.keyPressed("1")) then
+      _movie.go(9)
+    end if
   end if
   
-  entr = _key.keyPressed(" ") and _movie.window.sizeState <> #minimized
+  entr = _key.keyPressed(" ") and not dontRunStuff()
   
   if (entr)and(ldPrps.lstEnter=0) then
     
@@ -134,7 +134,7 @@ on exitFrame me
   
   ldPrps.lstEnter = entr
   
-  if _key.keyPressed(36) and _movie.window.sizeState <> #minimized then
+  if _key.keyPressed(36) and not dontRunStuff() then
     global gViewRender, gMassRenderL
     gViewRender = 1
     gMassRenderL = massRenderSelectL.duplicate()
@@ -150,3 +150,5 @@ on loadSubFolder me, fldrName
   gLOADPATH.add(chars(fldrName, 2, fldrName.length))
   _movie.go(4)
 end 
+
+

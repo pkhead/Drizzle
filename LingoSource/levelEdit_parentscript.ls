@@ -4,21 +4,25 @@ property p
 
 on newUpdate me
   
+  if dontRunStuff() then
+    return
+  end if
+  
+  
   p.lastWorkPos = p.workPos
   p.lastInput = p.input
+  p.lastLayerInp = p.layerInp
   p.Input = [point(0, 0), 0, 0]
   currTool = gLEProps.toolMatrix[p.toolPos.locV][p.toolPos.locH]--EXCEPTION!!!!
   
   case p.playerNum of
     1:
-      p.Input[1].locH =  p.Input[1].locH - (_key.keyPressed(123) and _movie.window.sizeState <> #minimized)
-      p.Input[1].locH =  p.Input[1].locH + (_key.keyPressed(124) and _movie.window.sizeState <> #minimized)
-      --if p.Input[1].locH = 0 then
-      p.Input[1].locV =  p.Input[1].locV - (_key.keyPressed(126) and _movie.window.sizeState <> #minimized)
-      p.Input[1].locV =  p.Input[1].locV + (_key.keyPressed(125) and _movie.window.sizeState <> #minimized)
-      --end if
-      p.Input[2] = _key.keyPressed("K") and _movie.window.sizeState <> #minimized
-      p.Input[3] = _key.keyPressed("L") and _movie.window.sizeState <> #minimized
+      p.Input[1].locH =  p.Input[1].locH - checkCustomKeybind(#GeoMoveLeft, 123)
+      p.Input[1].locH =  p.Input[1].locH + checkCustomKeybind(#GeoMoveRight, 124)
+      p.Input[1].locV =  p.Input[1].locV - checkCustomKeybind(#GeoMoveUp, 126)
+      p.Input[1].locV =  p.Input[1].locV + checkCustomKeybind(#GeoMoveDown, 125)
+      p.Input[2] = checkCustomKeybind(#GeoSelect, "K")
+      p.Input[3] = checkCustomKeybind(#GeoPlace, "L")
       
       msTile = (_mouse.mouseLoc/point(16.0, 16.0))+point(0.4999, 0.4999)
       msTile = point(msTile.loch.integer, msTile.locV.integer)+point(-11, -1) + gLEprops.camPos
@@ -29,12 +33,12 @@ on newUpdate me
       
     2:
       msTile = point(-100, -100)
-      p.Input[1].locH =  p.Input[1].locH - (_key.keyPressed("S") and _movie.window.sizeState <> #minimized)
-      p.Input[1].locH =  p.Input[1].locH + (_key.keyPressed("F") and _movie.window.sizeState <> #minimized)
-      p.Input[1].locV =  p.Input[1].locV - (_key.keyPressed("E") and _movie.window.sizeState <> #minimized)
-      p.Input[1].locV =  p.Input[1].locV + (_key.keyPressed("D") and _movie.window.sizeState <> #minimized)
-      p.Input[2] = _key.keyPressed("Q") and _movie.window.sizeState <> #minimized
-      p.Input[3] = _key.keyPressed("W") and _movie.window.sizeState <> #minimized
+      p.Input[1].locH =  p.Input[1].locH - checkCustomKeybind(#GeoP2MoveLeft, "S")
+      p.Input[1].locH =  p.Input[1].locH + checkCustomKeybind(#GeoP2MoveRight, "F")
+      p.Input[1].locV =  p.Input[1].locV - checkCustomKeybind(#GeoP2MoveUp, "E")
+      p.Input[1].locV =  p.Input[1].locV + checkCustomKeybind(#GeoP2MoveDown, "D")
+      p.Input[2] = checkCustomKeybind(#GeoP2Select, "Q")
+      p.Input[3] = checkCustomKeybind(#GeoP2lace, "W")
   end case
   
   mv = point(0,0)
@@ -92,34 +96,26 @@ on newUpdate me
   
   changeTo = "NOCHANGE"
   
-  if (p.Input[3]) then
-    
-    
+  if (p.Input[3]) and (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656)) or not _mouse.mouseDown or ["workLayer", "mirrorToggle"].findPos(currTool) > 0) then
     
     --  put tool
     case currTool of
       "inverse":
-        if (p.lastInput[3]=0) and (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
+        if (p.lastInput[3]=0) then
           if gLEProps.matrix[p.workPos.locH][p.workPos.locV][p.workLayer][1] = 0 then
             changeTo = 1
-          else if (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
+          else
             changeTo = 0
           end if
         end if
       "paintWall":
-        if (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
-          changeTo = 1
-        end if
+        changeTo = 1
       "paintAir":
-        if (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
-          changeTo = 0
-        end if
+        changeTo = 0
       "floor":
-        if (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
-          changeTo = 6
-        end if
+        changeTo = 6
       "slope":
-        if (p.lastInput[3]=0) and (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
+        if (p.lastInput[3]=0) then
           me.slopeTile(p.workPos)
           if p.mirror then
             wrkPos = me.mirrorRect(rect(p.workPos,p.workPos))
@@ -130,30 +126,26 @@ on newUpdate me
         end if
         
       "lizardHole":
-        if (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
-          me.addRemoveFeature(7)
-        end if
+        me.addRemoveFeature(7)
         
       "playerSpawn":
-        if (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
-          me.addRemoveFeature(6)
-        end if
+        me.addRemoveFeature(6)
         
         
       "squareWall", "squareAir":
-        if (p.lastInput[3]=0) and (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
+        if (p.lastInput[3]=0) then
           if p.rectFollow then
             p.rectFollow = 0
-          else if (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
+          else
             p.rectFollow = 1
             changeTo = (currTool="squareWall")
           end if
         end if
       "copyBack":
-        if (p.lastInput[3]=0) and (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
+        if (p.lastInput[3]=0) then
           if p.rectFollow then
             p.rectFollow = 0
-          else if (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
+          else
             p.rectFollow = 1
             changeTo = "copyBack"
           end if
@@ -167,39 +159,21 @@ on newUpdate me
         --          end if
         --        end if
       "flip":
-        if (p.lastInput[3]=0) and (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
+        if (p.lastInput[3]=0) then
           if p.rectFollow then
             p.rectFollow = 0
-          else if (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
+          else
             p.rectFollow = 1
             changeTo = "flip"
           end if
         end if
         
       "horbeam":
-        --        if (p.lastInput[3]=0) then
-        --          if gLEProps.matrix[p.workPos.locH][p.workPos.locV][p.workLayer][2].getPos(1) = 0 then
-        --            gLEProps.matrix[p.workPos.locH][p.workPos.locV][p.workLayer][2].add(1)
-        --          else 
-        --            gLEProps.matrix[p.workPos.locH][p.workPos.locV][p.workLayer][2].deleteOne(1)
-        --          end if
-        --        end if
-        if (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
-          me.addRemoveFeature(1)
-        end if
+        me.addRemoveFeature(1)
       "verBeam":
-        --        if (p.lastInput[3]=0) then
-        --          if gLEProps.matrix[p.workPos.locH][p.workPos.locV][p.workLayer][2].getPos(2) = 0 then
-        --            gLEProps.matrix[p.workPos.locH][p.workPos.locV][p.workLayer][2].add(2)
-        --          else 
-        --            gLEProps.matrix[p.workPos.locH][p.workPos.locV][p.workLayer][2].deleteOne(2)
-        --          end if
-        --        end if
-        if (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
-          me.addRemoveFeature(2)
-        end if
+        me.addRemoveFeature(2)
       "glass":
-        if ((p.lastInput[3]=0)or(p.lastWorkPos<>p.workPos)) and (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
+        if ((p.lastInput[3]=0)or(p.lastWorkPos<>p.workPos)) then
           --if gLEProps.matrix[p.workPos.locH][p.workPos.locV][p.workLayer][1] = 9 then
           --  changeTo = 0
           --else
@@ -207,49 +181,17 @@ on newUpdate me
           --end if
         end if
       "shortCutEntrance":
-        --        if (p.lastInput[3]=0) then
-        --          gLEProps.matrix[p.workPos.locH][p.workPos.locV][1][1] = 0
-        --          if gLEProps.matrix[p.workPos.locH][p.workPos.locV][1][2].getPos(4) = 0 then
-        --            gLEProps.matrix[p.workPos.locH][p.workPos.locV][1][2].add(4)
-        --            if gLEProps.matrix[p.workPos.locH][p.workPos.locV][1][2].getPos(5) > 0 then
-        --              gLEProps.matrix[p.workPos.locH][p.workPos.locV][1][2].deleteOne(5)
-        --            end if
-        --          else
-        --            gLEProps.matrix[p.workPos.locH][p.workPos.locV][1][2].deleteOne(4)
-        --          end if
-        --        end if
-        if (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
+        if (p.workLayer=1) then
           me.addRemoveFeature(4)
           drawShortCutsImg(affectRect+ rect(-1, -1, 1, 1), 16)
         end if
       "shortCut":
-        --        if (p.lastInput[3]=0) then
-        --          if gLEProps.matrix[p.workPos.locH][p.workPos.locV][1][2].getPos(5) = 0 then
-        --            gLEProps.matrix[p.workPos.locH][p.workPos.locV][1][2].add(5)
-        --            if gLEProps.matrix[p.workPos.locH][p.workPos.locV][1][2].getPos(4) > 0 then
-        --              gLEProps.matrix[p.workPos.locH][p.workPos.locV][1][2].deleteOne(4)
-        --            end if
-        --          else
-        --            gLEProps.matrix[p.workPos.locH][p.workPos.locV][1][2].deleteOne(5)
-        --          end if
-        --        end if
-        if (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
+        if (p.workLayer=1) then
           me.addRemoveFeature(5)
           drawShortCutsImg(affectRect+ rect(-1, -1, 1, 1), 16)
         end if
       "hive":
-        --        if (p.lastInput[3]=0) then
-        --          if gLEProps.matrix[p.workPos.locH][p.workPos.locV][p.workLayer][2].getPos(3) = 0 then
-        --            if (afaMvLvlEdit(p.workPos+point(0,1), p.workLayer) = 1)and(gLEProps.matrix[p.workPos.locH][p.workPos.locV][p.workLayer][1]<>1) then
-        --              gLEProps.matrix[p.workPos.locH][p.workPos.locV][p.workLayer][2].add(3)
-        --            end if
-        --          else
-        --            gLEProps.matrix[p.workPos.locH][p.workPos.locV][p.workLayer][2].deleteOne(3)
-        --          end if
-        --        end if
-        if (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
-          me.addRemoveFeature(3)
-        end if
+        me.addRemoveFeature(3)
       "workLayer":
         if (p.lastInput[3]=0) then
           --          if p.workLayer = 1 then
@@ -269,56 +211,24 @@ on newUpdate me
           p.mirror = 1-p.mirror
         end if
       "rock":
-        -- if (p.lastInput[3]=0) then
-        --          if gLEProps.matrix[p.workPos.locH][p.workPos.locV][p.workLayer][2].getPos(9) = 0 then
-        --            gLEProps.matrix[p.workPos.locH][p.workPos.locV][p.workLayer][2].add(9)
-        --          else 
-        --            gLEProps.matrix[p.workPos.locH][p.workPos.locV][p.workLayer][2].deleteOne(9)
-        --          end if
-        if (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
-          me.addRemoveFeature(9)
-        end if
-        -- end if
+        me.addRemoveFeature(9)
       "spear":
-        --        if (p.lastInput[3]=0) then
-        --          if gLEProps.matrix[p.workPos.locH][p.workPos.locV][p.workLayer][2].getPos(10) = 0 then
-        --            gLEProps.matrix[p.workPos.locH][p.workPos.locV][p.workLayer][2].add(10)
-        --          else 
-        --            gLEProps.matrix[p.workPos.locH][p.workPos.locV][p.workLayer][2].deleteOne(10)
-        --          end if
-        --        end if
-        if (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
-          me.addRemoveFeature(10)
-        end if
+        me.addRemoveFeature(10)
         
       "crack":
-        if (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
-          me.addRemoveFeature(11)
-        end if
+        me.addRemoveFeature(11)
       "forbidbats":
-        if (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
-          me.addRemoveFeature(12)
-        end if
+        me.addRemoveFeature(12)
       "garbageHole":
-        if (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
-          me.addRemoveFeature(13)
-        end if
+        me.addRemoveFeature(13)
       "waterfall":
-        if (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
-          me.addRemoveFeature(18)
-        end if
+        me.addRemoveFeature(18)
       "WHAMH":
-        if (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
-          me.addRemoveFeature(19)
-        end if
+        me.addRemoveFeature(19)
       "wormGrass":
-        if (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
-          me.addRemoveFeature(20)
-        end if
+        me.addRemoveFeature(20)
       "scavengerHole":
-        if (_mouse.mouseLoc.inside(rect(176, 16, 1008, 656))) then
-          me.addRemoveFeature(21)
-        end if
+        me.addRemoveFeature(21)
     end case
     
     --  sv = 
@@ -349,12 +259,13 @@ on newUpdate me
     lvlEditDraw(affectRect, 3)
   end if
   
-  --  if _key.keyPressed("L") and _movie.window.sizeState <> #minimized then
-  --    p.workLayer =  p.workLayer +1
-  --    if  p.workLayer > 3 then
-  --      p.workLayer = 1
-  --    end if
-  --  end if
+  p.layerInp  =checkCustomKeybind(#GeoChangeLayer, "L") 
+  if p.layerInp<>0 and p.lastLayerInp=0 then
+    p.workLayer =  p.workLayer +1
+    if  p.workLayer > 3 then
+      p.workLayer = 1
+    end if
+  end if
   --  
   --  txt = ""
   --  txtL = ""
@@ -368,7 +279,7 @@ on newUpdate me
   
   if(p.playerNum = 1)then
     if(affectRect.width = 0)and(affectRect.height = 0)then
-      member("rulerText").text = "x:" & affectRect.left & " y:" & affectRect.top
+      member("rulerText").text = "x:" & affectRect.left & " y:" & affectRect.top & "  l:" & p.workLayer
     else
       member("rulerText").text = "w:" & (affectRect.width + 1) & " h:" & (affectRect.height + 1)
     end if
@@ -527,6 +438,9 @@ on new me, playNm
   p.addProp(#workLayer, 1)
   
   p.addProp(#lastWorkPos, point(1,1))
+  
+  p.addProp(#lastLayerInp, 0)
+  p.addProp(#layerInp, 0)
   
   p.addProp(#mirror, 0)
   p.addProp(#mirrorPos, gLOprops.size.loch/2)

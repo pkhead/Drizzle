@@ -122,6 +122,8 @@ public sealed partial class LingoGlobal
     public static LingoNumber bitxor(LingoNumber a, LingoNumber b) => LingoNumber.BitXor(a, b);
     public static LingoNumber bitnot(LingoNumber x) => LingoNumber.BitNot(x);
 
+    public LingoNumber integer(LingoNumber x) => x.integer;
+
     public void put(object d)
     {
         Console.WriteLine(d);

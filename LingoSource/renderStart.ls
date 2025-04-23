@@ -1,5 +1,6 @@
 global gTiles, tileSetIndex, gCurrentRenderCamera, gAnyDecals, firstCamRepeat, solidMtrx, gLOprops, gLEprops, gTEprops, gDRMatFixes, gDRInvI, grimeActive, grimeOnGradients, bkgFix, gRRSpreadsMore, slimeFxt
 global DRWhite, DRPxl, DRPxlRect, DRDarkSlimeFix
+
 on exitFrame me
   DRPxl = member("pxl").image
   DRPxlRect = DRPxl.rect

@@ -32,15 +32,13 @@ public sealed partial class MovieScript
         Log.Verbose($"Lingo: {msg}");
     }
 
-    public void outputinternallog()
-    {
-    }
+    public void outputinternallog() { }
 
-    public void exportall()
-    {
-    }
+    public void exportall() { }
 
-    public LingoNumber getboolconfig(dynamic str = default)
+    public void checkdebugkeybinds() { }
+
+    public LingoNumber getboolconfig(string str = default)
     {
         string txt = _global.member(@"editorConfig").text;
         for (int i = 1; i <= LingoGlobal.thenumberoflines_helper(txt); i++)
@@ -54,7 +52,24 @@ public sealed partial class MovieScript
         return LingoGlobal.FALSE;
     }
 
-    public string getstringconfig(dynamic str = default)
+    public LingoNumber getboolconfigordefault(string str, LingoNumber def)
+    {
+        string txt = default;
+        LingoNumber q = default;
+        txt = _global.member(@"editorConfig").text;
+        for (int tmp_q = (int)(new LingoNumber(1)); tmp_q <= LingoGlobal.thenumberoflines_helper(txt); tmp_q++)
+        {
+            q = (LingoNumber)tmp_q;
+            if (LingoGlobal.op_eq_b(_global.slice_helper(LingoGlobal.charmember_helper(LingoGlobal.linemember_helper(txt)[q]), new LingoNumber(1), LingoGlobal.lengthmember_helper(str)), str))
+            {
+                return LingoGlobal.op_eq(LingoGlobal.linemember_helper(txt)[q], LingoGlobal.concat(str, @" : TRUE"));
+            }
+            tmp_q = (int)q;
+        }
+        return def;
+    }
+
+    public string getstringconfig(string str = default)
     {
         string txt = _global.member(@"editorConfig").text;
         for (int i = 1; i <= LingoGlobal.thenumberoflines_helper(txt); i++)
@@ -72,6 +87,23 @@ public sealed partial class MovieScript
 
     }
 
+    public string getstringconfigorvoid(string str = default)
+    {
+        string txt = default;
+        LingoNumber q = default;
+        txt = _global.member(@"editorConfig").text;
+        for (int tmp_q = (int)(new LingoNumber(1)); tmp_q <= LingoGlobal.thenumberoflines_helper(txt); tmp_q++)
+        {
+            q = (LingoNumber)tmp_q;
+            if (LingoGlobal.op_eq_b(_global.slice_helper(LingoGlobal.charmember_helper(LingoGlobal.linemember_helper(txt)[q]), new LingoNumber(1), LingoGlobal.lengthmember_helper(str)), str))
+            {
+                return _global.slice_helper(LingoGlobal.charmember_helper(str), LingoGlobal.op_add(LingoGlobal.lengthmember_helper(str), new LingoNumber(3)), LingoGlobal.lengthmember_helper(LingoGlobal.linemember_helper(txt)[q]));
+            }
+            tmp_q = (int)q;
+        }
+        return null;
+    }
+
     public LingoNumber checkexitrender()
     {
         return LingoGlobal.FALSE;
@@ -83,6 +115,11 @@ public sealed partial class MovieScript
     }
 
     public LingoNumber checkminimize() {
+        return LingoGlobal.FALSE;
+    }
+
+    public LingoNumber dontrunstuff()
+    {
         return LingoGlobal.FALSE;
     }
 
@@ -139,6 +176,15 @@ public sealed partial class MovieScript
 
     public void popupwarning(dynamic ttl, dynamic msg) { }
 
-    public LingoNumber checkisdrizzlerendering() => 1;
+    public void tryaddtopreview(dynamic ad) { }
+
+    public LingoNumber checkisdrizzlerendering() => LingoGlobal.TRUE;
+
+    public void initcustomkeybindthings() { }
+
+    public void registercustomkeybind(dynamic k, dynamic v) { }
+
+    public LingoNumber checkcustomkeybind(dynamic k, dynamic v) => LingoGlobal.FALSE;
+
 }
 

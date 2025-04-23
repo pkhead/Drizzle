@@ -95,15 +95,16 @@ on drawShortCutsImg(drwRect, scl, drawAll)
             member("levelEditImageShortCuts").image.copyPixels(member("eggIcon").image, rct, member("eggIcon").image.rect, {#ink:36})
           end if
           
-          if gLEProps.matrix[q][c][1][2].getPos(16)>0 then
-            rct = rect((drawq-1)*scl, (drawc-1)*scl, drawq*scl, drawc*scl)
-            member("levelEditImageShortCuts").image.copyPixels(member("miniFlyGraf").image, rct+rect(10,0,0,-10)*scl/16, member("miniFlyGraf").image.rect, {#ink:36})
-          end if
+          -- Obsolete and were causing SU_A63 to crash for some reason lmao
+          --if gLEProps.matrix[q][c][1][2].getPos(16)>0 then
+          --  rct = rect((drawq-1)*scl, (drawc-1)*scl, drawq*scl, drawc*scl)
+          --  member("levelEditImageShortCuts").image.copyPixels(member("miniFlyGraf").image, rct+rect(10,0,0,-10)*scl/16, member("miniFlyGraf").image.rect, {#ink:36})
+          --end if
           
-          if gLEProps.matrix[q][c][1][2].getPos(17)>0 then
-            rct = rect((drawq-1)*scl, (drawc-1)*scl, drawq*scl, drawc*scl)
-            member("levelEditImageShortCuts").image.copyPixels(member("wallBugGraf").image, rct+rect(5,5,-5,5)*scl/16, member("wallBugGraf").image.rect, {#ink:36})
-          end if
+          --if gLEProps.matrix[q][c][1][2].getPos(17)>0 then
+          --  rct = rect((drawq-1)*scl, (drawc-1)*scl, drawq*scl, drawc*scl)
+          --  member("levelEditImageShortCuts").image.copyPixels(member("wallBugGraf").image, rct+rect(5,5,-5,5)*scl/16, member("wallBugGraf").image.rect, {#ink:36})
+          --end if
           
           if gLEProps.matrix[q][c][1][2].getPos(18)>0 then
             rct = rect((drawq-1)*scl, (drawc-1)*scl, drawq*scl, drawc*scl)
@@ -351,3 +352,5 @@ end
 on saveLvl()
   -- member("matrixTxt").text = string(gMatrix)
 end
+
+

@@ -380,10 +380,10 @@ on setUpLayer(layer)
   --  end repeat
   
   repeat with q = 0 to cols then
-    drawVerticalSurface(q, dpt)
+    drawVerticalSurface(q, dpt, tl)
   end repeat
   repeat with q = 0 to rows then
-    drawHorizontalSurface(q, dpt)
+    drawHorizontalSurface(q, dpt, tl)
   end repeat
   
   
@@ -1186,6 +1186,125 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
           member("gradientB" & string(d)).image.copyPixels(tileImage, rct, gtRect + rect(gtRect.width * (rnd - 1), 0, gtRect.width * (rnd - 1), 0) + rect(0, 1, 0, 1) + rect((tl.sz.locH * 20 + (40 * tl.bfTiles)) * tl.rnd, 0, (tl.sz.locH * 20 + (40 * tl.bfTiles)) * tl.rnd, 0), {#ink:39})
         end if
       end repeat
+      
+    "voxelStructSeamlessHorizontal", "voxelStructSeamlessVertical":
+      -- By LudoCrypt
+      if l = 1 then
+        dp = 0
+      else if l = 2 then
+        dp = 10
+      else
+        dp = 20
+      end if
+      
+      -- where it actually draws in the image, being the start -> start + sz. Expand by bfTiles. Offset by 20.
+      rct = rect(strt * 20, (strt + tl.sz) * 20) + rect(-20 * tl.bfTiles, -20 * tl.bfTiles, 20 * tl.bfTiles, 20 * tl.bfTiles) + rect(-20, -20, -20, -20)
+      
+      -- "get rect" aka source rect aka where it picks from the tile image, being the regular (sz + bfTiles * 2) * 20, used effectively as the unit size
+      gtRect = rect(0, 0, (tl.sz.locH * 20) + (40 * tl.bfTiles), (tl.sz.locV * 20) + (40 * tl.bfTiles))
+      
+      if tl.rnd = -1 then
+        rnd = 1
+        
+        repeat with dir in [point(-1, 0), point(0, -1), point(1, 0), point(0, 1)] then
+          if [0,6].getPos(afaMvLvlEdit(point(q,c) + dir + gRenderCameraTilePos, 1)) <> 0 then
+            exit repeat
+          else
+            rnd = rnd + 1
+          end if
+        end repeat
+        
+      else
+        rnd = random(tl.rnd)
+      end if
+      
+      if tl.tags.getPos("ramp") <> 0 then
+        rnd = 2
+        if (afaMvLvlEdit(point(q,c) + gRenderCameraTilePos, 1) = 3) then
+          rnd = 1
+        end if
+      end if
+      
+      seed = the randomSeed
+      
+      -- offset within the "unit" for seamless tiles
+      seamOffsetX = 0
+      seamOffsetY = 0
+      
+      -- unit size for rnd vars
+      fullSz = rect(0, 0, gtRect.width, gtRect.height)
+      
+      if tl.tp = "voxelStructSeamlessHorizontal" then
+        fullSz = rect(0, 0, gtRect.width * tl.seam, gtRect.height)
+        
+        -- seed based on y (c) coordinate when looping along x (q)
+        the randomSeed = gLOprops.tileSeed + c
+        tileOffset = q
+        
+        if tl.tags.getPos("seamlessDisplace") <> 0 then
+          tileOffset = q + random(tl.seam)
+        end if
+        
+        seamOffsetX = (integer(tileOffset / tl.sz.locH) mod tl.seam)
+        
+        -- recalculate rnd to accomodate for seam size
+        the randomSeed = -gLOprops.tileSeed + integer(tileOffset / (tl.sz.locH * tl.seam)) + c * gLOprops.tileSeed
+        
+        if tl.rnd <> -1 then
+          rnd = random(tl.rnd)
+        end if
+        
+      else if tl.tp = "voxelStructSeamlessVertical" then
+        fullSz = rect(0, 0, gtRect.width, gtRect.height * tl.seam)
+        
+        -- seed based on x (q) coordinate when looping along y (c)
+        the randomSeed = gLOprops.tileSeed + q
+        tileOffset = c
+        
+        if tl.tags.getPos("seamlessDisplace") <> 0 then
+          tileOffset = c + random(tl.seam)
+        end if
+        
+        seamOffsetY = (integer(tileOffset / tl.sz.locV) mod tl.seam)
+        
+        -- recalculate rnd to accomodate for seam size
+        the randomSeed = -gLOprops.tileSeed + integer(tileOffset / (tl.sz.locV * tl.seam)) + q * gLOprops.tileSeed
+        
+        if tl.rnd <> -1 then
+          rnd = random(tl.rnd)
+        end if
+      end if
+      
+      the randomSeed = seed
+      
+      frntImg.copyPixels(tileImage, rct, gtRect + rect(fullSz.width * (rnd - 1), 0, fullSz.width * (rnd - 1), 0) + rect(seamOffsetX * gtRect.width, seamOffsetY * gtRect.height, seamOffsetX * gtRect.width, seamOffsetY * gtRect.height) + rect(0, 1, 0, 1), {#ink:36})
+      
+      d = -1
+      repeat with ps = 1 to tl.repeatL.count then
+        repeat with ps2n = 1 to tl.repeatL[ps] then
+          d = d + 1  
+          if d + dp > 29 then
+            exit repeat
+          else
+            copyRect = gtRect + rect(fullSz.width * (rnd - 1), fullSz.height * (ps - 1), fullSz.width * (rnd - 1), fullSz.height * (ps - 1)) + rect(seamOffsetX * gtRect.width, seamOffsetY * gtRect.height, seamOffsetX * gtRect.width, seamOffsetY * gtRect.height) + rect(0, 1, 0, 1)
+            member("layer"&string(d+dp)).image.copyPixels(tileImage, rct, copyRect, {#ink:36})
+            
+            if(colored)then
+              if (effectColorA = FALSE) and (effectColorB = FALSE) then
+                member("layer"&string(d+dp)&"dc").image.copyPixels(tileImage, rct, copyRect + rect(fullSz.width * tl.rnd, 0, fullSz.height * tl.rnd, 0), {#ink:36})
+              end if
+            end if
+            
+            if(effectColorA)then
+              member("gradientA"&string(d+dp)).image.copyPixels(tileImage, rct, copyRect + rect(fullSz.width * tl.rnd, 0, fullSz.height * tl.rnd, 0), {#ink:39})
+            end if
+            
+            if(effectColorB)then
+              member("gradientB"&string(d+dp)).image.copyPixels(tileImage, rct, copyRect + rect(fullSz.width * tl.rnd, 0, fullSz.height * tl.rnd, 0), {#ink:39})
+            end if
+          end if
+        end repeat
+      end repeat
   end case
   
   repeat with tag in tl.tags then
@@ -1210,13 +1329,13 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
             
             global gLOProps
             
-            steps: number = ((diag(ps1, ps2)/12.0)+0.4999).integer
-            dr: point = moveToPoint(ps1, ps2, 1.0)
-            ornt: number = random(2)-1
-            degDir: number = lookatpoint(ps1, ps2)
-            stp: number = random(100)*0.01
+            steps = ((diag(ps1, ps2)/12.0)+0.4999).integer
+            dr = moveToPoint(ps1, ps2, 1.0)
+            ornt = random(2)-1
+            degDir = lookatpoint(ps1, ps2)
+            stp = random(100)*0.01
             repeat with q = 1 to steps then
-              pos: point = ps1+(dr*12*(q-stp))
+              pos = ps1+(dr*12*(q-stp))
               if ornt then
                 --   pos = (pnt+lastPnt)*0.5
                 rct = rect(pos,pos)+rect(-6,-10,6,10)
@@ -1907,7 +2026,7 @@ end
 --end
 
 
-on drawHorizontalSurface(row, dpt)
+on drawHorizontalSurface(row: number, dpt: number, tl)
   -- if row < 10 then
   pnt1 = point(0, row*20)
   pnt2 = point(gLOprops.size.locH*20, row*20)
@@ -1936,7 +2055,7 @@ on drawHorizontalSurface(row, dpt)
   --end if
 end
 
-on drawVerticalSurface(col, dpt)
+on drawVerticalSurface(col: number, dpt: number, tl)
   --if col < 26 then
   pnt1 = point(col*20, 0)
   pnt2 = point(col*20, gLOprops.size.locV*20)

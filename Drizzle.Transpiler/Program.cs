@@ -38,6 +38,10 @@ internal static class Program
         "levelEdit_parentscript"
     };
 
+    public static readonly HashSet<string> SkipScripts = new()
+    {
+    };
+
     private static readonly Dictionary<string, ScriptQuirks> Quirks = new()
     {
         ["fiffigt"] = new ScriptQuirks
@@ -90,6 +94,7 @@ internal static class Program
 
         var scripts = Directory.GetFiles(sourcesRoot, "*.lingo")
             .Concat(Directory.GetFiles(sourcesRoot, "*.ls"))
+            .Where(x => !SkipScripts.Contains(Path.GetFileNameWithoutExtension(x)))
             .AsParallel()
             .Select(n =>
             {

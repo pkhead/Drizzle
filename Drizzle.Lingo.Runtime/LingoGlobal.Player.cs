@@ -8,5 +8,6 @@ public sealed partial class LingoGlobal
     {
         public void appminimize() { }
         public void quit() { }
+        public void alert(string msg) { }
     }
 }

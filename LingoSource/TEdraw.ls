@@ -68,7 +68,10 @@ on TEdraw(drwRect, layer, drawAll)
               --          cl = color(200, 150, 150)
               --          member("TEimg"&string(layer)).image.copyPixels(member("pxl").image, rct, member("pxl").image.rect, {#color:cl})
               
+              -- Import tile preview
+              tryAddToPreview(tl)
               
+              -- The normal draw code
               
               mdPnt = point(((tl.sz.locH*0.5)+0.4999).integer,((tl.sz.locV*0.5)+0.4999).integer)
               strt = point(q,c)-mdPnt+point(1,1)-gLEprops.camPos
@@ -136,3 +139,4 @@ on TEdraw(drwRect, layer, drawAll)
     end repeat
   end repeat
 end
+

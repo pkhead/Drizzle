@@ -59,17 +59,6 @@ on seedForTile(tile: point, effectSeed: number)
   return effectSeed + tile.locH + tile.locV * gLEprops.matrix.count
 end
 
-on rotateToQuadFix(rct, deg)
-  mdpt = point((rct.left + rct.right) * 0.5, (rct.top + rct.bottom) * 0.5)
-  halfWidth = (rct.right - rct.left) / 2.0
-  halfHeight = (rct.bottom - rct.top) / 2.0
-  if deg.float mod 360.0 = 0.0 then return [point(rct.left, rct.top), point(rct.right, rct.top), point(rct.right, rct.bottom), point(rct.left, rct.bottom)]
-  else if deg.float mod 360.0 = 180.0 then return [point(rct.right, rct.bottom), point(rct.left, rct.bottom), point(rct.left, rct.top), point(rct.right, rct.top)]
-  else if deg.float mod 360.0 = 90.0  then return [mdpt + point(-halfHeight, halfWidth), mdpt + point(-halfHeight, -halfWidth), mdpt + point(halfHeight, -halfWidth), mdpt + point(halfHeight, halfWidth)]
-  else if deg.float mod 360.0 = 270.0 then return [mdpt + point(halfHeight, -halfWidth), mdpt + point(halfHeight, halfWidth),   mdpt + point(-halfHeight, halfWidth), mdpt + point(-halfHeight, -halfWidth)]
-  else return rotateToQuad(rct, deg)
-end
-
 on copyPixelsToEffectColor(gdLayer: string, lr: number, rct, getMember, gtRect: rect, zbleed: number, blnd)
   global DRPxl
   if (blnd = VOID) then
@@ -197,9 +186,39 @@ on rotateToQuadLB(rct: rect, dir: point)
   return [topPnt + tlr, topPnt - tlr, bottomPnt - tlr, bottomPnt + tlr]
 end
 
+on rotateToQuadFix(rct, deg)
+  mdpt = point((rct.left + rct.right) * 0.5, (rct.top + rct.bottom) * 0.5)
+  halfWidth = (rct.right - rct.left) / 2.0
+  halfHeight = (rct.bottom - rct.top) / 2.0
+  if deg.float mod 360.0 = 0.0 then return [point(rct.left, rct.top), point(rct.right, rct.top), point(rct.right, rct.bottom), point(rct.left, rct.bottom)]
+  else if deg.float mod 360.0 = 180.0 then return [point(rct.right, rct.bottom), point(rct.left, rct.bottom), point(rct.left, rct.top), point(rct.right, rct.top)]
+  else if deg.float mod 360.0 = 90.0  then return [mdpt + point(-halfHeight, halfWidth), mdpt + point(-halfHeight, -halfWidth), mdpt + point(halfHeight, -halfWidth), mdpt + point(halfHeight, halfWidth)]
+  else if deg.float mod 360.0 = 270.0 then return [mdpt + point(halfHeight, -halfWidth), mdpt + point(halfHeight, halfWidth),   mdpt + point(-halfHeight, halfWidth), mdpt + point(-halfHeight, -halfWidth)]
+  else return rotateToQuad(rct, deg)
+end
+
+on rotatePnt(pnt, ang)
+  ang = (ang + lookAtpoint(point(0,0), pnt) - 90) * PI / 180.0
+  dist = sqrt(pnt.locH*pnt.locH + pnt.locV*pnt.locV)
+  return point(cos(ang) * dist, sin(ang) * dist)
+end
+
+on rotateRectAroundPoint(rct, pt, ang)
+  tl = rotatePnt(point(rct.left, rct.top), ang)
+  tr = rotatePnt(point(rct.right, rct.top), ang)
+  br = rotatePnt(point(rct.right, rct.bottom), ang)
+  bl = rotatePnt(point(rct.left, rct.bottom), ang)
+  return [pt + tl, pt + tr, pt + br, pt + bl]
+end
+
 on flipQuadH(qd: list)
   type return: list
   return [qd[2], qd[1], qd[4], qd[3]]
+end
+
+on flipQuadV(qd: list)
+  type return: list
+  return [qd[3], qd[4], qd[1], qd[2]]
 end
 
 on pasteShortCutHole(mem: string, pnt: point, dp: number, cl)
@@ -323,3 +342,20 @@ on vecToRadLB(vec)
     return atan(vec.locV / vec.locH)
   end if
 end
+
+
+on withinBoundsOfLevel(pos)
+  global solidMtrx
+  if pos.inside(rect(2, 2, solidMtrx.count, solidMtrx[1].count)) then
+    return 1
+  else
+    return 0
+  end if
+end
+
+
+
+
+
+
+
