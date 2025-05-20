@@ -1,5 +1,5 @@
 global gLEProps, TEdraw, gDirectionKeys, gLOprops, gPEprops, gProps, gPEblink, gPEcounter, peScrollPos, peSavedRotat, peSavedFlip, peFreeQuad, peMousePos, lastPeMouse, mouseStill, propSettings, editSettingsProp, peSavedStretch
-global ropeModel, settingsPropType, gPEcolors, closestProp, longPropPlacePos, snapToGrid, preciseSnap, stg, ps, showControls
+global ropeModel, settingsPropType, gPEcolors, closestProp, longPropPlacePos, snapToGrid, preciseSnap, stg, ps, showControls, gFSLastTm, gFSFlag
 
 
 on exitFrame me
@@ -10,8 +10,15 @@ on exitFrame me
   end if
   
   if dontRunStuff() then
+    gFSLastTm = _system.milliseconds
     go the frame
     return
+  end if
+  
+  gFSFlag = false
+  if _system.milliseconds - gFSLastTm > 10 then
+    gFSFlag = true
+    gFSLastTm = _system.milliseconds
   end if
   
   script("levelOverview").exitFrame(me)
@@ -56,32 +63,39 @@ on exitFrame me
   end if
   
   repeat with q = 1 to 4 then
-    if (me.getDirection(q))and(gDirectionKeys[q] = 0) then
-      fast = checkCustomKeybind(#MoveFast, 83)
-      faster = checkCustomKeybind(#MoveFaster, 85)
-      gLEProps.camPos = gLEProps.camPos + [point(-1, 0), point(0,-1), point(1,0), point(0,1)][q] * (1 + 9 * fast + 34 * faster)
-      if not checkCustomKeybind(#MoveOutside, 92) then
-        if gLEProps.camPos.loch < -1 then
-          gLEProps.camPos.loch = -1
+    if (me.getDirection(q)) then
+      if gFSFlag then
+        if (gDirectionKeys[q] = 0) or (gDirectionKeys[q] > 20 and (gDirectionKeys[q] mod 2) = 0) then
+          fast = checkCustomKeybind(#MoveFast, 83)
+          faster = checkCustomKeybind(#MoveFaster, 85)
+          gLEProps.camPos = gLEProps.camPos + [point(-1, 0), point(0,-1), point(1,0), point(0,1)][q] * (1 + 9 * fast + 34 * faster)
+          if not checkCustomKeybind(#MoveOutside, 92) then
+            if gLEProps.camPos.loch < -1 then
+              gLEProps.camPos.loch = -1
+            end if
+            if gLEProps.camPos.locv < -1 then
+              gLEProps.camPos.locv = -1
+            end if  
+            if gLEProps.camPos.loch > gLEprops.matrix.count-51 then
+              gLEProps.camPos.loch = gLEprops.matrix.count-51
+            end if
+            if gLEProps.camPos.locv > gLEprops.matrix[1].count-39 then
+              gLEProps.camPos.locv = gLEprops.matrix[1].count-39
+            end if
+          end if
+          
+          repeat with l = 1 to 3 then
+            lvlEditDraw(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), l)
+            TEdraw(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), l)
+          end repeat
+          drawShortCutsImg(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), 16)
+          renderPropsImage()
         end if
-        if gLEProps.camPos.locv < -1 then
-          gLEProps.camPos.locv = -1
-        end if  
-        if gLEProps.camPos.loch > gLEprops.matrix.count-51 then
-          gLEProps.camPos.loch = gLEprops.matrix.count-51
-        end if
-        if gLEProps.camPos.locv > gLEprops.matrix[1].count-39 then
-          gLEProps.camPos.locv = gLEprops.matrix[1].count-39
-        end if
+        gDirectionKeys[q] = gDirectionKeys[q] + 1
       end if
-      repeat with l = 1 to 3 then
-        lvlEditDraw(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), l)
-        TEdraw(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), l)
-      end repeat
-      drawShortCutsImg(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), 16)
-      renderPropsImage()
+    else
+      gDirectionKeys[q] = 0
     end if
-    gDirectionKeys[q] = me.getDirection(q)
   end repeat
   
   
@@ -280,7 +294,7 @@ on exitFrame me
   gPEprops.lastKeys.m2 = gPEprops.keys.m2
   
   if checkCustomKeybind(#PropVariationMode, "F") then
-    if(propSettings.findPos(#variation) <> void)and((actn1)or(actn2)) then
+    if(propSettings.findPos(#variation) <> void) and ((actn1)or(actn2)) then
       propSettings.variation = propSettings.variation + actn1 - actn2
       mn = (1 - settingsPropType.random)
       if(propSettings.variation < mn)then
@@ -448,9 +462,8 @@ on exitFrame me
   lastClosest = closestProp
   closestProp = 0
   
-  if(gPEprops.props.count > 0)and((checkCustomKeybind(#PropDelete, "V"))or(checkCustomKeybind(#PropSample, "B"))or(checkCustomKeybind(#PropOptionsPlaced, "M")) ) then
+  if(gPEprops.props.count > 0)and((checkCustomKeybind(#PropDelete, "V"))or(checkCustomKeybind(#PropSample, "B"))or(checkCustomKeybind(#PropSampleWithSettings, [" ", "B"]))or(checkCustomKeybind(#PropOptionsPlaced, "M")) ) then
     closestProp = findClosestProp()
-    
   end if
   
   if(editSettingsProp > 0)then
@@ -489,7 +502,97 @@ on exitFrame me
         gPEprops.props.deleteAt(closestProp)
         renderPropsImage()
       end if
-    else  if checkCustomKeybind(#PropSample, "B") then
+    else if checkCustomKeybind(#PropSampleWithSettings, [" ", "B"]) then
+      sprite(264).color = color(0,100,255)
+      sprite(264).foreColor = color(255,255,255)
+      if(actn1) then
+        -- Sample prop
+        gPEprops.pmPos = gPEprops.props[closestProp][3]
+        updatePropMenu(point(0, 0))
+        
+        propSettings = gPEprops.props[closestProp][5].settings
+        settingsPropType = gProps[gPEprops.pmPos.loch].prps[gPEprops.pmPos.locV]
+        
+        editSettingsProp = -1
+        
+        -- Reset our transforms
+        gPEprops.propStretchX = 1
+        gPEprops.propStretchY = 1
+        gPEprops.propFlipX = 1
+        gPEprops.propFlipY = 1
+        gPEprops.propRotation = 0
+        
+        -- Now copy its transform
+        newPrp = gProps[gPEprops.props[closestProp][3].locH].prps[gPEprops.props[closestProp][3].locV]
+        if ((newPrp.tp <> "long") and (newPrp.tp <> "customLong")) then
+          -- Figure out scale, flip, rotation, and free quad :monksilly:
+          pq = gPEProps.props[closestProp][4]
+          ps = propPreviewMember(newPrp)
+          
+          -- Start with scale
+          pw = (diag(pq[1], pq[2]) + diag(pq[3], pq[4])) / 2
+          ph = (diag(pq[1], pq[4]) + diag(pq[2], pq[3])) / 2
+          gPEprops.propStretchX = pw / ps.rect.width * 20.0/16.0
+          gPEprops.propStretchY = ph / ps.rect.height * 20.0/16.0
+          
+          -- Figure out flip
+          flpX = (pq[1].locH+pq[4].locH)/2 > (pq[2].locH+pq[3].locH)/2
+          flpY = (pq[1].locV+pq[2].locV)/2 > (pq[3].locV+pq[4].locV)/2
+          if flpX then gPEprops.propFlipX = -1
+          if flpY then gPEprops.propFlipY = -1
+          
+          -- Rotation
+          slpeX = (pq[2].locH+pq[3].locH)/2 - (pq[1].locH+pq[4].locH)/2
+          slpeY = (pq[2].locV+pq[3].locV)/2 - (pq[1].locV+pq[4].locV)/2
+          if slpeX = 0 then
+            gPEprops.propRotation = 90
+          else
+            gPEprops.propRotation = atan(slpeY / slpeX) * 180 / PI
+            if gPEprops.propRotation < 0 then gPEprops.propRotation = gPEprops.propRotation + 360
+          end if
+          
+          -- Finally: the remaining quad
+          if flpX then pw = -pw
+          if flpY then ph = -ph
+          pqMid = (pq[1]+pq[2]+pq[3]+pq[4])/4
+          peFreeQuad = (pq - [pqMid,pqMid,pqMid,pqMid]) - rotateToQuadFix(rect(-pw/2,ph/2,pw/2,-ph/2), 180+gPEprops.propRotation)
+        else
+          peFreeQuad = [point(0,0), point(0,0), point(0,0), point(0,0)]
+        end if
+        
+        -- Copy layer, maybe
+        cpyDpth = -gPEProps.props[closestProp][1]
+        gPEprops.depth = cpyDpth mod 10
+        gPEprops.workLayer = (cpyDpth - gPEprops.depth) / 10 + 1
+        
+        -- Now that we *might* have changed the layer, we also have to update all the graphics and stuff
+        if gPEprops.workLayer = 2 then
+          sprite(250).blend = 40
+          sprite(251).blend = 40
+          sprite(252).blend = 90
+          sprite(253).blend = 90
+          sprite(254).blend = 10
+          sprite(255).blend = 10
+        else if gPEprops.workLayer = 1 then
+          sprite(250).blend = 20
+          sprite(251).blend = 20
+          sprite(252).blend = 40
+          sprite(253).blend = 40
+          sprite(254).blend = 90
+          sprite(255).blend = 90
+        else
+          sprite(250).blend = 90
+          sprite(251).blend = 90
+          sprite(252).blend = 10
+          sprite(253).blend = 10
+          sprite(254).blend = 10
+          sprite(255).blend = 10
+        end if
+        
+        updateWorkLayerText()
+        renderPropsImage()
+      end if
+    else if checkCustomKeybind(#PropSample, "B") then
       sprite(264).color = color(0,255,255)
       sprite(264).foreColor = color(255, 255, 255)
       if(actn1) then
@@ -501,7 +604,7 @@ on exitFrame me
         
         editSettingsProp = -1
       end if
-    else   if (editSettingsProp > 0) then
+    else if (editSettingsProp > 0) then
       sprite(264).color = color(0,255,0)
       sprite(264).foreColor = 187
     else if checkCustomKeybind(#PropOptionsPlaced, "M") then
@@ -816,15 +919,23 @@ on checkKey me, key
   rtrn = 0
   
   kb = VOID
+  hasFastScroll = false
+  fastScrollRate = 4
   case key of
     "W":
       kb = #PropSelectUp
+      hasFastScroll = true
     "S":
       kb = #PropSelectDown
+      hasFastScroll = true
     "A":
       kb = #PropCategoryPrev
+      hasFastScroll = true
+      fastScrollRate = 8
     "D":
       kb = #PropCategoryNext
+      hasFastScroll = true
+      fastScrollRate = 8
     "Z":
       kb = #PropColor
     "N":
@@ -833,9 +944,24 @@ on checkKey me, key
       kb = #PropChangeLayer
   end case
   
-  gPEProps.keys[symbol(key)] = checkCustomKeybind(kb, key) and not dontRunStuff()
-  if (gPEProps.keys[symbol(key)])and(gPEProps.lastKeys[symbol(key)]=0) then
-    rtrn = 1
+  rslt = checkCustomKeybind(kb, key) and not dontRunStuff()
+  if hasFastScroll then
+    -- fast scroll
+    if rslt then
+      gPEProps.keys[symbol(key)] = gPEProps.keys[symbol(key)] + gFSFlag
+    else
+      gPEProps.keys[symbol(key)] = 0
+    end if
+    
+    if (gPEProps.keys[symbol(key)] = 1) or ((gPEProps.keys[symbol(key)] > 20) and ((gPEProps.keys[symbol(key)] mod fastScrollRate) = 0)) then
+      rtrn = gFSFlag
+    end if
+  else
+    -- no fast scroll
+    gPEProps.keys[symbol(key)] = rslt
+    if (gPEProps.keys[symbol(key)])and(gPEProps.lastKeys[symbol(key)]=0) then
+      rtrn = 1
+    end if
   end if
   gPEProps.lastKeys[symbol(key)] = gPEProps.keys[symbol(key)]
   return rtrn

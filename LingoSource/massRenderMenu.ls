@@ -150,5 +150,3 @@ on loadSubFolder me, fldrName
   gLOADPATH.add(chars(fldrName, 2, fldrName.length))
   _movie.go(4)
 end 
-
-

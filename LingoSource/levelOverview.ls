@@ -252,4 +252,3 @@ on goToEditor me
     _movie.go(goFrm)
   end if
 end
-

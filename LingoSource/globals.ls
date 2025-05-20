@@ -111,3 +111,8 @@ type slimeFxt:                    number
 type showConstrols:               number
 type rndDisF:                     number
 type DRPxl:                       image
+type GL_ptPos:                    number
+type GL_drPos:                    number
+type gCustomLights:               list
+type gFSLastTm:                   number
+type gFSFlag:                     number

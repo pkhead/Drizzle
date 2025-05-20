@@ -21,4 +21,3 @@ on exitFrame me
     go the frame
   end if
 end
-

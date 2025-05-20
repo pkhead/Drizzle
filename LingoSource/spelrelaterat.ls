@@ -49,6 +49,15 @@ on solidAfaMv(pos: point, layer: number)
   end if
 end
 
+on withinBoundsOfLevel(pos)
+  global solidMtrx
+  if pos.inside(rect(2, 2, solidMtrx.count, solidMtrx[1].count)) then
+    return 1
+  else
+    return 0
+  end if
+end
+
 on depthPnt(pnt, dpt)
   return (pnt - point(700, 800 / 3)) / ((10 + dpt * 0.025) * 0.1) + point(700, 800 / 3)
 end
@@ -257,7 +266,7 @@ on pasteShortCutHole(mem: string, pnt: point, dp: number, cl)
 end
 
 on resizeLevel(sze: point, addTilesLeft: number, addTilesTop: number)--nt
-  global gLEprops, gLOProps, gTEprops, gEEprops
+  global gLEprops, gLOProps, gTEprops, gEEprops, gPEprops, gCameraProps
   newMatrix: list = []
   newTEmatrix: list = []
   
@@ -267,7 +276,7 @@ on resizeLevel(sze: point, addTilesLeft: number, addTilesTop: number)--nt
       if (q-addTilesLeft<=gLEprops.matrix.count)and(c-addTilesTop<=gLEprops.matrix[1].count)and(q-addTilesLeft>0)and(c-addTilesTop>0)then
         adder = gLEprops.matrix[q-addTilesLeft][c-addTilesTop]
       else
-        adder: list = [[1, []], [1, []], [1, []]]
+        adder = [[1, []], [1, []], [1, []]]
       end if
       ql.add(adder)
     end repeat
@@ -279,8 +288,19 @@ on resizeLevel(sze: point, addTilesLeft: number, addTilesTop: number)--nt
     repeat with c = 1 to sze.locV + addTilesTop then
       if (q+addTilesLeft<=gTEprops.tlMatrix.count)and(c+addTilesTop<=gTEprops.tlMatrix[1].count)and(q-addTilesLeft>0)and(c-addTilesTop>0)then
         adder = gTEprops.tlMatrix[q-addTilesLeft][c-addTilesTop]
+        
+        -- fix for tiles during resize
+        repeat with l = 1 to 3 then
+          if adder[l].tp = "tileBody" then
+            newPt = adder[l].data[1] + point(addTilesLeft, addTilesTop)
+            adder[l].data[1] = newPt
+            if newPt.locH < 1 or newPt.locH > sze.locH + addTilesLeft or newPt.locV < 1 or newPt.locV > sze.locV + addTilesTop then
+              adder[l] = [#tp:"default", #data:0]
+            end if
+          end if
+        end repeat
       else
-        adder: list = [[#tp:"default", #data:0], [#tp:"default", #data:0], [#tp:"default", #data:0]]
+        adder = [[#tp:"default", #data:0], [#tp:"default", #data:0], [#tp:"default", #data:0]]
       end if
       ql.add(adder)
     end repeat
@@ -295,15 +315,31 @@ on resizeLevel(sze: point, addTilesLeft: number, addTilesTop: number)--nt
       ql = []
       repeat with c = 1 to sze.locV + addTilesTop then
         if (q+addTilesLeft<=effect.mtrx.count)and(c+addTilesTop<=effect.mtrx[1].count)and(q-addTilesLeft>0)and(c-addTilesTop>0)then
-          ql.add(effect.mtrx[q-addTilesLeft][c-addTilesTop])
+          adder = effect.mtrx[q-addTilesLeft][c-addTilesTop]
         else
-          ql.add(0)
+          adder = 0
         end if
+        ql.add(adder)
       end repeat
       newEffMtrx.add(ql)
     end repeat
     
     effect.mtrx = newEffMtrx
+  end repeat
+  
+  repeat with prop in gPEprops.props then
+    repeat with q = 1 to 4 then
+      prop[4][q] = prop[4][q] + 16*point(addTilesLeft, addTilesTop)
+    end repeat
+    if prop[5][#points] <> void then
+      repeat with q = 1 to prop[5].points.count then
+        prop[5].points[q] = prop[5].points[q] + 20*point(addTilesLeft, addTilesTop)
+      end repeat
+    end if
+  end repeat
+  
+  repeat with q = 1 to gCameraProps.cameras.count then
+    gCameraProps.cameras[q] = gCameraProps.cameras[q] + point(20*addTilesLeft, 20*addTilesTop)
   end repeat
   
   
@@ -342,17 +378,6 @@ on vecToRadLB(vec)
     return atan(vec.locV / vec.locH)
   end if
 end
-
-
-on withinBoundsOfLevel(pos)
-  global solidMtrx
-  if pos.inside(rect(2, 2, solidMtrx.count, solidMtrx[1].count)) then
-    return 1
-  else
-    return 0
-  end if
-end
-
 
 
 

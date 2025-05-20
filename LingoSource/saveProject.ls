@@ -49,7 +49,7 @@ on exitFrame me
     --  member("lightImageExport").image.copyPixels(member("lightImage").image, rect(0, 0, 1040+200, 800+200), rect(0, 0, 1040+200, 800+200))
     member("lightImage").image.setPixel(0,0,color(0,0,0))
     member("lightImage").image.setPixel(member("lightImage").rect.width-1, member("lightImage").rect.height-1, color(0,0,0))
-    -- exportAnImage( member("lightImageExport").image, "\LevelEditorProjects\" & levelName)
+    -- exportAnImage( member("lightImageExport").image, the dirSeparator&"LevelEditorProjects"&the dirSeparator & levelName)
     
     gImgXtra = xtra("ImgXtra").new()
     nwImg = image(member("lightImage").image.rect.width, member("lightImage").image.rect.height, 32)

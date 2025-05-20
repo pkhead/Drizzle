@@ -76,4 +76,3 @@ on mouseLeave(me)
   sprite(me.spriteNum).color = color(0,0,0)
   member("buttonText").text = ""
 end mouseLeave
-

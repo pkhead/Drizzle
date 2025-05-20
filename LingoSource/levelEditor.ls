@@ -1,4 +1,4 @@
-global gLEProps, gDirectionKeys, gLOprops, gEnvEditorProps, showControls
+global gLEProps, gDirectionKeys, gLOprops, gEnvEditorProps, showControls, gFSLastTm, gFSFlag
 
 
 on exitFrame me
@@ -9,37 +9,50 @@ on exitFrame me
   end if
   
   if dontRunStuff() then
+    gFSLastTm = _system.milliseconds
     go the frame
     return
   end if
   
+  gFSFlag = false
+  if _system.milliseconds - gFSLastTm > 10 then
+    gFSFlag = true
+    gFSLastTm = _system.milliseconds
+  end if
+  
   
   repeat with q = 1 to 4 then
-    if (me.getDirection(q))and(gDirectionKeys[q] = 0) then
-      fast = checkCustomKeybind(#MoveFast, 83)
-      faster = checkCustomKeybind(#MoveFaster, 85)
-      gLEProps.camPos = gLEProps.camPos + [point(-1, 0), point(0,-1), point(1,0), point(0,1)][q] * (1 + 9 * fast + 34 * faster)
-      if not checkCustomKeybind(#MoveOutside, 92) then
-        if gLEProps.camPos.loch < -1 then
-          gLEProps.camPos.loch = -1
+    if (me.getDirection(q)) then
+      if gFSFlag then
+        if (gDirectionKeys[q] = 0) or (gDirectionKeys[q] > 20 and (gDirectionKeys[q] mod 2) = 0) then
+          fast = checkCustomKeybind(#MoveFast, 83)
+          faster = checkCustomKeybind(#MoveFaster, 85)
+          gLEProps.camPos = gLEProps.camPos + [point(-1, 0), point(0,-1), point(1,0), point(0,1)][q] * (1 + 9 * fast + 34 * faster)
+          if not checkCustomKeybind(#MoveOutside, 92) then
+            if gLEProps.camPos.loch < -1 then
+              gLEProps.camPos.loch = -1
+            end if
+            if gLEProps.camPos.locv < -1 then
+              gLEProps.camPos.locv = -1
+            end if  
+            if gLEProps.camPos.loch > gLEprops.matrix.count-51 then
+              gLEProps.camPos.loch = gLEprops.matrix.count-51
+            end if
+            if gLEProps.camPos.locv > gLEprops.matrix[1].count-39 then
+              gLEProps.camPos.locv = gLEprops.matrix[1].count-39
+            end if
+          end if
+          
+          lvlEditDraw(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), 1)
+          lvlEditDraw(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), 2)
+          lvlEditDraw(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), 3)
+          drawShortCutsImg(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), 16) 
         end if
-        if gLEProps.camPos.locv < -1 then
-          gLEProps.camPos.locv = -1
-        end if  
-        if gLEProps.camPos.loch > gLEprops.matrix.count-51 then
-          gLEProps.camPos.loch = gLEprops.matrix.count-51
-        end if
-        if gLEProps.camPos.locv > gLEprops.matrix[1].count-39 then
-          gLEProps.camPos.locv = gLEprops.matrix[1].count-39
-        end if
+        gDirectionKeys[q] = gDirectionKeys[q] + 1
       end if
-      lvlEditDraw(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), 1)
-      lvlEditDraw(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), 2)
-      lvlEditDraw(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), 3)
-      drawShortCutsImg(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), 16)
+    else
+      gDirectionKeys[q] = 0
     end if
-    gDirectionKeys[q] = me.getDirection(q)
-    --script("propEditor").renderPropsImage()
   end repeat
   
   call(#newUpdate, gLEProps.levelEditors)
@@ -66,8 +79,6 @@ on getDirection me, q
   orig = [86, 91, 88, 84][q]
   return checkCustomKeybind(k, orig)
 end
-
-
 
 
 

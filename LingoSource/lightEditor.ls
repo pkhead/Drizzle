@@ -1,7 +1,9 @@
-global gTEprops, gLEProps, gTiles, gEEProps, gEffects, gLightEProps, geverysecond, firstFrame, glgtimgQuad, gDirectionKeys, showControls, gCustomLights, gLastImported
+global gTEprops, gLEProps, gTiles, gEEProps, gEffects, gLightEProps, geverysecond, firstFrame, glgtimgQuad, gDirectionKeys, showControls, gCustomLights, gLastImported, gFSLastTm, gFSFlag
 
 
 on exitFrame me
+  global gLELastMouse, gLELastMoving
+  
   if (showControls) then
     sprite(189).blend = 100
   else
@@ -10,8 +12,15 @@ on exitFrame me
   
   if dontRunStuff() then
     gLightEProps.lastTm = _system.milliseconds
+    gFSLastTm = _system.milliseconds
     go the frame
     return
+  end if
+  
+  gFSFlag = false
+  if _system.milliseconds - gFSLastTm > 10 then
+    gFSFlag = true
+    gFSLastTm = _system.milliseconds
   end if
   
   --  if checkKey("N") then
@@ -20,26 +29,32 @@ on exitFrame me
   --  end if
   
   repeat with q2 = 1 to 4 then
-    if (me.getDirection(q2))and(gDirectionKeys[q2] = 0) then
-      fast = checkCustomKeybind(#MoveFast, 83)
-      faster = checkCustomKeybind(#MoveFaster, 85)
-      gLEProps.camPos = gLEProps.camPos + [point(-1, 0), point(0,-1), point(1,0), point(0,1)][q2] * (1 + 9 * fast + 34 * faster)
-      if not checkCustomKeybind(#MoveOutside, 92) then
-        if gLEProps.camPos.loch < -26 then
-          gLEProps.camPos.loch = -26
+    if (me.getDirection(q2)) then
+      if gFSFlag then
+        if (gDirectionKeys[q2] = 0) or (gDirectionKeys[q2] > 20 and (gDirectionKeys[q2] mod 2) = 0) then
+          fast = checkCustomKeybind(#MoveFast, 83)
+          faster = checkCustomKeybind(#MoveFaster, 85)
+          gLEProps.camPos = gLEProps.camPos + [point(-1, 0), point(0,-1), point(1,0), point(0,1)][q2] * (1 + 9 * fast + 34 * faster)
+          if not checkCustomKeybind(#MoveOutside, 92) then
+            if gLEProps.camPos.loch < -26 then
+              gLEProps.camPos.loch = -26
+            end if
+            if gLEProps.camPos.locv < -18 then
+              gLEProps.camPos.locv = -18
+            end if  
+            if gLEProps.camPos.loch > gLEprops.matrix.count-56 then
+              gLEProps.camPos.loch = gLEprops.matrix.count-56
+            end if
+            if gLEProps.camPos.locv > gLEprops.matrix[1].count-37 then
+              gLEProps.camPos.locv = gLEprops.matrix[1].count-37
+            end if
+          end if
         end if
-        if gLEProps.camPos.locv < -18 then
-          gLEProps.camPos.locv = -18
-        end if  
-        if gLEProps.camPos.loch > gLEprops.matrix.count-56 then
-          gLEProps.camPos.loch = gLEprops.matrix.count-56
-        end if
-        if gLEProps.camPos.locv > gLEprops.matrix[1].count-37 then
-          gLEProps.camPos.locv = gLEprops.matrix[1].count-37
-        end if
+        gDirectionKeys[q2] = gDirectionKeys[q2] + 1
       end if
+    else
+      gDirectionKeys[q2] = 0
     end if
-    gDirectionKeys[q2] = me.getDirection(q2)
     --script("propEditor").renderPropsImage()
   end repeat
   
@@ -151,7 +166,7 @@ on exitFrame me
       gLightEProps.paintShape = l[curr]
     else
       lightMem = member("previewImprt")
-      member("previewImprt").importFileInto("Lights\" & gCustomLights[curr - l.count])
+      member("previewImprt").importFileInto("Lights" & the dirSeparator & gCustomLights[curr - l.count])
       lightMem.name = "previewImprt"
       lmiw = lightMem.image.width-1
       lmih = lightMem.image.height-1
@@ -222,6 +237,26 @@ on exitFrame me
   sprite(178).loc = point(1366/2, 768/2) - gLEProps.camPos*20
   
   -- sprite(18).rect = 
+  
+  -- Move the entire lightmap
+  if checkCustomKeybind(#LightMapMove, "X") and not (checkCustomKeybind(#LightMapStretchTL, "C") or checkCustomKeybind(#LightMapStretchTR, "V") or checkCustomKeybind(#LightMapStretchBL, "B") or checkCustomKeybind(#LightMapStretchBR, "N")) then
+    gLELastMoving = true
+    mouseMV = _mouse.mouseLoc - gLELastMouse
+    sprite(176).loc = sprite(176).loc + mouseMV
+    sprite(179).loc = sprite(179).loc + mouseMV
+  else if gLELastMoving then
+    gLELastMoving = false
+    mouseMV = _mouse.mouseLoc - gLELastMouse
+    newQd = [point(0,0), point(member("lightImage").image.width,0), point(member("lightImage").image.width,member("lightImage").image.height), point(0,member("lightImage").image.height)]
+    newQd = newQd + [mouseMV, mouseMV, mouseMV, mouseMV]
+    dupl = image(member("lightImage").image.width, member("lightImage").image.height, 1)
+    dupl.copypixels(member("lightImage").image, dupl.rect, dupl.rect)
+    era = image(member("lightImage").image.width, member("lightImage").image.height, 1)
+    member("lightImage").image.copypixels(era, member("lightImage").image.rect, era.rect)
+    member("lightImage").image.copypixels(dupl, newQd, dupl.rect)
+  else
+    gLELastMouse = _mouse.mouseLoc
+  end if
   
   script("levelOverview").goToEditor()
   go the frame

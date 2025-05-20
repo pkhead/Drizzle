@@ -45,4 +45,3 @@ on exitFrame me
   
   gRenderCameraTilePos = gRenderCameraTilePos + point(-15, -10)
 end
-

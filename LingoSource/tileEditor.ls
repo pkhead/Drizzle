@@ -1,4 +1,4 @@
-global gTEprops, gLEProps, gTiles, gLOProps, gDirectionKeys, gEnvEditorProps, specialRectPoint, showControls
+global gTEprops, gLEProps, gTiles, gLOProps, gDirectionKeys, gEnvEditorProps, specialRectPoint, showControls, gFSLastTm, gFSFlag
 
 
 on exitFrame me
@@ -9,42 +9,52 @@ on exitFrame me
   end if
   
   if dontRunStuff() then
+    gFSLastTm = _system.milliseconds
     go the frame
     return
+  end if
+  
+  gFSFlag = false
+  if _system.milliseconds - gFSLastTm > 10 then
+    gFSFlag = true
+    gFSLastTm = _system.milliseconds
   end if
   
   msTile = (_mouse.mouseLoc/point(16.0, 16.0))+point(0.4999, 0.4999)
   msTile = point(msTile.loch.integer, msTile.locV.integer)+point(-1, -1)+gLEprops.camPos
   
   repeat with q = 1 to 4 then
-    if (me.getDirection(q))and(gDirectionKeys[q] = 0) then
-      fast = checkCustomKeybind(#MoveFast, 83)
-      faster = checkCustomKeybind(#MoveFaster, 85)
-      gLEProps.camPos = gLEProps.camPos + [point(-1, 0), point(0,-1), point(1,0), point(0,1)][q] * (1 + 9 * fast + 34 * faster)
-      if not checkCustomKeybind(#MoveOutside, 92) then
-        if gLEProps.camPos.loch < -1 then
-          gLEProps.camPos.loch = -1
+    if (me.getDirection(q)) then
+      if gFSFlag then
+        if (gDirectionKeys[q] = 0) or (gDirectionKeys[q] > 20 and (gDirectionKeys[q] mod 2) = 0) then
+          fast = checkCustomKeybind(#MoveFast, 83)
+          faster = checkCustomKeybind(#MoveFaster, 85)
+          gLEProps.camPos = gLEProps.camPos + [point(-1, 0), point(0,-1), point(1,0), point(0,1)][q] * (1 + 9 * fast + 34 * faster)
+          if not checkCustomKeybind(#MoveOutside, 92) then
+            if gLEProps.camPos.loch < -1 then
+              gLEProps.camPos.loch = -1
+            end if
+            if gLEProps.camPos.locv < -1 then
+              gLEProps.camPos.locv = -1
+            end if  
+            if gLEProps.camPos.loch > gLEprops.matrix.count-51 then
+              gLEProps.camPos.loch = gLEprops.matrix.count-51
+            end if
+            if gLEProps.camPos.locv > gLEprops.matrix[1].count-39 then
+              gLEProps.camPos.locv = gLEprops.matrix[1].count-39
+            end if
+          end if
+          repeat with l = 1 to 3 then
+            lvlEditDraw(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), l)
+            TEdraw(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), l)
+          end repeat
+          drawShortCutsImg(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), 16, 1)
         end if
-        if gLEProps.camPos.locv < -1 then
-          gLEProps.camPos.locv = -1
-        end if  
-        if gLEProps.camPos.loch > gLEprops.matrix.count-51 then
-          gLEProps.camPos.loch = gLEprops.matrix.count-51
-        end if
-        if gLEProps.camPos.locv > gLEprops.matrix[1].count-39 then
-          gLEProps.camPos.locv = gLEprops.matrix[1].count-39
-        end if
+        gDirectionKeys[q] = gDirectionKeys[q] + 1
       end if
-      
-      repeat with l = 1 to 3 then
-        lvlEditDraw(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), l)
-        TEdraw(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), l)
-      end repeat
-      drawShortCutsImg(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), 16, 1)
-      
+    else
+      gDirectionKeys[q] = 0
     end if
-    gDirectionKeys[q] = me.getDirection(q)
-    --script("propEditor").renderPropsImage()
   end repeat
   
   
@@ -226,26 +236,50 @@ on checkKey me, key
   rtrn = 0
   
   kb = VOID
+  hasFastScroll = false
+  fastScrollRate = 4
   case key of
     "W":
       kb = #TileSelectUp
+      hasFastScroll = true
     "S":
       kb = #TileSelectDown
+      hasFastScroll = true
     "A":
       kb = #TileCategoryPrev
+      hasFastScroll = true
+      fastScrollRate = 8
     "D":
       kb = #TileCategoryNext
+      hasFastScroll = true
+      fastScrollRate = 8
     "Q":
       kb = #TileSample
     "L":
       kb = #TileChangeLayer
   end case
   
-  gTEProps.keys[symbol(key)] = checkCustomKeybind(kb, key) and not dontRunStuff()
-  if (gTEprops.keys[symbol(key)])and(gTEprops.lastKeys[symbol(key)]=0) then
-    rtrn = 1
+  rslt = checkCustomKeybind(kb, key) and not dontRunStuff()
+  if hasFastScroll then
+    -- fast scroll
+    if rslt then
+      if gFSFlag then
+        gTEProps.keys[symbol(key)] = gTEProps.keys[symbol(key)] + 1
+      end if
+    else
+      gTEProps.keys[symbol(key)] = 0
+    end if
+    
+    if (gTEProps.keys[symbol(key)] = 1) or ((gTEProps.keys[symbol(key)] > 20) and ((gTEProps.keys[symbol(key)] mod fastScrollRate) = 0)) then
+      rtrn = gFSFlag
+    end if
+  else
+    -- no fast scroll
+    gTEProps.keys[symbol(key)] = rslt
+    if (gTEProps.keys[symbol(key)])and(gTEProps.lastKeys[symbol(key)]=0) then
+      rtrn = 1
+    end if
   end if
-  gTEprops.lastKeys[symbol(key)] = gTEprops.keys[symbol(key)]
   return rtrn
 end
 
@@ -698,13 +732,14 @@ on deleteTileTile(ps, lr)
   tl = gTiles[tl.locH].tls[tl.locV]
   mdPnt = point(((tl.sz.locH*0.5)+0.4999).integer,((tl.sz.locV*0.5)+0.4999).integer)
   strt = ps-mdPnt+point(1,1)
+  ramp = tl.tags.getPos("ramp") > 0
   
   
   if (tl.specs2 <> 0)and(lr<3) then
     n = 1
     repeat with q = strt.locH to strt.locH + tl.sz.locH-1 then
       repeat with c = strt.locV to strt.locV + tl.sz.locV-1 then
-        if (tl.specs2[n] <> -1)and(point(q,c).inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)))and (_mouse.mouseLoc.inside(rect(16, 17, 848, 657)))then
+        if (tl.specs2[n] <> -1 or ramp)and(point(q,c).inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)))and (_mouse.mouseLoc.inside(rect(16, 17, 848, 657)))then
           gTEprops.tlMatrix[q][c][lr+1].tp = "default"
           gTEprops.tlMatrix[q][c][lr+1].data = 0
           
@@ -720,7 +755,7 @@ on deleteTileTile(ps, lr)
   n = 1
   repeat with q = strt.locH to strt.locH + tl.sz.locH-1 then
     repeat with c = strt.locV to strt.locV + tl.sz.locV-1 then
-      if (tl.specs[n] <> -1) and(point(q,c).inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)))and (_mouse.mouseLoc.inside(rect(16, 17, 848, 657)))then
+      if (tl.specs[n] <> -1 or ramp) and(point(q,c).inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)))and (_mouse.mouseLoc.inside(rect(16, 17, 848, 657)))then
         gTEprops.tlMatrix[q][c][lr].tp = "default"
         gTEprops.tlMatrix[q][c][lr].data = 0
         
@@ -943,8 +978,6 @@ on SpecialRectPlacement(rct)
       end repeat
   end case
 end 
-
-
 
 
 

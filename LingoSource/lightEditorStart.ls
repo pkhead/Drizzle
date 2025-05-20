@@ -1,6 +1,8 @@
 global gTEprops, gTiles, gEEprops, gLightEProps, firstFrame, geverysecond, glgtimgQuad, gDirectionKeys,gLOprops
 
 on exitFrame me
+  global gLELastMouse, gLELastMoving
+  
   firstFrame = 1
   l = [ #m1:1, m2:0, #w:0, #a:0, #s:0, #d:0, #r:0, f:0]
   gLightEProps.lastKeys = l.duplicate()
@@ -17,6 +19,9 @@ on exitFrame me
   glgtimgQuad = [point(0,0), point(member("lightImage").image.width,0), point(member("lightImage").image.width,member("lightImage").image.height), point(0,member("lightImage").image.height)]
   
   gLightEProps.lastTm = _system.milliseconds
+  
+  gLELastMouse = _mouse.mouseLoc
+  gLELastMoving = false
   
   sprite(181).member = member("pxl")
   sprite(182).member = member("pxl")

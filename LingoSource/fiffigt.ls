@@ -71,6 +71,10 @@ on lerp(A: number, B: number, val: number)
   
 end
 
+on lerpPnt(A, B, val)
+  return point(lerp(A.locH, B.locH, val), lerp(A.locV, B.locV, val))
+end
+
 
 --lämnar tillbaks punkten där två linjer korsar varandra
 --(lämna in linjerna som rektanglar)

@@ -1,4 +1,4 @@
-global gLEProps, gLOprops
+global gLEProps, gLOprops, gFSLastTm, gFSFlag
 
 property p
 
@@ -41,11 +41,21 @@ on newUpdate me
       p.Input[3] = checkCustomKeybind(#GeoP2lace, "W")
   end case
   
+  fastScroll = false
+  if (p.Input[1].locH <> 0) or (p.Input[1].locV <> 0) then
+    if gFSFlag then
+      p.inputCntr = p.inputCntr + 1
+      fastScroll = (p.inputCntr > 12) and ((p.inputCntr mod 10) = 0)
+    end if
+  else
+    p.inputCntr = 0
+  end if
+  
   mv = point(0,0)
-  if (p.lastInput[1].locH <> p.Input[1].locH) then
+  if (p.lastInput[1].locH <> p.Input[1].locH) or fastScroll then
     mv.locH = p.Input[1].locH
   end if
-  if (p.lastInput[1].locV <> p.Input[1].locV) then
+  if (p.lastInput[1].locV <> p.Input[1].locV) or fastScroll then
     mv.locV = p.Input[1].locV
   end if
   if mv <> point(0,0) then
@@ -426,6 +436,7 @@ on new me, playNm
   
   p.addProp(#input, [point(0,0), 0, 0])
   p.addProp(#lastInput, [point(0,0), 0, 0])
+  p.addProp(#inputCntr, 0)
   
   p.addProp(#toolPos, point(1,1))
   p.addProp(#workPos, point(1,1))
@@ -460,7 +471,7 @@ end
 
 
 on moveCanvas me, mv
-  global gTEprops, gEEprops, gPEprops
+  global gTEprops, gEEprops, gPEprops, gCameraProps
   
   if mv.locH < 0 then
     sav = gLEProps.matrix[1]
@@ -470,10 +481,6 @@ on moveCanvas me, mv
     sav = gTEprops.tlMatrix[1]
     gTEprops.tlMatrix.deleteAt(1)
     gTEprops.tlMatrix.add(sav)
-    
---    sav = gPEprops.props[1]
---    gPEprops.props.deleteAt(1)
---    gPEprops.props.add(sav)
     
     repeat with eff in gEEprops.effects then
       sav = eff.mtrx[1]
@@ -489,10 +496,6 @@ on moveCanvas me, mv
     sav = gTEprops.tlMatrix[gLOprops.size.loch]
     gTEprops.tlMatrix.deleteAt(gLOprops.size.loch)
     gTEprops.tlMatrix.addAt(1, sav)
-    
-    --    sav = gPEprops.props[gLOprops.size.loch]
-    --    gPEprops.props.deleteAt(gLOprops.size.loch)
-    --    gPEprops.props.addAt(1, sav)
     
     repeat with eff in gEEprops.effects then
       sav = eff.mtrx[gLOprops.size.loch]
@@ -511,10 +514,6 @@ on moveCanvas me, mv
       sav = gTEprops.tlMatrix[q][1]
       gTEprops.tlMatrix[q].deleteAt(1)
       gTEprops.tlMatrix[q].add(sav)
---      
---      sav = gPEprops.props[q][1]
---      gPEprops.props[q].deleteAt(1)
---      gPEprops.props[q].add(sav)
       
       repeat with eff in gEEprops.effects then
         sav = eff.mtrx[q][1]
@@ -533,10 +532,6 @@ on moveCanvas me, mv
       gTEprops.tlMatrix[q].deleteAt(gLOprops.size.locv)
       gTEprops.tlMatrix[q].addAt(1, sav)
       
-      --      sav = gPEprops.props[q][gLOprops.size.locv]
-      --      gPEprops.props[q].deleteAt(gLOprops.size.locv)
-      --      gPEprops.props[q].addAt(1, sav)
-      
       repeat with eff in gEEprops.effects then
         sav = eff.mtrx[q][gLOprops.size.locv]
         eff.mtrx[q].deleteAt(gLOprops.size.locv)
@@ -544,6 +539,46 @@ on moveCanvas me, mv
       end repeat
     end repeat
   end if
+  
+  -- Move tiles and remove those that crossed over
+  repeat with q = 1 to gLOprops.size.locH then
+    repeat with c = 1 to gLOprops.size.locv then
+      repeat with l = 1 to 3 then
+        tl = gTEprops.tlMatrix[q][c][l]
+        -- Move tile body segments
+        if tl.tp = "tileBody" then
+          tl.data[1] = tl.data[1] + mv
+          if tl.data[1].locH < 1 or tl.data[1].locH > gLOprops.size.locH or tl.data[1].locV < 1 or tl.data[1].locV > gLOprops.size.locV then
+            gTEprops.tlMatrix[q][c][l] = [#tp:"default", #data:0]
+          end if
+        end if
+        if tl.tp = "tileHead" or tl.tp = "tileBody" then
+          if mv.locH < 0 and q = gLOprops.size.locH then
+            gTEprops.tlMatrix[q][c][l] = [#tp:"default", #data:0]
+          else if mv.locH > 0 and q = 1 then
+            gTEprops.tlMatrix[q][c][l] = [#tp:"default", #data:0]
+          end if
+          if mv.locV < 0 and c = gLOprops.size.locV then
+            gTEprops.tlMatrix[q][c][l] = [#tp:"default", #data:0]
+          else if mv.locV > 0 and c = 1 then
+            gTEprops.tlMatrix[q][c][l] = [#tp:"default", #data:0]
+          end if
+        end if
+      end repeat
+    end repeat
+  end repeat
+  
+  -- Move props
+  repeat with prop in gPEprops.props then
+    repeat with q = 1 to 4 then
+      prop[4][q] = prop[4][q] + 16*mv
+    end repeat
+    if prop[5][#points] <> void then
+      repeat with q = 1 to prop[5].points.count then
+        prop[5].points[q] = prop[5].points[q] + 20*mv
+      end repeat
+    end if
+  end repeat
   
   lvlEditDraw(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), 1)
   lvlEditDraw(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), 2)

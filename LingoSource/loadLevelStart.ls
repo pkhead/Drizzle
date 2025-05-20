@@ -1,9 +1,11 @@
-global projects, ldPrps, gLOADPATH, showControls, INT_EXIT, INT_EXRD
+global projects, ldPrps, gLOADPATH, showControls, INT_EXIT, INT_EXRD, gFSLastTm, gFSFlag
 
 on exitFrame me
   INT_EXIT = getStringConfig("Exit button")
   INT_EXRD = getStringConfig("Exit render button")
   showControls = getBoolConfig("Show controls")
+  gFSLastTm = _system.milliseconds
+  gFSFlag = false
   if checkMinimize() then
     _player.appMinimize()
     
@@ -59,4 +61,3 @@ on exitFrame me
   
   member("PalName").text = "Press 'N' to create a new level. Use left and right arrows to step in and out of subfolders"
 end
-

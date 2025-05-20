@@ -54,7 +54,14 @@ on exitFrame me
   script("effectsEditor").updateEffectsMenu(point(0,0))
   script("effectsEditor").updateEffectsL(0)
   script("effectsEditor").initMode("createNew")
-  script("propEditor").renderPropsImage()
+  if not getBoolConfig("Hide props in effects") then
+    sprite(238).visibility = true
+    sprite(239).visibility = true
+    script("propEditor").renderPropsImage()
+  else
+    sprite(238).visibility = false
+    sprite(239).visibility = false
+  end if
   script("effectsEditor").drawEfMtrx(gEEprops.editEffect)
 end
 

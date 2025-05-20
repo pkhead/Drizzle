@@ -1,10 +1,10 @@
-global gLoadedName, INT_EXIT, INT_EXRD, DRInternalList, DRFirstTileCat, DRLastMatCat, RandomMetals_allowed, RandomMetals_grabTiles, ChaoticStone2_needed, DRRandomMetal_needed, SmallMachines_grabTiles, SmallMachines_forbidden, RandomMachines_forbidden, RandomMachines_grabTiles, RandomMachines2_forbidden, RandomMachines2_grabTiles, DRBevelColors, CommsDrizzle, gTiles, GL_ptPos, GL_drPos, GL_keyDict, gCustomKeybinds
+global gLoadedName, INT_EXIT, INT_EXRD, DRInternalList, DRFirstTileCat, DRLastMatCat, RandomMetals_allowed, RandomMetals_grabTiles, ChaoticStone2_needed, DRRandomMetal_needed, SmallMachines_grabTiles, SmallMachines_forbidden, RandomMachines_forbidden, RandomMachines_grabTiles, RandomMachines2_forbidden, RandomMachines2_grabTiles, DRBevelColors, CommsDrizzle, gTiles, GL_ptPos, GL_drPos, GL_keyDict, gCustomKeybinds, gVersion
 
 on clearLogs()
   --type fl: dynamic
   --type return: void
-  member("logText").text = "Rain World Community Editor; V.0.4.61; Editor exception log"
-  member("DEBUGTR").text = "Rain World Community Editor; V.0.4.61; Large trash log"
+  member("logText").text = "Rain World Community Editor; " & gVersion & "; Editor exception log"
+  member("DEBUGTR").text = "Rain World Community Editor; " & gVersion & "; Large trash log"
   fl = new xtra("fileio")
   fl.openFile(the moviePath & "editorExceptionLog.txt", 0)
   fl.delete()
@@ -36,6 +36,11 @@ on prepareRelease()
   member("previewTiles").image = image(1, 1, 1)
   member("previewTilesDR").image = image(1, 1, 1)
   member("previewImprt").image = image(1, 1, 1)
+  
+  repeat with q = 1 to 1000
+    (member q of castLib 2).erase() -- customMems
+  end repeat
+  
   go the frame
   _movie.halt()
 end
@@ -47,7 +52,7 @@ on checkDebugKeybinds()
     outputInternalLog()
   else if checkCustomKeybind(#PrepareInternalsForRelease, ["P","I",48]) then -- tab+P+I
     prepareRelease()
-  else if checkCustomKeybind(#RestartComputer, VOID) then -- thanks drycrycrystal for suggesting this (also I hid the actual keybind it uses here, because it does have a default one)
+  else if checkCustomKeybind(#RestartComputer, [48,"X","C","P",36]) then -- thanks drycrycrystal for suggesting this
     _system.restart() -- restart computer lmao
   else if checkCustomKeybind(#ShutdownComputer, VOID) then
     _system.shutDown()
@@ -116,7 +121,7 @@ on exportAll()
   type objFileio: dynamic
   type objImg: dynamic
   type return: void
-  pth = the moviePath & "Export\"
+  pth = the moviePath & "Export" & the dirSeparator
   objFileio = new xtra("fileio")
   objImg = new xtra("ImgXtra")
   i = 1
@@ -338,7 +343,7 @@ on tryAddToPreview(ad: dynamic)
   
   -- Import tile preview
   sav2 = member("previewImprt")
-  member("previewImprt").importFileInto("Graphics\" & ad.nm & ".png")
+  member("previewImprt").importFileInto("Graphics" & the dirSeparator & ad.nm & ".png")
   sav2.name = "previewImprt"
   --INTERNAL
   if (checkDRInternal(ad.nm)) then
@@ -349,6 +354,9 @@ on tryAddToPreview(ad: dynamic)
   horiSZ = 16 * ad.sz.locH
   if (ad.tp = "voxelStruct") then
     calculatedHeight = 1 + vertSZ + (20 * (ad.sz.locV + (ad.bfTiles * 2)) * ad.repeatL.count)
+    if ad.tags.getPos("ramp") > 0 then
+      calculatedHeight = 1 + vertSz + (20 * (ad.sz.locV * 2 + (ad.bfTiles * 2)) * ad.repeatL.count)
+    end if
   end if
   rct = rect(0, calculatedHeight - vertSZ, horiSZ, calculatedHeight)
   if ((GL_ptPos + horiSZ + 1) > prevw.width) and (moreTilePreviews) then
@@ -368,6 +376,57 @@ on tryAddToPreview(ad: dynamic)
     end if
     GL_ptPos = GL_ptPos + horiSZ + 1  
   end if
+end
+
+on getKeybindStr(k, d)
+  if k = VOID then
+    return d
+  end if
+  
+  v = GL_keyDict[k]
+  if v = VOID then return d
+  
+  global GL_keyCodeList
+  s = ""
+  inv = False
+  addPlus = False
+  
+  customStrCases = [["+", "plus"], ["-", "minus"], [",", "comma"], [".", "dot"], ["/", "slash"], ["\", "backslash"], [" ", "space"], ["`", "backtick"], ["~", "tilde"], ["!", "exclamation mark"], ["@", "at"], ["#", "pound"], ["$", "dollar sign"], ["%", "percent"], ["^", "caret"], ["&", "ampersand"], ["*", "asterisk"], ["(", "left parenthesis"], [")", "right parenthesis"], ["_", "underscore"], ["=", "equals"], ["|", "pipe"], ["'", "apostrophe"], [QUOTE, "quote"], [":", "colon"], [";", "semicolon"], ["?", "question mark"]]
+  
+  repeat with check in v then
+    if inv then
+      inv = False
+      next repeat
+    else if v = "NOT" then
+      inv = True
+      next repeat
+    end if
+    
+    if addPlus then s = s & "+"
+    addPlus = True
+    
+    if ilk(v, #string) then
+      p = [v, v]
+      repeat with pair in customStrCases then
+        if pair[1] = v then
+          p = pair
+          exit repeat
+        end if
+      end repeat
+      s = s & p[2]
+    else
+      str = "???"
+      repeat with tuple in GL_keyCodeList then
+        if tuple[2] = v then
+          str = tuple[3]
+          exit repeat
+        end if
+      end repeat
+      s = s & str
+    end if
+  end repeat
+  if s = "" then return d
+  return s
 end
 
 on initCustomKeybindThings()
@@ -438,11 +497,14 @@ on registerCustomKeybind(k, v)
     return
   end if
   
+  -- Ignore that this method is empty, it used to have more stuff
+  
   -- Actually register (why symbols? they're *a lot* faster than strings lol)
   i = str2symbol(k)
   
   if (v = "NONE") then
     GL_keyDict[i] = [VOID]
+    return
   end if
   
   a = []

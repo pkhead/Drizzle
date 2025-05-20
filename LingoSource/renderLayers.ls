@@ -21,4 +21,3 @@ on exitFrame(me)
   renderLevel()
   c = 1
 end
-

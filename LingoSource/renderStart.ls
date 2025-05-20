@@ -37,15 +37,6 @@ on exitFrame me
   me.createShortCuts()
   
   tileSetIndex = []
-  --repeat with q = 1 to gTiles[1].tls.count then
-  --    if gTiles[1].tls[q].renderType = "unified" then
-  --      member("tileSet"&string(q)).image = image(1,1,32)
-  --      sav = member("tileSet"&string(q))
-  --      member("tileSet"&string(q)).importFileInto("Graphics\tileSet" &  gTiles[1].tls[q].nm &".png")
-  --      sav.name = "tileSet"&string(q)
-  --      tileSetIndex.add(gTiles[1].tls[q].nm)
-  --    end if
-  --end repeat
   
   
   

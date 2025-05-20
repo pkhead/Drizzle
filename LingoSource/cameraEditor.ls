@@ -220,4 +220,3 @@ on checkKey(key)
   gCameraProps.lastKeys[symbol(key)] = gCameraProps.keys[symbol(key)]
   return rtrn
 end
-

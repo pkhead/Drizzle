@@ -18,4 +18,3 @@ on exitFrame me
   
   script("cameraEditor").drawAll()
 end
-

@@ -75,7 +75,7 @@ on TEdraw(drwRect, layer, drawAll)
               
               mdPnt = point(((tl.sz.locH*0.5)+0.4999).integer,((tl.sz.locV*0.5)+0.4999).integer)
               strt = point(q,c)-mdPnt+point(1,1)-gLEprops.camPos
-              
+              ramp = tl.tags.getPos("ramp") > 0
               
               if (tl.specs2 <> void)and(layer<3) then
                 repeat with g = strt.locH to strt.locH + tl.sz.locH-1 then
@@ -83,7 +83,7 @@ on TEdraw(drwRect, layer, drawAll)
                     if(g+gLEprops.camPos.locH>0)and(h+gLEprops.camPos.locV>0)and(g+gLEprops.camPos.locH<gTEprops.tlMatrix.count+1)and(h+gLEprops.camPos.locV<gTEprops.tlMatrix[1].count+1)then
                       
                       drw = true
-                      if(tl.specs2[(h-strt.locV) + (g-strt.locH)*tl.sz.locV + 1] = -1)then
+                      if(tl.specs2[(h-strt.locV) + (g-strt.locH)*tl.sz.locV + 1] = -1) and not ramp then
                         drw = false
                       else if(gTEprops.tlMatrix[g+gLEprops.camPos.locH][h+gLEprops.camPos.locV][layer+1].tp = "tileHead")and(gTEprops.tlMatrix[q][c][layer].data <> gTEprops.tlMatrix[g+gLEprops.camPos.locH][h+gLEprops.camPos.locV][layer+1].data)then
                         drw = false
@@ -110,7 +110,7 @@ on TEdraw(drwRect, layer, drawAll)
                     
                     drw = true
                     
-                    if(tl.specs[(h-strt.locV) + (g-strt.locH)*tl.sz.locV + 1] = -1)then
+                    if(tl.specs[(h-strt.locV) + (g-strt.locH)*tl.sz.locV + 1] = -1) and not ramp then
                       drw = false  
                     else if (gTEprops.tlMatrix[g+gLEprops.camPos.locH][h+gLEprops.camPos.locV][layer].tp = "tileHead")and(gTEprops.tlMatrix[q][c][layer].data<> gTEprops.tlMatrix[g+gLEprops.camPos.locH][h+gLEprops.camPos.locV][layer].data)then
                       drw = false
@@ -139,4 +139,3 @@ on TEdraw(drwRect, layer, drawAll)
     end repeat
   end repeat
 end
-

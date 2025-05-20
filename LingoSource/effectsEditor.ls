@@ -1,4 +1,4 @@
-global gTEprops, gLEProps, gTiles, gEEProps, gEffects, lstSpace, gLOprops, gEnvEditorProps, gDirectionKeys, gPEProps, gProps, showControls, gCustomEffects
+global gTEprops, gLEProps, gTiles, gEEProps, gEffects, lstSpace, gLOprops, gEnvEditorProps, gDirectionKeys, gPEProps, gProps, showControls, gCustomEffects, gFSLastTm, gFSFlag
 
 
 on exitFrame me
@@ -10,41 +10,60 @@ on exitFrame me
   
   if dontRunStuff() then
     lstSpace = 0
+    gFSLastTm = _system.milliseconds
     go the frame
     return
   end if
   
+  gFSFlag = false
+  if _system.milliseconds - gFSLastTm > 10 then
+    gFSFlag = true
+    gFSLastTm = _system.milliseconds
+  end if
+  
   
   repeat with q = 1 to 4 then
-    
-    if (me.getDirection(q))and(gDirectionKeys[q] = 0) then
-      fast = checkCustomKeybind(#MoveFast, 83)
-      faster = checkCustomKeybind(#MoveFaster, 85)
-      gLEProps.camPos = gLEProps.camPos + [point(-1, 0), point(0,-1), point(1,0), point(0,1)][q] * (1 + 9 * fast + 34 * faster)
-      if not checkCustomKeybind(#MoveOutside, 92) then
-        if gLEProps.camPos.loch < -1 then
-          gLEProps.camPos.loch = -1
+    if (me.getDirection(q)) then
+      if gFSFlag then
+        if (gDirectionKeys[q] = 0) or (gDirectionKeys[q] > 20 and (gDirectionKeys[q] mod 2) = 0) then
+          fast = checkCustomKeybind(#MoveFast, 83)
+          faster = checkCustomKeybind(#MoveFaster, 85)
+          gLEProps.camPos = gLEProps.camPos + [point(-1, 0), point(0,-1), point(1,0), point(0,1)][q] * (1 + 9 * fast + 34 * faster)
+          if not checkCustomKeybind(#MoveOutside, 92) then
+            if gLEProps.camPos.loch < -1 then
+              gLEProps.camPos.loch = -1
+            end if
+            if gLEProps.camPos.locv < -1 then
+              gLEProps.camPos.locv = -1
+            end if  
+            if gLEProps.camPos.loch > gLEprops.matrix.count-51 then
+              gLEProps.camPos.loch = gLEprops.matrix.count-51
+            end if
+            if gLEProps.camPos.locv > gLEprops.matrix[1].count-39 then
+              gLEProps.camPos.locv = gLEprops.matrix[1].count-39
+            end if
+          end if
+          
+          repeat with l = 1 to 3 then
+            lvlEditDraw(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), l)
+            TEdraw(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), l)
+          end repeat
+          drawShortCutsImg(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), 16)
+          if not getBoolConfig("Hide props in effects") then
+            sprite(238).visibility = true
+            sprite(239).visibility = true
+            script("propEditor").renderPropsImage()
+          else
+            sprite(238).visibility = false
+            sprite(239).visibility = false
+          end if
+          me.drawEfMtrx(gEEprops.editEffect) 
         end if
-        if gLEProps.camPos.locv < -1 then
-          gLEProps.camPos.locv = -1
-        end if  
-        if gLEProps.camPos.loch > gLEprops.matrix.count-51 then
-          gLEProps.camPos.loch = gLEprops.matrix.count-51
-        end if
-        if gLEProps.camPos.locv > gLEprops.matrix[1].count-39 then
-          gLEProps.camPos.locv = gLEprops.matrix[1].count-39
-        end if
+        gDirectionKeys[q] = gDirectionKeys[q] + 1
       end if
-      repeat with l = 1 to 3 then
-        lvlEditDraw(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), l)
-        TEdraw(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), l)
-      end repeat
-      drawShortCutsImg(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), 16)
-      script("propEditor").renderPropsImage()
-      me.drawEfMtrx(gEEprops.editEffect)
-      
+    else
+      gDirectionKeys[q] = 0
     end if
-    gDirectionKeys[q] = me.getDirection(q)
   end repeat
   
   if gEnvEditorProps.waterLevel = -1 then
@@ -197,30 +216,58 @@ on checkKey me, key
   rtrn = 0
   
   kb = VOID
+  hasFastScroll = false
+  fastScrollRate = 6
   case key of
     "W":
       kb = #EffectSelectUp
+      hasFastScroll = true
     "S":
       kb = #EffectSelectDown
+      hasFastScroll = true
     "A":
       kb = #EffectCategoryPrev
+      hasFastScroll = true
+      fastScrollRate = 9
     "D":
       kb = #EffectCategoryNext
+      hasFastScroll = true
+      fastScrollRate = 9
     "N":
       kb = #EffectModeNew
     "E":
       kb = #EffectModeEdit
     "r":
       kb = #EffectBrushBigger
+      hasFastScroll = true
+      fastScrollRate = 12
     "f":
       kb = #EffectBrushSmaller
+      hasFastScroll = true
+      fastScrollRate = 12
   end case
   
-  gEEprops.keys[symbol(key)] = checkCustomKeybind(kb, key) and not dontRunStuff()
-  if (gEEprops.keys[symbol(key)])and(gEEprops.lastKeys[symbol(key)]=0) then
-    rtrn = 1
+  rslt = checkCustomKeybind(kb, key) and not dontRunStuff()
+  if hasFastScroll then
+    -- fast scroll
+    if rslt then
+      gEEprops.keys[symbol(key)] = gEEprops.keys[symbol(key)] + gFSFlag
+    else
+      gEEprops.keys[symbol(key)] = 0
+    end if
+    
+    if (gEEprops.keys[symbol(key)] = 1) or ((gEEprops.keys[symbol(key)] > 20) and ((gEEprops.keys[symbol(key)] mod fastScrollRate) = 0)) then
+      rtrn = gFSFlag
+    end if
+  else
+    -- no fast scroll
+    gEEprops.keys[symbol(key)] = rslt
+    if (gEEprops.keys[symbol(key)])and(gEEprops.lastKeys[symbol(key)]=0) then
+      rtrn = 1
+    end if
   end if
   gEEprops.lastKeys[symbol(key)] = gEEprops.keys[symbol(key)]
+  
   return rtrn
 end
 
@@ -454,7 +501,7 @@ on newEffect me
       ef.options.add(["3D", ["Off", "On"], "Off"])
       ef.options.add(["Affect Gradients and Decals", ["Yes", "No"], "No"])
       
-    "Rubble":
+    "Rubble", "Wire Bunches":
       ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
       
     "Colored Rubble":
@@ -468,7 +515,7 @@ on newEffect me
       ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "1"])
       ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
       
-    "Foliage", "High Grass", "High Fern", "Mistletoe", "Reeds", "Lavenders":
+    "Foliage", "High Grass", "High Fern", "Mistletoe", "Reeds", "Lavenders", "Spindles", "Box Grubs":
       ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
       ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
       
@@ -480,7 +527,7 @@ on newEffect me
       ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
       ef.options.add(["Effect Color", ["EffectColor1", "EffectColor2", "None"], "None"])
       
-    "Fern", "Giant Mushroom", "Sprawlbush", "featherFern", "Fungus Tree":
+    "Fern", "Giant Mushroom", "Sprawlbush", "featherFern", "Fungus Tree", "Sprawlroots", "Fungus Roots":
       ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "1"])
       ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
       
@@ -519,7 +566,7 @@ on newEffect me
       ef.options.add(["Finger Thickness", ["Small", "Medium", "FAT", "Random"], "Medium"])
       ef.options.add(["Finger Length", ["Short", "Medium", "Tall", "Random"], "Medium"])
       
-    "Head Lamp":
+    "Head Lamp", "Ceiling Lamp":
       ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
       ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Dead"])
       ef.options.add(["Lamp Color", ["Color1", "Color2", "Dead"], "Dead"])
@@ -689,11 +736,13 @@ on useBrush me, pnt, fac
       end repeat
     end if
     strength = 10 + (90* checkCustomKeybind(#EffectBrushPowerful, "T"))
-    if ["BlackGoo", "Fungi Flowers", "Lighthouse Flowers", "Colored Fungi Flowers", "Colored Lighthouse Flowers", "High Fern", "High Grass", "Fern", "Giant Mushroom", "Sprawlbush", "featherFern", "Fungus Tree", "Restore As Scaffolding", "Restore As Pipes", "Small Springs", "Super BlackGoo", "Stained Glass Properties", "Cobwebs", "Hand Growers", "Head Lamp"].getPos(efName)>0 then
+    if ["BlackGoo", "Fungi Flowers", "Lighthouse Flowers", "Colored Fungi Flowers", "Colored Lighthouse Flowers", "High Fern", "High Grass", "Fern", "Giant Mushroom", "Sprawlbush", "featherFern", "Fungus Tree", "Restore As Scaffolding", "Restore As Pipes", "Small Springs", "Super BlackGoo", "Stained Glass Properties", "Cobwebs", "Hand Growers", "Head Lamp", "Sprawlroots", "Fungus Roots", "Ceiling Lamp"].getPos(efName)>0 then
       strength = 10000
       if (efName <> "BlackGoo") and (efName <> "Super BlackGoo") then
         gEEprops.brushSize = 1
       end if
+    else if efName = "Box Grubs" then
+      gEEprops.brushSize = 1
     else if cEff <> VOID then
       if cEff.tp = "individual" or cEff.tp = "individualHanger" or cEff.tp = "individualClinger" then
         strength = 10000
@@ -769,7 +818,7 @@ on initMode me, md
     "createNew":
       -- me.drawEfMtrx(rect(1,1,52,40), 0)
       sprite(229).rect = rect((53*16)+8, 8, 1366-8, 10*16)
-      member("EEhelp").text = "Create new: Use the W, A, S, D keys and the spacebar to select an effect to add. Press E to edit effects added previously."    
+      member("EEhelp").text = "Create new: Use the W, A, S, D keys and the spacebar to select an effect to add. Press E to edit effects added previously."
     otherwise:
       sprite(229).rect = rect(-1, -1, -1, -1)
       member("EEhelp").text = "---"    

@@ -22,7 +22,7 @@ public partial class LingoRuntime
     private readonly Dictionary<string, LingoCastLib>
         _castLibNames = new(StringComparer.InvariantCultureIgnoreCase);
 
-    private readonly LingoCastLib[] _castLibs = new LingoCastLib[8];
+    private readonly LingoCastLib[] _castLibs = new LingoCastLib[10];
 
     // This is intentionally case sensitive, see GetCastMemberAnyCast.
     private readonly Dictionary<string, CastMember> _castMemberNameIndex = new();
@@ -129,6 +129,8 @@ public partial class LingoRuntime
     {
         var i = 0;
         // These offsets make no sense wtf director
+        // Alduris: Actually they do make perfect sense, they're all increments of 65536,
+        // except for some reason there's an extra jump of 65536 between Internal and customMems
         InitLib("Internal", 0);
         InitLib("customMems", 131072);
         InitLib("soundCast", 196608);
@@ -137,6 +139,8 @@ public partial class LingoRuntime
         InitLib("Drought", 393216);
         InitLib("Dry Editor", 458752);
         InitLib("MSC", 524288);
+        InitLib("Watcher", 589824);
+        InitLib("Effects", 655360);
 
         void InitLib(string name, int offset)
         {

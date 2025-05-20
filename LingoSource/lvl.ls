@@ -352,5 +352,3 @@ end
 on saveLvl()
   -- member("matrixTxt").text = string(gMatrix)
 end
-
-

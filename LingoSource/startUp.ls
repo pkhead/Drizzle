@@ -1,6 +1,9 @@
-global gSaveProps, gTEprops, gTiles, gLEProps, gFullRender, gEEprops, gEffects, gLightEProps, lvlPropOutput, gLEVEL, gLOprops, gLoadedName, gViewRender, gMassRenderL, gCameraProps, gImgXtra, gEnvEditorProps, gPEprops, altGrafLG, gMegaTrash, showControls, gProps, gLOADPATH, gTrashPropOptions, solidMtrx, INT_EXIT, INT_EXRD, DRCustomMatList, DRLastTL, gCustomEffects, GL_ptPos, GL_drPos, GL_keyDict, gCustomLights
+global gSaveProps, gTEprops, gTiles, gLEProps, gFullRender, gEEprops, gEffects, gLightEProps, lvlPropOutput, gLEVEL, gLOprops, gLoadedName, gViewRender, gMassRenderL, gCameraProps, gImgXtra, gEnvEditorProps, gPEprops
+global altGrafLG, gMegaTrash, showControls, gProps, gLOADPATH, gTrashPropOptions, solidMtrx, INT_EXIT, INT_EXRD, DRCustomMatList, DRLastTL, gCustomEffects, GL_ptPos, GL_drPos, GL_keyDict, gCustomLights, gVersion
 
 on exitFrame me
+  gVersion = "V.0.4.63"
+  
   hadException: number = 0
   
   --  clearAsObjects()
@@ -11,7 +14,7 @@ on exitFrame me
   -- Load config
   member("editorConfig").text = ""
   member("editorConfig").importFileInto("editorConfig.txt")
-  if (member("editorConfig").text = VOID) or (member("editorConfig").text = "") or (member("editorConfig").text.line[1] <> member("baseConfig").text.line[1]) then
+  if not checkIsDrizzleRendering() and ((member("editorConfig").text = VOID) or (member("editorConfig").text = "") or (member("editorConfig").text.line[1] <> member("baseConfig").text.line[1])) then
     fileCo = new xtra("fileio")
     fileCo.createFile(the moviePath & "editorConfig.txt")
     fileCo.openFile(the moviePath & "editorConfig.txt", 0)
@@ -58,8 +61,8 @@ on exitFrame me
     
     screenSize = _system.deskTopRectList/2
     
-    midPos: point = screenResolutionPoint/2
-    windowRect: rect = rect(midPos-screenSize, midPos+screenSize)
+    midPos = screenResolutionPoint/2
+    windowRect = rect(midPos-screenSize, midPos+screenSize)
     _movie.window.rect = windowRect
     _movie.stage.drawRect = windowRect
   else
@@ -72,7 +75,7 @@ on exitFrame me
   global gCustomKeybinds, GL_keyDict
   gCustomKeybinds = 0
   GL_keyDict = VOID
-  if getBoolConfig("Custom keybinds") then
+  if getBoolConfig("Custom keybinds") and not checkIsDrizzleRendering() then
     member("editorKeybinds").text = ""
     member("editorKeybinds").importFileInto("editorKeybinds.txt")
     if (member("editorKeybinds").text <> VOID and member("editorKeybinds").text <> "") then
@@ -278,6 +281,7 @@ on exitFrame me
   setFirstTileCat(gTiles.count + 1)
   
   sav = member("initImport")
+  sav.text = ""
   member("initImport").importFileInto("Graphics" & the dirSeparator & "Init.txt")
   sav.text = sav.text&RETURN&RETURN&member("Drought Needed Init").text
   sav.name = "initImport"
@@ -376,85 +380,67 @@ on exitFrame me
   rndDisF = getBoolConfig("voxelStructRandomDisplace for tiles as props")
   tAsPFixes = getBoolConfig("Tiles as props fixes")
   repeat with q = getFirstTileCat() to gTiles.count
+    gPageTick = 0
     repeat with c = 1 to gTiles[q].tls.count
-      if gPageTick = 0 then
-        gPageTick = 21
-        gPageCount = gPageCount + 1
-        gProps.add([#nm:"Tiles as props " & gPageCount, #clr:color(255, 0,0), #prps:[]])
-      end if
+      --if gPageTick = 0 then
+      --  gPageTick = 21
+      --  gPageCount = gPageCount + 1
+      --  gProps.add([#nm:"Tiles as props " & gPageCount, #clr:color(255, 0,0), #prps:[]])
+      --end if
       tl = gTiles[q].tls[c]
-      if((tl.tp = "voxelStruct") or (tl.tp = "voxelStructRandomDisplaceVertical" and rndDisF) or (tl.tp = "voxelStructRandomDisplaceHorizontal" and rndDisF))and(tl.tags.getPos("notProp") = 0)then
-        --Ugly part Ik
-        eCAT = ""
-        eCBT = ""
-        dcT = ""
-        cCT = ""
-        cCRT = ""
-        rRT = ""
-        rFXT = ""
-        rFYT = ""
-        cST = ""
-        cSBT = ""
-        lST = ""
-        lSBT = ""
-        dRT = ""
-        INTE = ""
-        NMTP = ""
-        if (tl.tags.getPos("notMegaTrashProp") > 0) then
-          NMTP = "notMegaTrashProp"
+      if((tl.tp = "voxelStruct") or (tl.tp = "voxelStructRockType") or (tl.tp = "voxelStructRandomDisplaceVertical" and rndDisF) or (tl.tp = "voxelStructRandomDisplaceHorizontal" and rndDisF))and(tl.tags.getPos("notProp") = 0)then
+        --Ugly part Ik (I made it less ugly -Alduris)
+        tlTags = ["Tile"]
+        noFixTags = ["Tile"]
+        if (tl.tp = "voxelStructRockType") then
+          tlTags.append("rockType")
+          noFixTags.append("rockType")
         end if
-        if(tl.tags.getPos("effectColorA") > 0) then
-          eCAT = "effectColorA"
+        if (tl.tags.getPos("notMegaTrashProp") > 0) then 
+          tlTags.append("notMegaTrashProp")
+          noFixTags.append("notMegaTrashProp")
         end if
-        if(tl.tags.getPos("effectColorB") > 0) then
-          eCBT = "effectColorB"
+        if(tl.tags.getPos("effectColorA") > 0) then tlTags.append("effectColorA")
+        if(tl.tags.getPos("effectColorB") > 0) then tlTags.append("effectColorB")
+        if(tl.tags.getPos("colored") > 0) then tlTags.append("colored")
+        if(tl.tags.getPos("customColor") > 0) then tlTags.append("customColor")
+        if(tl.tags.getPos("customColorRainbow") > 0) then tlTags.append("customColorRainbow")
+        if(tl.tags.getPos("randomRotat") > 0) then tlTags.append("randomRotat")
+        if(tl.tags.getPos("randomFlipX") > 0) then tlTags.append("randomFlipX")
+        if(tl.tags.getPos("randomFlipY") > 0) then tlTags.append("randomFlipY")
+        if(tl.tags.getPos("Circular Sign") > 0) then tlTags.append("Circular Sign")
+        if(tl.tags.getPos("Circular Sign B") > 0) then tlTags.append("Circular Sign B")
+        if(tl.tags.getPos("Larger Sign") > 0) then tlTags.append("Larger Sign")
+        if(tl.tags.getPos("Larger Sign B") > 0) then tlTags.append("Larger Sign B")
+        if(tl.tags.getPos("notTrashProp") > 0) then
+          tlTags.append("notTrashProp")
+          noFixTags.append("notTrashProp")
         end if
-        if(tl.tags.getPos("colored") > 0) then
-          dcT = "colored"
-        end if
-        if(tl.tags.getPos("customColor") > 0) then
-          cCT = "customColor"
-        end if
-        if(tl.tags.getPos("customColorRainbow") > 0) then
-          cCRT = "customColorRainbow"
-        end if
-        if(tl.tags.getPos("randomRotat") > 0) then
-          rRT = "randomRotat"
-        end if
-        if(tl.tags.getPos("randomFlipX") > 0) then
-          rFXT = "randomFlipX"
-        end if
-        if(tl.tags.getPos("randomFlipY") > 0) then
-          rFYT = "randomFlipY"
-        end if
-        if(tl.tags.getPos("Circular Sign") > 0) then
-          cST = "Circular Sign"
-        end if
-        if(tl.tags.getPos("Circular Sign B") > 0) then
-          cSBT = "Circular Sign B"
-        end if
-        if(tl.tags.getPos("Larger Sign") > 0) then
-          lST = "Larger Sign"
-        end if
-        if(tl.tags.getPos("Larger Sign B") > 0) then
-          lSBT = "Larger Sign B"
-        end if
-        if(tl.tags.getPos("notTrashProp") > 0)then
-          nTP = "notTrashProp"
-        end if
-        if(tl.tags.getPos("INTERNAL") > 0)then
-          INTE = "INTERNAL"
+        if(tl.tags.getPos("INTERNAL") > 0)then 
+          tlTags.append("INTERNAL")
+          noFixTags.append("INTERNAL")
         end if
         --End ugly part
+        if (tl.tp = "voxelStructRockType") then
+          repeatL = [10 + (tl.specs2 <> [])*10]
+        else
+          repeatL = tl.repeatL
+        end if
+        
         if (tAsPFixes) then
-          if (tl.rnd > 1)then
-            ad = [#nm:tl.nm, #tp:"variedStandard", #colorTreatment:"standard", #sz:tl.sz + point(tl.bfTiles*2, tl.bfTiles*2), #depth:10 + (tl.specs2 <> [])*10, #repeatL:tl.repeatL, #vars:tl.rnd, #random:1, #tags:["Tile", nTP, eCAT, eCBT, dcT, cCT, cCRT, rRT, rFXT, rFYT, cST, cSBT, lST, lSBT, INTE, NMTP], #layerExceptions:[], #notes:["Tile as prop"]]
+          if (tl.rnd > 1) then
+            ad = [#nm:tl.nm, #tp:"variedStandard", #colorTreatment:"standard", #sz:tl.sz + point(tl.bfTiles*2, tl.bfTiles*2), #depth:10 + (tl.specs2 <> [])*10, #repeatL:repeatL, #vars:tl.rnd, #random:1, #tags:tlTags, #layerExceptions:[], #notes:["Tile as prop"]]
           else
-            ad = [#nm:tl.nm, #tp:"standard", #colorTreatment:"standard", #sz:tl.sz + point(tl.bfTiles*2, tl.bfTiles*2), #depth:10 + (tl.specs2 <> [])*10, #repeatL:tl.repeatL, #tags:["Tile", nTP, eCAT, eCBT, dcT, cCT, cCRT, rRT, rFXT, rFYT, cST, cSBT, lST, lSBT, INTE, NMTP], #layerExceptions:[], #notes:["Tile as prop"]]
+            ad = [#nm:tl.nm, #tp:"standard", #colorTreatment:"standard", #sz:tl.sz + point(tl.bfTiles*2, tl.bfTiles*2), #depth:10 + (tl.specs2 <> [])*10, #repeatL:repeatL, #tags:tlTags, #layerExceptions:[], #notes:["Tile as prop"]]
           end if
         else
-          ad = [#nm:tl.nm, #tp:"standard", #colorTreatment:"standard", #sz:tl.sz + point(tl.bfTiles*2, tl.bfTiles*2), #depth:10 + (tl.specs2 <> [])*10, #repeatL:tl.repeatL, #tags:["Tile", nTP, INTE, NMTP], #layerExceptions:[], #notes:["Tile as prop"]]
+          ad = [#nm:tl.nm, #tp:"standard", #colorTreatment:"standard", #sz:tl.sz + point(tl.bfTiles*2, tl.bfTiles*2), #depth:10 + (tl.specs2 <> [])*10, #repeatL:repeatL, #tags:noFixTags, #layerExceptions:[], #notes:["Tile as prop"]]
         end if
+        
+        if gPageTick = 0 then
+          gProps.add([#nm:gTiles[q].nm, #clr:color(255,0,0), #prps:[]])
+        end if
+        
         ad.addProp(#category, gProps.count)
         gProps[gProps.count].prps.add(ad)
         gPageTick = gPageTick - 1
@@ -624,7 +610,7 @@ on exitFrame me
   savEf = member("effectsInit")
   member("effectsInit").importFileInto("effectsInit.txt")
   savEf.name = "effectsInit"
-  if (savEf.text = VOID) or (savEf.text = "") or (savEf.text.line[1] <> member("baseEffectsInit").text.line[1]) then
+  if (savEf.text <> VOID) and (savEf.text <> "") and (savEf.text.line[1] <> member("baseEffectsInit").text.line[1]) and not checkIsDrizzleRendering() then
     fileEf = new xtra("fileio")
     fileEf.createFile(the moviePath & "effectsInit.txt")
     fileEf.openFile(the moviePath & "effectsInit.txt", 0)
@@ -650,7 +636,7 @@ on exitFrame me
     end if
   end repeat
   if (gEffects.count >= 1) then
-    repeat with del = 1 to gEffects.count
+    repeat with del = gEffects.count down to 1
       if (gEffects[del].efs.count < 1) then
         gEffects.deleteAt(del)
       end if
@@ -803,18 +789,31 @@ on exitFrame me
     gEffects[gEffects.count].efs.add([#nm:"Lollipop Mold"])
     gEffects[gEffects.count].efs.add([#nm:"Cobwebs"])
     gEffects[gEffects.count].efs.add([#nm:"Fingers"])
+    gEffects[gEffects.count].efs.add([#nm:"Sprawlroots"])
+    gEffects[gEffects.count].efs.add([#nm:"Fungus Roots"])
     
     gEffects.add([#nm:"April Plants", #efs:[]])
     gEffects[gEffects.count].efs.add([#nm:"Grape Roots"])
     gEffects[gEffects.count].efs.add([#nm:"Og Grass"])
     gEffects[gEffects.count].efs.add([#nm:"Hand Growers"])
-    gEffects[gEffects.count].efs.add([#nm:"Head Lamps"])
+    gEffects[gEffects.count].efs.add([#nm:"Head Lamp"])
+    gEffects[gEffects.count].efs.add([#nm:"Ceiling Lamp"])
+    gEffects[gEffects.count].efs.add([#nm:"Spindles"])
+    
+    -- THE FOLLOWING EFFECTS ARE NOT FOR PUBLIC USE. DO NOT USE WITHOUT PERMISSION.
+    if getBoolConfig("HB special") then
+      gEffects[gEffects.count].efs.add([#nm:"Wire Bunches"]) -- contact @aprilistheworstmonthever before use
+    end if
+    if getBoolConfig("Hog special") then
+      gEffects[gEffects.count].efs.add([#nm:"Box Grubs"]) -- contact @slithersss before use
+    end if
+    
   end if
   
   -- Custom effects
   sav = member("initImport")
   sav.text = ""
-  member("initImport").importFileInto("Effects" & the dirSeparator & "Init.txt")
+  member("initImport").importFileInto("Effects"&the dirSeparator&"Init.txt")
   sav.name = "initImport"
   
   didNewHeading = 0
@@ -873,7 +872,7 @@ on exitFrame me
   gCustomLights = []
   if not checkIsDrizzleRendering() then
     
-    pth = the moviePath & "Lights\"
+    pth = the moviePath & "Lights" & the dirSeparator
     i = 1
     repeat while true then
       n = getNthFileNameInFolder(pth, i)
