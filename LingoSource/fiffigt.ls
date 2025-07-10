@@ -689,6 +689,19 @@ on CacheLoadImage(fileName: string)
   -- implemented in C#
 end
 
+--April:
+--for the decay of the diameter of a sphere as you go forward in depth
+--for making  the size of a rect decrease as you go along a sphere
+--put  it into desmos (x = sqrt( r^2 - y^2)) for a visual example
+on SphereDepth(startRadius, depthAmount)
+  if depthAmount = 0 then
+    return startRadius
+  else if depthAmount > startRadius then
+  return 0  
+  else
+    return sqrt(power(startRadius, 2) - power(depthAmount, 2))
+  end if
+end
 
 
 
