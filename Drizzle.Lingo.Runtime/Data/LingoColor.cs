@@ -1,6 +1,4 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading.Channels;
 using Serilog;
 
 namespace Drizzle.Lingo.Runtime;
@@ -31,24 +29,24 @@ public struct LingoColor : IEquatable<LingoColor>
 
     public LingoNumber red
     {
-        get => RedByte;
+        readonly get => RedByte;
         set => RedByte = (byte)value.IntValue;
     }
 
     public LingoNumber green
     {
-        get => GreenByte;
+        readonly get => GreenByte;
         set => GreenByte = (byte)value.IntValue;
     }
 
     public LingoNumber blue
     {
-        get => BlueByte;
+        readonly get => BlueByte;
         set => BlueByte = (byte)value.IntValue;
     }
 
     // Pack as BGRA32
-    public int BitPack => (int)(0xFF_00_00_00
+    public readonly int BitPack => (int)(0xFF_00_00_00
                                 | (uint)(RedByte << 16)
                                 | (uint)(GreenByte << 8)
                                 | (uint)(BlueByte << 0));
@@ -86,24 +84,29 @@ public struct LingoColor : IEquatable<LingoColor>
         return (int)paletteIndex;
     }
 
-    public bool Equals(LingoColor other)
+    public readonly bool Equals(LingoColor other)
     {
         return RedByte == other.RedByte && GreenByte == other.GreenByte && BlueByte == other.BlueByte;
     }
 
-    public override bool Equals(object? obj)
+    public readonly bool Equals(LingoNumber number)
     {
-        return obj is LingoColor other && Equals(other);
+        // hacky fix for (color = -1) problem that I'm unsure what the cause is (GetPixel sometimes returns -1 and it's not explained why)
+        return BitPack == number.IntValue;
     }
 
-    [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
-    public override int GetHashCode()
+    public override readonly bool Equals(object? obj)
+    {
+        return (obj is LingoColor other && Equals(other)) || (obj is LingoNumber number && Equals(number));
+    }
+
+    public override readonly int GetHashCode()
     {
         return HashCode.Combine(RedByte, GreenByte, BlueByte);
     }
 
     public LingoNumber this[LingoNumber index] {
-        get {
+        readonly get {
             return index.IntValue switch {
                 1 => red,
                 2 => green,
@@ -138,7 +141,7 @@ public struct LingoColor : IEquatable<LingoColor>
         return !left.Equals(right);
     }
 
-    public override string ToString()
+    public override readonly string ToString()
     {
         return $"color( {RedByte}, {GreenByte}, {BlueByte} )";
     }
