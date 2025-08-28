@@ -1267,7 +1267,7 @@ on applyDaddyCorruption me, q, c, amount
     
     if(solid = 0)and(dp < 27)and(rad > 1.2)then
       repeat with dr in [point(0,0), point(-1,0), point(0,-1), point(0,1), point(1,0)]then
-        if( member("layer"&string(dp+2)).getPixel(startPos.locH + dr.locH*rad*0.5, startPos.locV + dr.locV*rad*0.5) <> -1)then --compare it to -1 here, not to white
+        if( member("layer"&string(dp+2)).getPixel(startPos.locH + dr.locH*rad*0.5, startPos.locV + dr.locV*rad*0.5) <> color(255,255,255))then --DRIZZLE FIX: COMPARE TO WHITE, NOT -1
           rad = rad / 2
           solid = 1
           exit repeat
@@ -1367,7 +1367,7 @@ on applyCorruptionNoEye me, q, c, amount
     
     if(solid = 0)and(dp < 27)and(rad > 1.2)then
       repeat with dr in [point(0,0), point(-1,0), point(0,-1), point(0,1), point(1,0)]then
-        if( member("layer"&string(dp+2)).getPixel(startPos.locH + dr.locH*rad*0.5, startPos.locV + dr.locV*rad*0.5) <> -1)then --compare it to -1 here, not to white
+        if( member("layer"&string(dp+2)).getPixel(startPos.locH + dr.locH*rad*0.5, startPos.locV + dr.locV*rad*0.5) <> color(255,255,255))then --DRIZZLE FIX: COMPARE TO WHITE, NOT -1
           rad = rad / 2
           solid = 1
           exit repeat
