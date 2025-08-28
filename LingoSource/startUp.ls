@@ -2,7 +2,7 @@ global gSaveProps, gTEprops, gTiles, gLEProps, gFullRender, gEEprops, gEffects, 
 global altGrafLG, gMegaTrash, showControls, gProps, gLOADPATH, gTrashPropOptions, solidMtrx, INT_EXIT, INT_EXRD, DRCustomMatList, DRLastTL, gCustomEffects, GL_ptPos, GL_drPos, GL_keyDict, gCustomLights, gVersion
 
 on exitFrame me
-  gVersion = "V.0.4.63"
+  gVersion = "V.0.4.64"
   
   hadException: number = 0
   
@@ -395,6 +395,12 @@ on exitFrame me
         if (tl.tp = "voxelStructRockType") then
           tlTags.append("rockType")
           noFixTags.append("rockType")
+          if not getBoolConfig("Rock types in large trash") then
+            tlTags.append("notTrashProp")
+            noFixTags.append("notTrashProp")
+            tlTags.append("notMegaTrashProp")
+            noFixTags.append("notMegaTrashProp")
+          end if
         end if
         if (tl.tags.getPos("notMegaTrashProp") > 0) then 
           tlTags.append("notMegaTrashProp")
@@ -504,6 +510,15 @@ on exitFrame me
   propsInCat.add([#nm:"Twisted Thread", #tp:"long", #depth:0, #tags:[], #notes:[]])
   propsInCat.add([#nm:"Stretched Wire", #tp:"long", #depth:0, #tags:[], #notes:[]])
   propsInCat.add([#nm:"Long Barbed Wire", #tp:"long", #depth:0, #tags:[], #notes:[]])
+  
+  gProps.add([#nm:"April Longs", #clr:color(0, 255, 0), #prps:[]])
+  propsInCat = gProps[gProps.count].prps
+  propsInCat.add([#nm:"Moss Drop", #tp:"long", #depth:3, #tags:[], #notes:["Keep in mind this long will droop in in front of anything solid, if you dont want something to collide with it, render it after this prop"]])
+  propsInCat.add([#nm:"Moss Drop A", #tp:"long", #depth:3, #tags:["effectColorA"], #notes:["Keep in mind this long will droop in in front of anything solid, if you dont want something to collide with it, render it after this prop"]])
+  propsInCat.add([#nm:"Moss Drop B", #tp:"long", #depth:3, #tags:["effectColorB"], #notes:["Keep in mind this long will droop in in front of anything solid, if you dont want something to collide with it, render it after this prop"]])
+  propsInCat.add([#nm:"Moss Hang", #tp:"long", #depth:3, #tags:[], #notes:["For best results you should place this on the back sublayers of whatever layer you're trying to place this on, and allow the moss to kinda 'lerch' forward. The moss starts placing in the middle of the long, and follows gravity."]]) 
+  propsInCat.add([#nm:"Moss Hang A", #tp:"long", #depth:3, #tags:["effectColorA"], #notes:["For best results you should place this on the back sublayers of whatever layer you're trying to place this on, and allow the moss to kinda 'lerch' forward. The moss starts placing in the middle of the long, and follows gravity."]])
+  propsInCat.add([#nm:"Moss Hang B", #tp:"long", #depth:3, #tags:["effectColorB"], #notes:["For best results you should place this on the back sublayers of whatever layer you're trying to place this on, and allow the moss to kinda 'lerch' forward. The moss starts placing in the middle of the long, and follows gravity."]])
   
   gTrashPropOptions = []
   gMegaTrash = []
@@ -802,10 +817,14 @@ on exitFrame me
     
     -- THE FOLLOWING EFFECTS ARE NOT FOR PUBLIC USE. DO NOT USE WITHOUT PERMISSION.
     if getBoolConfig("HB special") then
-      gEffects[gEffects.count].efs.add([#nm:"Wire Bunches"]) -- contact @aprilistheworstmonthever before use
+      -- contact @aprilistheworstmonthever before use:
+      gEffects[gEffects.count].efs.add([#nm:"Wire Bunches"])
+      gEffects[gEffects.count].efs.add([#nm:"Orblings"])
+      gEffects[gEffects.count].efs.add([#nm:"Mama Orblings"])
     end if
     if getBoolConfig("Hog special") then
-      gEffects[gEffects.count].efs.add([#nm:"Box Grubs"]) -- contact @slithersss before use
+      -- contact @slithersss before use:
+      gEffects[gEffects.count].efs.add([#nm:"Box Grubs"])
     end if
     
   end if
