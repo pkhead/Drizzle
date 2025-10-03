@@ -1,8 +1,8 @@
 global gSaveProps, gTEprops, gTiles, gLEProps, gFullRender, gEEprops, gEffects, gLightEProps, lvlPropOutput, gLEVEL, gLOprops, gLoadedName, gViewRender, gMassRenderL, gCameraProps, gImgXtra, gEnvEditorProps, gPEprops
-global altGrafLG, gMegaTrash, showControls, gProps, gLOADPATH, gTrashPropOptions, solidMtrx, INT_EXIT, INT_EXRD, DRCustomMatList, DRLastTL, gCustomEffects, GL_ptPos, GL_drPos, GL_keyDict, gCustomLights, gVersion
+global altGrafLG, gMegaTrash, showControls, gProps, gLOADPATH, gTrashPropOptions, solidMtrx, INT_EXIT, INT_EXRD, DRCustomMatList, DRLastTL, gCustomEffects, GL_ptPos, GL_drPos, GL_keyDict, gCustomLights, gVersion, ldEvilCangleLayer
 
 on exitFrame me
-  gVersion = "V.0.4.64"
+  gVersion = "V.0.4.65"
   
   hadException: number = 0
   
@@ -37,6 +37,7 @@ on exitFrame me
   gFullRender = 1
   gViewRender = 1 - getBoolConfig("Fast render")
   DRLastTL = 1
+  ldEvilCangleLayer = FALSE
   gMassRenderL = []
   gLOADPATH = []
   
@@ -93,8 +94,8 @@ on exitFrame me
   end if
   
   -- LEVELEDITOR!!!!!
-  cols: number = 72--gLOprops.size.loch
-  rows: number = 43--gLOprops.size.locv
+  cols = 72--gLOprops.size.loch
+  rows = 43--gLOprops.size.locv
   
   gLEProps = [#matrix:[] , #levelEditors:[] , #toolMatrix:[],#camPos:point(0,0)]
   
@@ -195,7 +196,7 @@ on exitFrame me
   tilesInCat.add([#nm:"Chaotic Greeble", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(100,100,100)])
   
   savLM = member("matInit")
-  member("matInit").importFileInto("Materials" & the dirSeparator & "Init.txt")
+  member("matInit").importFileInto("Materials/Init.txt")
   savLM.name = "matInit"
   DRCustomMatList = []
   if (savLM.text <> VOID) and (savLM.text <> "") then
@@ -222,7 +223,7 @@ on exitFrame me
               if (matTl[#renderType] = "customAutofit") then
                 afMat = member("initImport")
                 afMat.text = ""
-                member("initImport").importFileInto("Materials" & the dirSeparator & matTl.nm & ".txt")
+                member("initImport").importFileInto("Materials/" & matTl.nm & ".txt")
                 afMat.name = "initImport"
                 
                 -- Make sure parts are correct
@@ -282,7 +283,7 @@ on exitFrame me
   
   sav = member("initImport")
   sav.text = ""
-  member("initImport").importFileInto("Graphics" & the dirSeparator & "Init.txt")
+  member("initImport").importFileInto("Graphics/Init.txt")
   sav.text = sav.text&RETURN&RETURN&member("Drought Needed Init").text
   sav.name = "initImport"
   
@@ -328,7 +329,7 @@ on exitFrame me
   global gPEcolors
   gPEcolors = []
   sav = member("initImport")
-  member("initImport").importFileInto("Props" & the dirSeparator & "propColors.txt")
+  member("initImport").importFileInto("Props/propColors.txt")
   sav.name = "initImport"
   repeat with q = 1 to the number of lines in sav.text then
     if sav.text.line[q] <> "" then
@@ -337,7 +338,7 @@ on exitFrame me
   end repeat
   
   sav = member("initImport")
-  member("initImport").importFileInto("Props" & the dirSeparator & "Init.txt")
+  member("initImport").importFileInto("Props/Init.txt")
   sav.name = "initImport"
   
   repeat with q = 1 to 1000 ---- PJB fix 2000 --> 1000
@@ -832,7 +833,7 @@ on exitFrame me
   -- Custom effects
   sav = member("initImport")
   sav.text = ""
-  member("initImport").importFileInto("Effects"&the dirSeparator&"Init.txt")
+  member("initImport").importFileInto("Effects/Init.txt")
   sav.name = "initImport"
   
   didNewHeading = 0
@@ -891,7 +892,7 @@ on exitFrame me
   gCustomLights = []
   if not checkIsDrizzleRendering() then
     
-    pth = the moviePath & "Lights" & the dirSeparator
+    pth = the moviePath & "Lights/"
     i = 1
     repeat while true then
       n = getNthFileNameInFolder(pth, i)
