@@ -77,7 +77,7 @@ public readonly struct LingoNumber : IEquatable<LingoNumber>, IComparable<LingoN
         new(Math.Pow(@base.DecimalValue, exp.DecimalValue));
 
     public static LingoNumber Max(LingoNumber a, LingoNumber b) => a.IsDecimal || b.IsDecimal ? new(Math.Max(a.DecimalValue, b.DecimalValue)) : new(Math.Max(a.IntValue, b.IntValue));
-    public static LingoNumber Min(LingoNumber a, LingoNumber b) => a.IsDecimal || b.IsDecimal ? new(Math.Min(a.DecimalValue, b.DecimalValue)) : new(Math.Max(a.IntValue, b.IntValue));
+    public static LingoNumber Min(LingoNumber a, LingoNumber b) => a.IsDecimal || b.IsDecimal ? new(Math.Min(a.DecimalValue, b.DecimalValue)) : new(Math.Min(a.IntValue, b.IntValue));
 
     public override string ToString() => IsDecimal ? DecimalValue.ToString("F4", CultureInfo.InvariantCulture) : IntValue.ToString(CultureInfo.InvariantCulture);
 

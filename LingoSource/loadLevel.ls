@@ -138,20 +138,20 @@ on loadLevel me, lvlName, fullPath
   if(fullPath)then
     pth = ""
   else
-    pth = the moviePath & "LevelEditorProjects" & the dirSeparator
+    pth = the moviePath & "LevelEditorProjects/"
     repeat with f in gLOADPATH then
-      pth = pth & f & the dirSeparator
+      pth = pth & f & "/" 
     end repeat
   end if
   
   objFileio = new xtra("fileio")
-  --createFile (objFileio, the moviePath&the dirSeparator&"LevelEditorProjects"&the dirSeparator&levelName&".txt")
+  --createFile (objFileio, the moviePath&"/LevelEditorProjects/"&levelName&".txt")
   objFileio.openFile(pth&lvlName&".txt", 0)
   if(fullPath = 1)then
     gLoadedName = ""
     lastBackSlash = 0
     repeat with q = 1 to lvlName.length then
-      if(chars(lvlName, q, q) = the dirSeparator)then
+      if(chars(lvlName, q, q) = "/" or chars(lvlName, q, q) = "\")then
         lastBackSlash = q
       end if
     end repeat
@@ -257,7 +257,7 @@ on loadLevel me, lvlName, fullPath
   gLASTDRAWWASFULLANDMINI = 0
   
   
-  put pth & the dirSeparator & lvlName & ".png"
+  put pth & "/" & lvlName & ".png"
   
 end
 
