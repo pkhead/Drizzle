@@ -53,10 +53,17 @@ public partial class LingoRuntime
 
     public CastMember? GetCastMember(string name)
     {
+        if (name is null)
+        {
+            Log.Warning("Attempted getting null cast member!");
+            Log.Debug(Environment.StackTrace);
+            return null;
+        }
+
         var found = GetCastMemberAnyCast(name);
 
         if (found == null)
-            Log.Warning("Failed to find member with name {MissingMemberName}", found);
+            Log.Warning("Failed to find member with name {MissingMemberName}", name);
 
         return found;
     }
