@@ -166,12 +166,40 @@ on renderProp(prop, dp: number, qd: list, mdPoint: point, data: object)
       initRenderSoftProp(prop, qd, data, dp, propImage)
     "long", "customLong":
       renderLongProp(qd, prop, propsToRender[c][5], dp)
+    "fezTree":
+      renderFezTree(prop, propsToRender[c][5], dp, data)
   end case
   DoPropTags(prop, dp, qd)
 end
 
-on renderVoxelProp(prop, dp: number, qd: list, mdPoint: point, propData, propImage)
+on renderFezTree(prop, data, dp, propData)
+  writeMessage(data)
+  treeParams = data.treeParameters
+  treeBasePos = treeParams.trunkPos - gRenderCameraTilePos*20
+  treeBaseAngle = treeParams.trunkAngle
+  
+  treeLeavesPos = treeParams.leafPos - gRenderCameraTilePos*20
+  treeLeavesSize = treeParams.leafSize
+  treeLeavesAngle = treeParams.leafAngle
+  
+  treeLeavesDensity = propData.settings.leafdensity
+  
+  treeLayer = clamp(dp + 8, 3, 25)
+  --on drawFezTreeAtPosition treeBasePos, treeBaseAngle, treeLeavesPos, treeLeavesSize, treeLeavesAngle, treeLayer, effectLayer, leafDensity
+  
+  treeColorAsNumber = propData.settings.effectColor
+  treeColor = "C"
+  if treeColorAsNumber = 1 then 
+    treeColor = "A"
+  else if treeColorAsNumber = 2 then
+    treeColor = "B"
+  end if
+  
+  drawFezTreeAtPosition(treeBasePos, treeBaseAngle, treeLeavesPos, treeLeavesSize, treeLeavesAngle, treeLayer, treeColor, treeLeavesDensity)
+end
 
+
+on renderVoxelProp(prop, dp: number, qd: list, mdPoint: point, propData, propImage)
   type var: number
   type ps: number
   type colored: number
@@ -1129,6 +1157,55 @@ on renderRopeSegment(num: number, prop, data, dp: number, pos: point, dir: point
       mdPnt = mdPnt - gRenderCameraTilePos*20
       member("layer"&string(dp)).image.copyPixels(member("ringChainGraf").image, rect(mdPnt,mdPnt)+rect(-5,-5,5,5), rect(80,0,90,10), {#ink:36})
       
+      
+    "Small Vents":
+      wdth = 17
+      pastQd = [pos - perp*wdth, pos + perp*wdth, lastPos + lastPerp*wdth, lastPos - lastPerp*wdth]
+      pastQd = pastQd - [gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20]
+      
+      repeat with a = 0 to 4 then
+        if(dp + a + 1 <= 29)then
+          member("layer"&string(dp + a + 1)).image.copyPixels(member("smallVentGraf").image, pastQd, rect(36,a*48,66,(a+1)*48), {#ink:36})
+        else 
+          exit repeat
+        end if
+      end repeat
+      
+      pastQd = [pos - perp*wdth - dir*5, pos + perp*wdth - dir*5, pos + perp*wdth + dir*5, pos - perp*wdth + dir*5]
+      pastQd = pastQd - [gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20]
+      
+      repeat with a = 0 to 5 then
+        if(dp + a <= 29)then
+          member("layer"&string(dp + a)).image.copyPixels(member("smallVentGraf").image, pastQd, rect(0,a*11,34,(a+1)*11), {#ink:36})
+        else 
+          exit repeat
+        end if
+      end repeat
+      
+    "Reinforced Duct":
+      wdth = 53
+      pastQd = [pos - perp*wdth, pos + perp*wdth, lastPos + lastPerp*wdth, lastPos - lastPerp*wdth]
+      pastQd = pastQd - [gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20]
+      
+      repeat with a = 0 to 9 then
+        if(dp + a + 1 <= 29)then
+          member("layer"&string(dp + a + 1)).image.copyPixels(member("reinforcedDuctGraf").image, pastQd, rect(106,a*104,212,(a+1)*104), {#ink:36})
+        else 
+          exit repeat
+        end if
+      end repeat
+      
+      pastQd = [pos - perp*wdth - dir*5, pos + perp*wdth - dir*5, pos + perp*wdth + dir*5, pos - perp*wdth + dir*5]
+      pastQd = pastQd - [gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20]
+      
+      repeat with a = 0 to 9 then
+        if(dp + a <= 29)then
+          member("layer"&string(dp + a)).image.copyPixels(member("reinforcedDuctGraf").image, pastQd, rect(0,a*12,106,(a+1)*12), {#ink:36})
+        else 
+          exit repeat
+        end if
+      end repeat
+      
   end case
 end
 
@@ -1932,10 +2009,10 @@ on renderLongProp(qd, prop, data, dp)
             end if
             
             if canRender then 
-              if prop[1] = "Moss Drop A" then
+              if prop.nm = "Moss Drop A" then
                 member("layer" & restrict(points[t][2] - i, 0, 29) ).image.copyPixels(member("MossDropGraf").image, qd2, spriteRect, {#ink:36, #color:color(255,0,255)})
                 copyPixelsToEffectColor("A", restrict(points[t][2] - i, 0, 29), qd2, "MossDropGrad", spriteRect, 0.5, intensityPercent)
-              else if prop[1] = "Moss Drop B" then
+              else if prop.nm = "Moss Drop B" then
                 
                 member("layer" & restrict(points[t][2] - i, 0, 29) ).image.copyPixels(member("MossDropGraf").image, qd2, spriteRect, {#ink:36, #color:color(0,255,255)})
                 copyPixelsToEffectColor("B", restrict(points[t][2] - i, 0, 29), qd2, "MossDropGrad", spriteRect, 0.5, intensityPercent)
@@ -1967,7 +2044,8 @@ on renderLongProp(qd, prop, data, dp)
           repeat with t2 = 1 to (mossLength).integer / 2 then
             
             percent2 = (t2 / (mossLength / 2)).float
-            qd2 = lerp(qd, point(qd.locH, qd.locV + mossLength), percent2)
+            --qd2 = lerp(qd, point(qd.locH, qd.locV + mossLength), percent2)
+            qd2 = lerpPnt(qd, point(qd.locH, qd.locV + mossLength), percent2)
             depthCheck = true
             points2.add([qd2, depthRange - depthOffset])
             repeat while depthCheck then
@@ -1994,10 +2072,10 @@ on renderLongProp(qd, prop, data, dp)
         totalPoints = 0
         totalPoints = points.count
         totalLine = lerp(0.3, 0.7, random(100).float/100)
-        if prop[1] = "Moss Hang A" then 
+        if prop.nm = "Moss Hang A" then 
           eftc = "A"
           colr = color(255, 0, 255)
-        else if prop[1] = "Moss Hang B" then 
+        else if prop.nm = "Moss Hang B" then 
           eftc = "B"
           colr = color(0, 255, 255)
         else

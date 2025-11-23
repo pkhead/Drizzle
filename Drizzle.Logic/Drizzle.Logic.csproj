@@ -2,6 +2,7 @@
 
     <PropertyGroup>
         <Nullable>enable</Nullable>
+		<PathMap>$(MSBuildProjectDirectory)=/$(SolutionName)</PathMap>
     </PropertyGroup>
 
     <ItemGroup>

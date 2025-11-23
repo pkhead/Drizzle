@@ -29,7 +29,9 @@ internal static class Program
         "FILE",
         "comEditorUtils",
         "LSlime",
-        "LMats"
+        "LMats",
+        "cappinEditorUtils",
+        "fezTreeRenderer"
     };
 
     public static readonly HashSet<string> ParentScripts = new()
