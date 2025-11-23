@@ -4,6 +4,7 @@
         <OutputType>Exe</OutputType>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+		<PathMap>$(MSBuildProjectDirectory)=/$(SolutionName)</PathMap>
     </PropertyGroup>
 
     <ItemGroup>

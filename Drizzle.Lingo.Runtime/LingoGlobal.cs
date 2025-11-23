@@ -123,6 +123,7 @@ public sealed partial class LingoGlobal
     public static LingoNumber bitnot(LingoNumber x) => LingoNumber.BitNot(x);
 
     public LingoNumber integer(LingoNumber x) => x.integer;
+    public LingoNumber @float(LingoNumber x) => x.@float;
 
     public void put(object d)
     {
