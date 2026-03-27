@@ -20,4 +20,6 @@ public sealed partial class MovieScript
     }
 
     public void ImageCacheClear() => _imageCache.Clear();
+
+    public void clearrendercache() { } // comms-only
 }

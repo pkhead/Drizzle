@@ -4117,7 +4117,6 @@ on renderTileMaterial(layer, material, frntImg)
         if delL.findPos(tl)=void then
           
           randomOrderList: list = []
-          randomOrderList.sort() -- COMMS 5.1.0 OPTIMIZATION: mark list as sorted first so it sorts as .add() is called
           repeat with w = 1 to randomMachines.count then
             randomMachinesW = randomMachines.getAt(w)
             repeat with h = 1 to randomMachinesW.count then
@@ -4127,6 +4126,7 @@ on renderTileMaterial(layer, material, frntImg)
               end repeat
             end repeat
           end repeat
+          randomOrderList.sort()
           
           repeat with q = 1 to randomOrderList.count then
             testTileIndex = randomOrderList.getAt(q).getAt(2)

@@ -38,7 +38,7 @@ on ApplyRipcords me, q, c
     
     
     zigZagCounter = lerp(5, 10, random(100).float/100).integer
-    Repeat While RepeatFlag then
+    repeat while RepeatFlag=true then
       
       qd = qd + degToVecFac2(plantAngle, plantOffset, plantOffset)
       points.add(qd)
@@ -77,7 +77,7 @@ on ApplyRipcords me, q, c
       
       if withinBoundsOfLevel(giveGridPos(qd) + gRenderCameraTilePos) = 0 then
         if skyRootsFix then
-          exit 
+          return 
         end if
         repeatFlag = false
       end if
@@ -97,7 +97,7 @@ on ApplyRipcords me, q, c
     -- Obscures the player less
     if layer < 5 then 
       if random(2) = 2 then
-        exit
+        return
       end if
     end if
     --
@@ -117,11 +117,11 @@ on ApplyRipcords me, q, c
     
     -- At smaller lengths, the effect looks really bad, kills him when that happens :D
     if totalDist < 100 then
-      exit
+      return
     end if
     --
     
-    Repeat with i = 1 to points.count then
+    repeat with i = 1 to points.count then
       if i > 1 then
         dist  = sqrt(power(points[i].locv - points[i-1].locv, 2) + power(points[i].loch - points[i-1].loch, 2))
         
@@ -239,7 +239,7 @@ on ApplySpudBuds me, q, c
     wiggledSide = 0
     wiggledSideBuffer = 0
     
-    repeat while RepeatFlag then
+    repeat while RepeatFlag=true then
       qd = qd + degToVecFac2(plantAngle, plantOffset, plantOffset)
       points.add(qd)
       
@@ -326,7 +326,7 @@ on ApplySpudBuds me, q, c
       exit
     end if
     
-    Repeat with i = 1 to points.count then
+    repeat with i = 1 to points.count then
       if i > 1 then
         dist  = sqrt(power(points[i].locv - points[i-1].locv, 2) + power(points[i].loch - points[i-1].loch, 2))
         
@@ -384,7 +384,7 @@ on ApplySpudBuds me, q, c
               frondClamp = 0
             end if
             
-            repeat while frondFlag then
+            repeat while frondFlag=true then
               if frondCount > 0 then
                 
                 if frondCountRepetition = 1 and frondCount > 3 then
@@ -489,7 +489,7 @@ on ApplyCrossRoses me, q, c
     plantBender = 0
     plantBias = lerp(155, 205, random(100).float/100)
     
-    Repeat While RepeatFlag then
+    repeat while RepeatFlag=true then
       
       qd = qd + degToVecFac2(plantAngle, plantOffset, plantOffset)
       points.add(qd)
@@ -569,7 +569,7 @@ on ApplyCrossRoses me, q, c
       exit
     end if
     
-    Repeat with i = 1 to points.count then
+    repeat with i = 1 to points.count then
       if i > 1 then
         dist  = sqrt(power(points[i].locv - points[i-1].locv, 2) + power(points[i].loch - points[i-1].loch, 2))
         
@@ -673,7 +673,7 @@ on ApplyCable me, q, c
     RepeatFlag2 = false
     points1 = []
     points1.add(midPoint)
-    Repeat While RepeatFlag1 then
+    repeat while RepeatFlag1=true then
       tubeAngle = tubeInitialAngle
       qd = qd + degToVecFac2(tubeAngle, tubeOffset, tubeOffset)
       points1.add(qd)
@@ -697,7 +697,7 @@ on ApplyCable me, q, c
     qd = midPoint
     points2 = []
     points2.add(midPoint)
-    Repeat While RepeatFlag2 then
+    repeat while RepeatFlag2=true then
       tubeAngle = tubeInitialAngle + 180
       qd = qd + degToVecFac2(tubeAngle, tubeOffset, tubeOffset)
       points2.add(qd)
@@ -791,7 +791,7 @@ on ApplySmokeWeed me, q, c
     behaviourWaitFlag = true
     
     
-    Repeat While RepeatFlag then
+    repeat while RepeatFlag=true then
       --Starts a decided behaviour if the cooldown has ran out and no behaviour is currently running
       if behaviourTimer < 1 and behaviourWaitFlag then
         behaviourChooser = restrict(random(4)-1, 1, 4)
@@ -922,7 +922,7 @@ on ApplySmokeWeed me, q, c
     --
     
     
-    Repeat with i = 1 to points.count then
+    repeat with i = 1 to points.count then
       if i > 1 then
         dist  = sqrt(power(points[i].locv - points[i-1].locv, 2) + power(points[i].loch - points[i-1].loch, 2))
         
@@ -1114,7 +1114,7 @@ on ApplyMushroomColony me, q, c
         layerRandom = random(5)-1
         
         member("layer"&string(restrict(sublayer-2+layerRandom, dmin, dmax))).image.copyPixels(member("MushroomColonyGraf").image, qd, qd2, {#color:colr, #ink:36})
-        copyPixelsToEffectColor(gdLayer, restrict(sublayer-2+layerRandom, dmin, dmax), qd, "MushroomColonyGrad", qd2, 0.5, restrict((lerp(0.7, 0.9, random(100).float/100)+colonySz)/2), 0, 1)
+        copyPixelsToEffectColor(gdLayer, restrict(sublayer-2+layerRandom, dmin, dmax), qd, "MushroomColonyGrad", qd2, 0.5, restrict((lerp(0.7, 0.9, random(100).float/100)+colonySz)/2, 0, 1))
       end repeat
       
     end if
@@ -1126,5 +1126,4 @@ on ApplyMushroomColony me, q, c
   -- the entire implementation goes here
   --need to check for solid terrain on the same layer under the pixel and also that hte pixel is air
   
-end if
 end

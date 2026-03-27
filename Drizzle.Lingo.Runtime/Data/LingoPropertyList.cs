@@ -58,6 +58,16 @@ public class LingoPropertyList : DynamicObject, ILingoListDuplicate
         Dict[key!] = value;
     }
 
+    public dynamic? getaprop(object? key)
+    {
+        return Dict[key!];
+    }
+
+    public void setaprop(object? key, object? value)
+    {
+        Dict[key!] = value;
+    }
+
     public LingoNumber findpos(object key)
     {
         // findpos is only used as a "does it exist in the list" check so this is fine.

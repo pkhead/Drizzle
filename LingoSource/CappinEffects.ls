@@ -36,7 +36,7 @@ on applyFezTree me, screenX, screenY, effectStrength
   drawFezTreeAtPosition(treeBasePos, 1, treeLeavesPos, treeLeavesSize, treeLeavesAngle, treeLayer, gdLayer, 1.0)
 end
 
-on applyBrainGrowers me, screenX, screenY, amount, upsideDown
+on applyBrainGrowers me, screenX: number, screenY: number, amount: number, upsideDown: number
   tileX = screenX + gRenderCameraTilePos.locH
   tileY = screenY + gRenderCameraTilePos.locV
   
