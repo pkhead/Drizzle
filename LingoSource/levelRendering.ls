@@ -210,6 +210,9 @@ on setUpLayer(layer)
         "customAutofit":
           frntImg = LRenderTileMaterial(layer, drawMaterials[q][1], frntImg)
           
+        "customPattern":
+          frntImg = LRenderPatternMaterial(layer, drawMaterials[q][1], frntImg)
+          
         "pipeType":
           repeat with tl in drawMaterials[q][2] then
             -- frntImg = drawATileMaterial(tl[2], tl[3], layer, pltt, drawTiles[q][1], frntImg)
@@ -886,7 +889,8 @@ on drawRidgeTypeTile(mat, tl, layer, frntImg)
 end
 
 
-on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
+-- TODO: `offsL` only affects voxelStruct, but should apply to other types
+on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list, offsL: number)
   
   global gAnyDecals
   
@@ -894,7 +898,7 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
   if (checkDRInternal(tl.nm)) then
     tileImage = member(tl.nm).image
   else
-    tileImage = cacheLoadImage("Graphics" & the dirSeparator & tl.nm & ".png")
+    tileImage = cacheLoadImage("Graphics/" & tl.nm & ".png")
   end if
   
   q = q - gRenderCameraTilePos.locH
@@ -1008,7 +1012,11 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
       end if
       
       
-      frntImg.copyPixels(tileImage, rct, gtRect + rect(gtRect.width*(rnd-1), 0, gtRect.width*(rnd-1), 0)+rect(0,1,0,1), {#ink:36})
+      if offsL = 0 then
+        frntImg.copyPixels(tileImage, rct, gtRect + rect(gtRect.width*(rnd-1), 0, gtRect.width*(rnd-1), 0)+rect(0,1,0,1), {#ink:36})
+      else
+        dp = restrict(dp + offsL.integer, 0, 29)
+      end if
       
       
       d = -1
@@ -2242,7 +2250,7 @@ on drawWVTypeTile(mat, tl, layer)
   end repeat
 end
 
---on drawWVTagTile(q, c, l, tl, frntImg, effectColorA, effectColorB, colored, sav2)
+--on drawWVTagTile(q, c, l, tl, frntImg, effectColorA, effectColorB, colored, tileImage)
 --  strt = point(q, c)
 --  tlt = 7
 --  case afaMvLvlEdit(strt, l) of
@@ -4040,6 +4048,8 @@ on renderTileMaterial(layer, material, frntImg)
       --      end repeat
       
     "Random Machines":
+      -- COMMS 5.1.0 OPTIMIZATION: replaced most square brackets with getAt because it is faster somehow
+      -- Also the same can be said for square brackets and getAProp and setAProp with property lists
       if (gDRMatFixes) then
         repeat with tileCat = getFirstTileCat() to gTiles.count then
           if(gTiles[tileCat].nm = "LB Missing Machine")then
@@ -4086,11 +4096,11 @@ on renderTileMaterial(layer, material, frntImg)
       repeat with a = 1 to RandomMachines_grabTiles.count then
         type a: number
         repeat with q = 1 to gTiles.count then
-          if(gTiles[q].nm = RandomMachines_grabTiles[a])then
-            repeat with t = 1 to gTiles[q].tls.count then
-              theTile = gTiles[q].tls[t]
+          if(gTiles.getAt(q).nm = RandomMachines_grabTiles.getAt(a))then
+            repeat with t = 1 to gTiles.getAt(q).tls.count then
+              theTile = gTiles.getAt(q).tls.getAt(t)
               if(theTile.sz.locH <= 8)and(theTile.sz.locV <= 8)and(theTile.specs2 = 0)and(RandomMachines_forbidden.getPos(theTile.nm) = 0)then
-                randomMachines[theTile.sz.locH][theTile.sz.locV].add(point(q,t))
+                randomMachines.getAt(theTile.sz.locH).getAt(theTile.sz.locV).add(point(q,t))
               end if
             end repeat
           end if
@@ -4100,7 +4110,7 @@ on renderTileMaterial(layer, material, frntImg)
       delL = [:]
       tlsBlock = [:]
       repeat with tl in tls then
-        tlsBlock[tl] = 1
+        tlsBlock.setaProp(tl, 1)
       end repeat
       repeat with tl in tls then
         the randomSeed = seedForTile(tl, gLOprops.tileSeed + layer)
@@ -4108,17 +4118,19 @@ on renderTileMaterial(layer, material, frntImg)
           
           randomOrderList: list = []
           repeat with w = 1 to randomMachines.count then
-            repeat with h = 1 to randomMachines[w].count then
-              repeat with t = 1 to randomMachines[w][h].count then
-                randomOrderList.add([random(1000), randomMachines[w][h][t]])
+            randomMachinesW = randomMachines.getAt(w)
+            repeat with h = 1 to randomMachinesW.count then
+              randomMachinesH = randomMachinesW.getAt(h)
+              repeat with t = 1 to randomMachinesH.count then
+                randomOrderList.add([random(1000), randomMachinesH.getAt(t)])
               end repeat
             end repeat
           end repeat
-          
           randomOrderList.sort()
           
-          repeat with q = 1 to randomOrderList.count then 
-            testTile = gTiles[randomOrderList[q][2].locH].tls[randomOrderList[q][2].locV]
+          repeat with q = 1 to randomOrderList.count then
+            testTileIndex = randomOrderList.getAt(q).getAt(2)
+            testTile = gTiles[testTileIndex.locH].tls[testTileIndex.locV]
             
             legalToPlace: number = true
             repeat with a = 0 to testTile.sz.locH-1 then
@@ -4156,7 +4168,7 @@ on renderTileMaterial(layer, material, frntImg)
                 repeat with b = 0 to testTile.sz.locV-1 then
                   spec = testTile.specs[(b+1) + (a*testTile.sz.locV)]
                   if(spec > -1)then
-                    delL[tl+point(a,b)] = 1
+                    delL.setAProp(tl+point(a,b), 1)
                   end if
                 end repeat
               end repeat
@@ -4615,7 +4627,7 @@ on renderTileMaterial(layer, material, frntImg)
       end repeat
       
       repeat with tlC = 1 to tls.count
-        tl = tls[tlC]
+        tl = tls.getAt(tlC)
         the randomSeed = seedForTile(tl, gLOprops.tileSeed + layer)
         if (delL.findPos(tl) = VOID) then
           randomOrderList = []
