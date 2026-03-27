@@ -95,9 +95,9 @@ on drawFezTreeAtPosition treeBasePos, treeBaseAngle, treeLeavesPos, treeLeavesSi
     originalDirMag = mag(dir)
     dir = dir * point(2, 1) -- i want more horizontal curving
     dir = (dir / mag(dir)) * originalDirMag -- reset the length
-    branchPathDirections.add((dir) * 0.2)
+    branchPathDirections.add(dir * 0.2)
   end repeat
-  branchPathDirections.add(degToVec(treeLeavesAngle.float) * 30)
+  branchPathDirections[branchPath.count] = degToVec(treeLeavesAngle.float) * 30
   
   -- approximation of total distance for interpolating branch size etc
   -- not 100% accurate beacuse of spline interpolation. truly do not give a shit.
@@ -109,7 +109,6 @@ on drawFezTreeAtPosition treeBasePos, treeBaseAngle, treeLeavesPos, treeLeavesSi
   currentDistance = 0
   
   currentDistances = []
-  distIndex = 1
   curvePoints = []
   repeat with branchIndex = 1 to branchPath.count - 1
     pnt1 = branchPath[branchIndex]

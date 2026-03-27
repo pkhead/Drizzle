@@ -72,7 +72,7 @@ on applyBrainGrowers me, screenX, screenY, amount, upsideDown
   
   maxAmount = 3
   countInTile = 0
-  repeat with i = 0 to maxAmount 
+  repeat with i = 0 to maxAmount do 
     randomNum = randomRange(0, 150)
     if randomNum < amount then
       countInTile = countInTile + 1
@@ -85,7 +85,7 @@ on applyBrainGrowers me, screenX, screenY, amount, upsideDown
   
   countInTile = countInTile * max(1, (layerMin - layerMax) / 10.0)
   
-  repeat with plant = 0 to countInTile
+  repeat with plant = 0 to countInTile do
     plantPos = midPoint + point(randomRange(-10, 10), 10)
     if (upsideDown) then
       plantPos = midPoint + point(randomRange(-10, 10), -10)
@@ -119,7 +119,7 @@ on applyBrainGrowers me, screenX, screenY, amount, upsideDown
       
       offsetRand = (randomRange(0, 10000)/ 10000.0) * 3.141592 * 2
       
-      repeat with segment = 0 to segmentCount
+      repeat with segment = 0 to segmentCount do
         segments.add(segmentPos)
         sine = sin(segment * 10.0 + offsetRand)
         if upsideDown then
@@ -136,7 +136,7 @@ on applyBrainGrowers me, screenX, screenY, amount, upsideDown
         --dir = dir / mag(dir) -- normalize
         segmentDeriv.add(dir * 0.2)
       end repeat
-      segmentDeriv.add(segmentDeriv[segments.count - 1])
+      segmentDeriv[segments.count] = segmentDeriv[segments.count - 1]
       
       stemEffectFactor = 0.4
       blossomEffectFactor = 0.9
@@ -144,7 +144,7 @@ on applyBrainGrowers me, screenX, screenY, amount, upsideDown
       curvePoints = []
       segmentRadius = plantRadius * 2.0
       startEffectFactor = 0.0
-      repeat with seg = 2 to segments.count
+      repeat with seg = 2 to segments.count do
         factor = 1.0 - (seg / segments.count)
         endRadius = lerp(plantRadius, plantRadius * 0.7, 1.0 - (factor * factor)) + lerp(-0.5, 0.5, (randomRange(0, 10000) / 10000.0))
         endEffectFactor = lerp(stemEffectFactor, 0.0, factor)
@@ -173,7 +173,7 @@ on applyBrainGrowers me, screenX, screenY, amount, upsideDown
       end if
       
       if randomRange(0, 3) <> 1 then
-        repeat with leafBlob = -2 to 8
+        repeat with leafBlob = -2 to 8 do
           factor = (leafBlob / 9.0)
           blobPos = lerpVector(leavesPos, leavesPos2, factor)
           factor2 = 4 * (factor - factor * factor)
@@ -190,7 +190,7 @@ on applyBrainGrowers me, screenX, screenY, amount, upsideDown
           
         end repeat
         
-        repeat with leaf = 1 to leafCount 
+        repeat with leaf = 1 to leafCount do 
           factor = (leaf / float(leafCount + 1.0))
           leafPos = lerpVector(leavesPos, leavesPos2, clamp(factor + (randomRange(-100, 100) / 1000.0), 0, 1))
           leafSize = lerp(0.1, 0.8, 6.75 * (factor*factor - factor*factor*factor))
@@ -215,13 +215,13 @@ on applyBrainGrowers me, screenX, screenY, amount, upsideDown
       if (plantSize > 0.3) and randomRange(1, 5) <> 2 then
         
         weirdLeafSpanCount = randomRange(0, 3)
-        repeat with weirdLeafSpan = 0 to weirdLeafSpanCount
+        repeat with weirdLeafSpan = 0 to weirdLeafSpanCount do
           spanSize = randomRange(10, 70)
           spanStart = randomRange(2, curvePoints.count - (spanSize + 1))
           prevPnt = curvePoints[spanStart][1]
           
           distanceSinceLastLeaf = -1
-          repeat with leaf = 0 to spanSize
+          repeat with leaf = 0 to spanSize do
             factor = leaf / float(spanSize)
             curveIndex = spanStart + leaf
             pnt = curvePoints[curveIndex][1]
