@@ -51,6 +51,8 @@ public class LingoList : IEnumerable<object>, ILingoListDuplicate, IEquatable<Li
 
     public object? findpos(object? value) => null;
 
+    public dynamic? getat(LingoNumber index) => this[index];
+
     public void add(object? value)
     {
         Add(value);

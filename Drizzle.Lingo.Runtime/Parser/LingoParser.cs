@@ -115,7 +115,7 @@ public static class LingoParser
 
     private static readonly Parser<char, string> Identifier =
         IdentifierUnchecked
-            .Assert(val => !Keywords.Contains(val), v => $"Expected identifier, found keyword {v}")
+            .Assert(val => !Keywords.Contains(val.ToLowerInvariant()), v => $"Expected identifier, found keyword {v}")
             .Labelled("identifier");
 
     private static readonly Parser<char, Unit> EmptyLine =
@@ -537,7 +537,7 @@ public static class LingoParser
                     (varName, listExpr, block) =>
                         (AstNode.Base)new AstNode.RepeatWithList(varName, listExpr, block),
                     Try(Identifier.Before(Tok("in"))),
-                    Expression.Before(BTok("then").Optional()),
+                    Expression.Before(BTok("then").Or(BTok("do")).Optional()),
                     StatementBlock),
 
                 // repeat with .. = .. to ..
@@ -545,7 +545,7 @@ public static class LingoParser
                         (AstNode.Base)new AstNode.RepeatWithCounter(varName, start, end, block),
                     Identifier.Before(Tok('=')),
                     Expression.Before(Tok("to")),
-                    Expression.Before(BTok("then").Optional()),
+                    Expression.Before(BTok("then").Or(BTok("do")).Optional()),
                     StatementBlock
                 ).TraceBegin("repeat with =")),
 
