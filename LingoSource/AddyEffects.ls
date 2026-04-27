@@ -225,6 +225,7 @@ on ApplySpudBuds me, q, c
     plantAngle = lerp(180-frondWeight, 180+frondWeight, random(100).float/100)
     frondAngle = plantAngle
     --
+    rootPoint = point(0.0, 0.0) -- fix by pkhead. before, it was not properly initialized.
     midPoint = giveMiddleOfTile(point(q, c))
     midPoint = midPoint + point(lerp(-10, 10, random(100).float/100), lerp(-10, 10, random(100).float/100))
     qd = midPoint
