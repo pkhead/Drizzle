@@ -53,6 +53,8 @@ public class LingoList : IEnumerable<object>, ILingoListDuplicate, IEquatable<Li
 
     public dynamic? getat(LingoNumber index) => this[index];
 
+    public dynamic? getlast() => List.Count > 0 ? List[^1] : null;
+
     public void add(object? value)
     {
         Add(value);
