@@ -236,6 +236,7 @@ internal static class Program
         writer.WriteLine("using System;");
         writer.WriteLine("using Drizzle.Lingo.Runtime;");
         writer.WriteLine("using Drizzle.Lingo.Runtime.Cast;");
+        writer.WriteLine("#pragma warning disable CS0162 // Unreachable code detected");
         writer.WriteLine($"namespace {OutputNamespace};");
     }
 
