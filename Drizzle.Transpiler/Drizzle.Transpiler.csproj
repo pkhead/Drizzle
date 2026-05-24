@@ -1,9 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <Nullable>enable</Nullable>
 	<PathMap>$(MSBuildProjectDirectory)=/$(SolutionName)</PathMap>
+    <NoWarn>IDE0028, IDE0300, IDE0301, IDE0305, IDE0290</NoWarn> <!-- Mostly collection initialization stuff -->
   </PropertyGroup>
 
   <ItemGroup>

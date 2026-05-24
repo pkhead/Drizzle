@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Pidgin;
 
 // ReSharper disable SuggestBaseTypeForParameter
 
@@ -17,6 +18,8 @@ public static class AstNode
             sb.Append(' ');
         }
     }
+
+    public sealed record SourcePosition(SourcePos Pos, Base Node) : Base();
 
     public sealed record Assignment(
         Base Assigned,
@@ -323,7 +326,10 @@ public static class AstNode
         }
     }
 
-    public sealed record TypedVariable(string Name, string? Type) : Base
+    public sealed record TypedVariable(
+        string Name,
+        string? Type
+    ) : Base
     {
         public override string ToString()
         {

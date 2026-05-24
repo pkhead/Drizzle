@@ -1291,7 +1291,7 @@ public sealed unsafe partial class LingoImage
         public static int Sample(ReadOnlySpan<Bgra32> srcDat, int rowMajorPos)
         {
             ref readonly var px = ref srcDat[rowMajorPos];
-            return Unsafe.As<Bgra32, int>(ref Unsafe.AsRef(px));
+            return Unsafe.As<Bgra32, int>(ref Unsafe.AsRef(in px));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

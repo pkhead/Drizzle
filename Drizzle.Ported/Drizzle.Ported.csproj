@@ -1,8 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <NoWarn>CS8981</NoWarn>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	<PathMap>$(MSBuildProjectDirectory)=/$(SolutionName)</PathMap>
+    <!-- Unnecessary assignment + naming schemes -->
+    <NoWarn>IDE0059, IDE1006</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
