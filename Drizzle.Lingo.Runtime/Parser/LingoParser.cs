@@ -41,11 +41,13 @@ public static class LingoParser
             parser.Bind(t => CurrentPos.Trace(p => $"[{PrintPos(p)}] {msgFunc(t)}").ThenReturn(t));
 
 #else
+#pragma warning disable IDE0060 // Remove unused parameter
     private static Parser<char, T> TraceBegin<T>(this Parser<char, T> parser, string msg) => parser;
 
     private static Parser<char, T> TracePos<T>(this Parser<char, T> parser, string msg) => parser;
 
     private static Parser<char, T> TracePos<T>(this Parser<char, T> parser, Func<T, string> msgFunc) => parser;
+#pragma warning restore IDE0060 // Remove unused parameter
 
 #endif
 
@@ -189,12 +191,10 @@ public static class LingoParser
             subExpr,
             Tok(':').Then(subExpr).Optional());
 
-    [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
     private static Parser<char, AstNode.Base> ListLike(Parser<char, AstNode.Base> subExpr) =>
         OneOf(
             Tok(':').ThenReturn(
-                (AstNode.Base)new AstNode.PropertyList(
-                    Array.Empty<KeyValuePair<AstNode.Base, AstNode.Base>>())),
+                (AstNode.Base)new AstNode.PropertyList(Array.Empty<KeyValuePair<AstNode.Base, AstNode.Base>>())),
             ListLikeElem(subExpr)
                 .Separated(Tok(','))
                 .Select<AstNode.Base>(elems =>
@@ -202,9 +202,9 @@ public static class LingoParser
                     var propList = false;
                     var linList = false;
 
-                    foreach (var elem in elems)
+                    foreach (var (k, v) in elems)
                     {
-                        if (elem.Item2 == null)
+                        if (v == null)
                             linList = true;
                         else
                             propList = true;
@@ -228,7 +228,7 @@ public static class LingoParser
                     }
 
                     if (linList)
-                        return new AstNode.List(elems.Select(ab => ab.Item1).ToArray());
+                        return new AstNode.List(elems.Select(ab => ab.k).ToArray());
                     return new AstNode.List(Array.Empty<AstNode.Base>());
                 })).Between(Tok('['), Tok(']'));
 
@@ -236,8 +236,7 @@ public static class LingoParser
         OneOf(
             // Empty list clause.
             Tok(':').ThenReturn(
-                (AstNode.Base)new AstNode.PropertyList(
-                    Array.Empty<KeyValuePair<AstNode.Base, AstNode.Base>>())),
+                (AstNode.Base)new AstNode.PropertyList(Array.Empty<KeyValuePair<AstNode.Base, AstNode.Base>>())),
             OneOf(
                     Try(Identifier).Select(i => (AstNode.Base)new AstNode.Symbol(i)),
                     subExpr
@@ -760,6 +759,7 @@ public static class LingoParser
                 Global.Cast<AstNode.Base>().TraceBegin("Statement -> global"),
                 TypeSpec.Cast<AstNode.Base>(),
                 Expression.TraceBegin("Statement -> expr"))
+            .Then(x => CurrentPos.Map(y => (AstNode.Base)new AstNode.SourcePosition(y, x)))
         /*.Trace(s => $"STATEMENT: {DebugPrint.PrintAstNode(s)}")*/;
 
     private static readonly Parser<char, AstNode.TypedVariable> TypedVariable =

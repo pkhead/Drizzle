@@ -1,9 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	<PathMap>$(MSBuildProjectDirectory)=/$(SolutionName)</PathMap>
+    <NoWarn>IDE0028, IDE0300, IDE0301, IDE0305</NoWarn> <!-- Mostly collection initialization stuff -->
   </PropertyGroup>
 
   <ItemGroup>
