@@ -8,7 +8,7 @@ param(
     [Parameter()]
     [string]$Configuration="Release");
 
-$CURRENT_TFM="net7.0"
+$CURRENT_TFM="net8.0"
 
 $baseDir = Join-Path -Resolve $PSScriptRoot ..
 
