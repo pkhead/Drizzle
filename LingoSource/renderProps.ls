@@ -764,11 +764,24 @@ on renderRopeSegment(num: number, prop, data, dp: number, pos: point, dir: point
   case prop.nm of
     "wire", "Zero-G Wire":
       wdth = data.settings.thickness/2.0
-      
+
       pastQd = [pos - perp*wdth, pos + perp*wdth, lastPos + lastPerp*wdth, lastPos - lastPerp*wdth]
       pastQd = pastQd - [gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20]
-      
-      member("layer"&string(dp)).image.copyPixels(member("pxl").image, pastQd, rect(0,0,1,1), {#color:color(255, 0,0)})
+
+      effectLayer = "C"
+      wireColor = color(255, 0, 0)
+      if data.settings.color = 1 then
+        effectLayer = "A"
+        wireColor = color(255, 255, 0)
+      end if
+      if data.settings.color = 2 then
+        effectLayer = "B"
+        wireColor = color(0, 255, 255)
+      end if
+
+      imgArea = rect(0,0,1,1)
+      member("layer"&string(dp)).image.copyPixels(member("pxl").image, pastQd, imgArea, {#color:wireColor})
+      copyPixelsToEffectColor(effectLayer, dp, pastQd, "pxl", imgArea, 1)
       
     "Christmas Wire":
       wdth = 8.5
